@@ -77,6 +77,13 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "消消乐"
 			}
+		},
+		{
+			"path": "pages/interview/game/tetris",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "俄罗斯方块"
+			}
 		}
 		// #ifdef APP-PLUS
 		,{

@@ -143,6 +143,19 @@
 				</view>
 				<view class="duck-ic-arrow"></view>
 			</view>
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goTetris">
+				<view class="menu-tile tetris-tile">
+					<view class="tt-b t1"></view>
+					<view class="tt-b t2"></view>
+					<view class="tt-b t3"></view>
+					<view class="tt-b t4"></view>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">俄罗斯方块</text>
+					<text class="menu-desc">整行消除，越堆越快</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
 		</view>
 
 		<!-- 更多 -->
@@ -244,6 +257,9 @@
 			},
 			goMatch() {
 				uni.navigateTo({ url: '/pages/interview/game/match' })
+			},
+			goTetris() {
+				uni.navigateTo({ url: '/pages/interview/game/tetris' })
 			},
 			about() {
 				uni.showModal({
@@ -596,6 +612,43 @@
 		right: 12rpx;
 		bottom: 12rpx;
 		background: linear-gradient(160deg, #7fb6ff, #2b6fe0);
+	}
+
+	.tetris-tile {
+		position: relative;
+		background: linear-gradient(135deg, #e8f3ff, #cfe0ff);
+	}
+
+	.tt-b {
+		position: absolute;
+		width: 24rpx;
+		height: 24rpx;
+		border-radius: 6rpx;
+		box-shadow: inset 0 -3rpx 0 rgba(0, 0, 0, 0.16);
+	}
+
+	.tt-b.t1 {
+		left: 10rpx;
+		top: 10rpx;
+		background: linear-gradient(160deg, #7ce9f7, #17a9d4);
+	}
+
+	.tt-b.t2 {
+		left: 38rpx;
+		top: 10rpx;
+		background: linear-gradient(160deg, #d8b4fe, #8b3fd9);
+	}
+
+	.tt-b.t3 {
+		left: 10rpx;
+		top: 38rpx;
+		background: linear-gradient(160deg, #ffe08a, #f0a020);
+	}
+
+	.tt-b.t4 {
+		left: 38rpx;
+		top: 38rpx;
+		background: linear-gradient(160deg, #9bf0b8, #14a05a);
 	}
 
 	.menu-main {
