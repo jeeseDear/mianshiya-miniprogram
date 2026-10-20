@@ -1,0 +1,1057 @@
+/**
+ * 题库 · Node.js 问答详解
+ *
+ * 题目清单与解析参考自「面试鸭」：https://www.mianshiya.com
+ * 字段：short 一句话回答 / points 回答重点 / detail 详细答案 / extend 扩展追问
+ * 共 50 题
+ */
+
+export const qaQuestions = [
+	{
+		id: "node-001",
+		cat: "node",
+		level: 1,
+		hot: 99,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中，同步和异步代码有什么区别？",
+		short: "同步代码会阻塞后续代码的执行，必须等待当前操作完成才能继续；而异步代码不会阻塞后续代码，它通过回调函数、Promise 或 async/await …",
+		points: [
+			"在 Node.js 中，同步代码（Synchronous Code）和异步代码（Asynchronous Code）是编程中的两种重要方式。…",
+			"同步代码：这种代码在执行的时候会阻塞后续代码的执行，直到当前操作完成。所以在同步代码中，每一步操作都必须等待前一步操作完成后再继续执行。",
+			"异步代码：这种代码不会阻塞后续代码的执行。异步操作会在完成时通过回调函数、Promise 以及 async/await 等机制通…",
+		],
+		detail: [
+			{ h: "整体回答", p: "同步代码会阻塞后续代码的执行，必须等待当前操作完成才能继续；而异步代码不会阻塞后续代码，它通过回调函数、Promise 或 async/await 等机制在操作完成后通知程序处理结果。" },
+			{ h: "为什么 Node.js 更推荐使用异步代码", p: "因为 Node.js 是单线程的，使用异步非阻塞 I/O 可以避免线程被长时间占用，从而能够高效处理大量并发请求，提升应用性能和响应能力。" },
+			{ h: "同步代码会造成什么问题", p: "同步代码会阻塞主线程，导致其他任务无法执行，特别是在进行文件读写、网络请求等耗时操作时，会使整个应用程序卡住，影响性能和用户体验。" },
+			{ h: "Node.js 如何实现异步非阻塞 I/O", p: "Node.js 通过事件循环（Event Loop）和 libuv 库来管理异步操作。当发起一个 I/O 操作时，Node.js 将其交给底层系统处理，并继续执行后续代码，待操作完成后再通过回调函数处理结果。" },
+		],
+		extend: ["async/await 是同步还是异步？它如何工作？", "fs.readFileSync 和 fs.readFile 的主要区别是什么？", "什么是事件循环（Event Loop）？它与异步代码的关系是什么？", "在什么场景下适合使用同步代码？"]
+	},
+	{
+		id: "node-002",
+		cat: "node",
+		level: 1,
+		hot: 92,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中创建一个简单的 HTTP 服务器？",
+		short: "在 Node.js 中创建一个简单的 HTTP 服务器，你可以使用内置的 http 模块。",
+		points: [
+			"在 Node.js 中创建一个简单的 HTTP 服务器，你可以使用内置的 http 模块。",
+			"const http = require('http');…",
+			"const server = http.createServer((req, res) => {…",
+		],
+		detail: [
+			{ h: "Node.js 创建 HTTP 服务器时，如何设置响应的状态码和响应头", p: "在请求处理函数中，使用 res.statusCode = 200; 设置状态码，例如 200 表示成功；使用 res.setHeader('Content-Type', 'text/plain') 来设置响应头，告知客户端返回内容的类型。" },
+			{ h: "如何根据不同 URL 路径返回不同的响应内容", p: "可以结合 url 模块解析请求的 URL 路径。使用 url.parse(req.url, true) 解析路径后，通过判断 parsedUrl.pathname 的值来区分不同路由，并返回相应的响应内容，例如当路径为 '/about' 时返回 'About Page'，否则返回 404。" },
+			{ h: "为什么在实际项目中更推荐使用 Express 而不是原生 http 模块", p: "因为 Express 提供了更高层次的抽象，简化了路由定义、中间件管理、错误处理等常见任务。相比原生 http 模块需要手动解析 URL 和处理各种细节，Express 让代码更简洁、可维护性更强，适合构建复杂的 Web 应用。" },
+			{ h: "如何为 Node.js HTTP 服务器添加错误处理机制", p: "可以通过为 server 实例绑定 'error' 事件监听器来进行错误处理。例如：server.on('error', (err) => { console.error('Server encountered an error:', err.message); });，这样可以在服务器启动失败或遇到异常时捕获并处理错误。" },
+		],
+		extend: ["如何提升 Node.js HTTP 服务器的性能以应对高并发？", "在使用 cluster 模块时，主进程和工作进程之间是什么关系？", "res.end() 和 res.send() 有什么区别？", "如何让 HTTP 服务器监听所有网络接口而不是仅限于 localhost？"],
+		code: "const http = require('http');"
+	},
+	{
+		id: "node-003",
+		cat: "node",
+		level: 1,
+		hot: 89,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js？它的主要特点是什么？适用于哪些场景？",
+		short: "Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行时环境，允许开发者在服务器端运行 JavaScript。",
+		points: [
+			"异步非阻塞 I/O：Node.js 在处理 I/O 操作时是非阻塞的，这使得它非常适合 I/O 密集型应用，如 Web 服务器。",
+			"Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行时环境，允许开发者在服务器端运行 JavaScript。",
+			"高效的事件驱动架构：Node.js 使用…",
+		],
+		detail: [
+			{ h: "整体回答", p: "Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行时环境，允许开发者在服务器端运行 JavaScript。它使 JavaScript 能够脱离浏览器，在服务端编写后端服务，实现了全栈开发。" },
+			{ h: "Node.js 的主要特点有哪些", p: "Node.js 的主要特点包括：1）异步非阻塞 I/O，适合处理大量 I/O 操作；2）事件驱动架构，能高效处理高并发连接；3）单线程模型结合事件循环，减少资源开销；4）跨平台，可在 Windows、Linux、macOS 等系统上运行。" },
+			{ h: "为什么说 Node.js 是异步非阻塞的", p: "Node.js 在执行 I/O 操作（如文件读写、网络请求）时不会阻塞主线程，而是通过回调函数、Promise 或 async/await 等机制异步处理结果，从而让程序可以继续执行其他任务，提升了整体性能和吞吐量。" },
+			{ h: "Node.js 采用单线程，如何处理并发", p: "尽管 Node.js 主线程是单线程的，但它利用事件循环和异步 I/O 操作来处理并发。所有阻塞操作都被委托给系统内核或线程池处理，完成后通过事件循环触发回调，因此能够以少量资源支持大量并发连接。" },
+		],
+		extend: ["Node.js 适用于哪些应用场景？", "Node.js 使用什么模块规范和包管理工具？", "常见的 Node.js 框架有哪些？", "Node.js 的诞生时间和开发者是谁？"]
+	},
+	{
+		id: "node-004",
+		cat: "node",
+		level: 1,
+		hot: 88,
+		source: "面试鸭 · Node.js",
+		title: "什么是 npm？如何使用它来管理项目的依赖？",
+		short: "npm（Node Package Manager）是JavaScript的包管理工具，也是Node.js平台的核心组件之一。",
+		points: [
+			"初始化项目：npm init或npm init -y可以在项目目录中生成一个package.json文件。",
+			"npm（Node Package Manager）是JavaScript的包管理工具，是Node.js平台的一个核心组件。",
+			"安装依赖：通过npm install <packa…",
+		],
+		detail: [
+			{ h: "整体回答", p: "npm（Node Package Manager）是JavaScript的包管理工具，也是Node.js平台的核心组件之一。它用于安装、共享、管理和控制JavaScript包及其依赖版本，帮助开发者在项目中引入和管理第三方库和模块。" },
+			{ h: "如何初始化一个npm项目", p: "可以通过运行npm init命令来交互式地创建package.json文件，或者使用npm init -y快速生成默认配置的package.json文件。" },
+			{ h: "如何安装项目的依赖包", p: "使用npm install <package-name>命令可以安装指定的包，并自动更新package.json和package-lock.json文件。安装后，包会被下载到node_modules目录中。" },
+			{ h: "生产依赖和开发依赖有什么区别？如何安装它们", p: "生产依赖是项目运行所必需的包，使用npm install <package-name>默认安装即为生产依赖；开发依赖仅在开发过程中使用（如构建工具、测试框架），需通过npm install <package-name> --save-dev安装并记录在devDependencies中。" },
+		],
+		extend: ["如何删除一个已安装的依赖包？", "什么是package-lock.json文件的作用？", "如何更新项目中的依赖包？", "全局安装和局部安装有何区别？"]
+	},
+	{
+		id: "node-005",
+		cat: "node",
+		level: 1,
+		hot: 87,
+		source: "面试鸭 · Node.js",
+		title: "什么是 package.json 文件？它的作用是什么？",
+		short: "package.json 是一个位于 Node.js 项目根目录下的 JSON 格式文件，用于定义项目的元数据和配置信息。",
+		points: [
+			"描述项目基本信息：如项目名称、版本号、描述、关键词、许可证等。",
+			"定义项目依赖：记录项目运行和开发时所需的依赖包及其版本信息。",
+			"package.json 文件是一个放在 Node.js 项目根目录下的 JSON 格式文件，它用于定义项目的各种元数据。",
+		],
+		detail: [
+			{ h: "整体回答", p: "package.json 是一个位于 Node.js 项目根目录下的 JSON 格式文件，用于定义项目的元数据和配置信息。它记录了项目的基本信息、依赖包、脚本命令以及其他构建和管理项目所需的配置，是 npm 和 yarn 等包管理工具的核心配置文件。" },
+			{ h: "package.json 的主要作用有哪些", p: "主要作用包括：1）描述项目基本信息，如名称、版本、描述等；2）定义项目依赖，包括生产依赖和开发依赖；3）管理可执行脚本，如启动、测试、构建命令；4）提供项目其他配置，如入口文件、仓库地址、许可证等，便于项目维护和协作。" },
+			{ h: "name 和 version 字段在 package.json 中有什么重要性", p: "name 是项目的唯一标识，在 npm 上发布时必须全局唯一；version 表示项目当前版本，遵循语义化版本规范（如 1.0.0），用于版本管理和依赖控制。这两个字段是必需的，缺一不可。" },
+			{ h: "dependencies 和 devDependencies 有什么区别", p: "dependencies 是项目在生产环境中运行所必需的依赖包，例如 express 或 react；而 devDependencies 是仅在开发或构建过程中使用的工具类依赖，如 webpack、babel、mocha 等，不会随项目一起部署到生产环境。" },
+		],
+		extend: ["scripts 字段的作用是什么？举几个常见例子。", "main 字段的作用是什么？", "repository 字段的用途是什么？", "license 字段表示什么？"]
+	},
+	{
+		id: "node-006",
+		cat: "node",
+		level: 1,
+		hot: 85,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的 Buffer 对象是什么？它有什么作用？",
+		short: "Buffer 是 Node.js 中的一个全局类，用于在内存中直接操作二进制数据。",
+		points: [
+			"处理二进制数据：Buffer 对象主要用于处理二进制数据，例如视频、图片和文件读取。",
+			"与流结合：它常与 Node.js 的流操作结合，用于文件处理、网络传输等场景。",
+			"Buffer 对象是 Node.js 中一个全局类，用来在处理二进制数据时，提供对内存缓冲区的操作能力。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Buffer 是 Node.js 中的一个全局类，用于在内存中直接操作二进制数据。它提供了一种类似数组的结构来存储原始字节数据，适合处理非文本数据，如图片、视频、文件流和网络传输数据。" },
+			{ h: "Buffer 主要用来做什么", p: "Buffer 主要用于处理二进制数据，例如读取文件内容、网络传输中的数据包处理、编码转换（如 UTF-8、Base64）以及与流（Stream）配合进行高效的数据读写操作。" },
+			{ h: "如何创建一个 Buffer", p: "可以通过多种方式创建 Buffer：使用 Buffer.alloc(size) 分配指定大小的 Buffer；使用 Buffer.from(data) 从字符串或数组创建 Buffer。例如：Buffer.from('Hello') 或 Buffer.alloc(10)。" },
+			{ h: "Buffer 和字符串有什么区别", p: "字符串是用于表示文本数据的不可变类型，有固定的编码格式（如 UTF-8），而 Buffer 是可变的、用于存储原始二进制数据的对象。字符串操作涉及编码/解码开销，Buffer 则直接操作内存，性能更高，尤其适用于大量二进制数据处理。" },
+		],
+		extend: ["为什么 Buffer 在处理文件或网络数据时更高效？", "Buffer 如何实现编码转换？", "Buffer 常与哪些 Node.js 模块或特性一起使用？", "Buffer 的默认编码是什么？"]
+	},
+	{
+		id: "node-007",
+		cat: "node",
+		level: 1,
+		hot: 82,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的回调函数是什么？请举例说明",
+		short: "回调函数是作为参数传递给另一个函数的函数，用于在某个操作完成后执行。",
+		points: [
+			"举个例子，假设我们要读取文件内容，可以使用Node.js内置的 fs模块，它提供了异步和同步的方法来与文件系统进行交互。…",
+			"回调函数是作为参数传递给另一个函数的函数。",
+			"举个例子，假设我们要读取文件内容，可以使用Node.js内置的 fs模块，它提供了异步和同步的方法来与文件系统进行交互。",
+		],
+		detail: [
+			{ h: "整体回答", p: "回调函数是作为参数传递给另一个函数的函数，用于在某个操作完成后执行。在Node.js中，回调函数常用于处理异步操作，例如文件读写、网络请求等。当异步任务完成时，Node.js会调用该回调函数来处理结果或错误。" },
+			{ h: "回调函数的第一个参数通常代表什么", p: "在Node.js中，回调函数的第一个参数通常用于接收错误对象（err）。如果操作成功，该参数为null；如果发生错误，则包含具体的错误信息。这种模式称为“错误优先回调”（error-first callback），是Node.js的标准实践。" },
+			{ h: "请举一个使用回调函数读取文件的例子。", p: "可以使用Node.js的fs模块中的readFile方法来异步读取文件内容，代码如下： const fs = require('fs'); fs.readFile('example.txt', 'utf8', (err, data) => { if (err) { console.error('Error reading file:', err); return; } console.log('File content:', data); }); 其中，第三个参数就是一个回调函数，…" },
+			{ h: "什么是回调地狱（Callback Hell）", p: "回调地狱是指多个异步操作嵌套使用回调函数，导致代码层级过深、难以阅读和维护的现象。例如连续读取多个文件时，每个回调函数内又调用下一个异步操作，形成多层嵌套结构，严重影响代码可读性。" },
+		],
+		extend: ["如何避免回调地狱？", "使用async/await如何改进回调函数的写法？", "为什么回调函数在Node.js中如此重要？", "Node.js中如何进行回调函数的错误处理？"]
+	},
+	{
+		id: "node-008",
+		cat: "node",
+		level: 1,
+		hot: 82,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的 require 和 import 有什么区别？",
+		short: "require基于CommonJS模块规范，是同步加载模块；import基于ES6模块规范，是异步加载，并且在编译时进行静态分析。",
+		points: [
+			"在Node.js中，require和import是用于引入模块的两种不同方式。require是基于CommonJS模块规范的，…",
+			"模块规范：require遵循CommonJS规范，而import则遵循ES6（ES2015）模块规范。",
+			"语法形式：require的语法是：const module = require('module_name');，而impor…",
+		],
+		detail: [
+			{ h: "整体回答", p: "require基于CommonJS模块规范，是同步加载模块；import基于ES6模块规范，是异步加载，并且在编译时进行静态分析。" },
+			{ h: "require和import的语法有什么不同", p: "require使用const module = require('module_name');的形式；import使用import module from 'module_name';的形式，支持更灵活的导入方式如解构赋值。" },
+			{ h: "为什么说require是同步的，而import是异步的", p: "require在运行时同步加载模块并立即执行，会阻塞后续代码执行；import在设计上是异步加载，在静态解析阶段处理依赖，不会阻塞主线程。" },
+			{ h: "在Node.js中如何启用import语法", p: "从Node.js 14开始，可以通过将文件扩展名设为.mjs或在package.json中设置\\\"type\\\": \\\"module\\\"来原生支持import语法；否则需要借助Babel等工具转译。" },
+		],
+		extend: ["import相比require有哪些优势？", "require可以在条件语句中动态加载模块吗？", "import能否完全替代require？", "如何在使用import的模块中引入CommonJS模块？"]
+	},
+	{
+		id: "node-009",
+		cat: "node",
+		level: 2,
+		hot: 81,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的回调、Promise 和 async/await 有什么区别？",
+		short: "回调是Node.js中最基本的异步处理方式，它将一个函数作为参数传递给异步操作，在操作完成后由该函数接收结果。",
+		points: [
+			"回调、Promise 和 async/await 是在Node.js中处理异步操作的三种不同方式。",
+			"回调是最基本的异步处理方式。",
+			"Promise 是对回调的改进，是一种更现代的异步处理方式。",
+		],
+		detail: [
+			{ h: "整体回答", p: "回调是Node.js中最基本的异步处理方式，它将一个函数作为参数传递给异步操作，在操作完成后由该函数接收结果。例如fs.readFile使用回调在文件读取完成后执行指定逻辑。" },
+			{ h: "什么是回调地狱，为什么它是个问题", p: "回调地狱是指多层嵌套的回调函数结构，导致代码缩进严重、逻辑混乱、难以阅读和维护。例如多个异步操作依次依赖时会形成深层嵌套，降低代码可读性。" },
+			{ h: "Promise如何解决回调地狱的问题", p: "Promise通过链式调用（.then()）的方式避免了深层嵌套，使异步代码线性化。每个Promise代表一个异步操作的未来结果，成功时调用resolve，失败时调用reject，并可通过.catch()统一处理错误。" },
+			{ h: "Promise的三种状态是什么", p: "Promise有三种状态：pending（等待中）、fulfilled（已成功）和rejected（已失败）。一旦状态从pending变为fulfilled或rejected，就不会再改变。" },
+		],
+		extend: ["async/await与Promise有什么关系？", "使用async/await相比Promise有什么优势？", "在async函数中如何处理错误？", "是否可以在非async函数中使用await？"]
+	},
+	{
+		id: "node-010",
+		cat: "node",
+		level: 2,
+		hot: 81,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 中的事件循环？",
+		short: "回答重点 Node.js 中的事件循环是一个核心概念，它是 Node.js 处理异步操作的基础。",
+		points: [
+			"Node.js 中的事件循环是一个核心概念，它是 Node.js 处理异步操作的基础。",
+			"在 Node.js 中，事件循环分为几个阶段，每个阶段都有不同类型的操作，Node.js 会在每个阶段处理相应的回调函数。",
+			"下面是事件循环的各个阶段和它们的作用…",
+		],
+		detail: [
+			{ h: "事件循环为什么能让 Node.js 实现非阻塞 I/O", p: "事件循环通过将耗时的 I/O 操作交给系统内核处理，并在操作完成后注册回调函数，在适当的阶段执行这些回调。这样主线程不会被阻塞，可以继续处理其他任务，实现了非阻塞 I/O。" },
+			{ h: "Node.js 事件循环有哪些主要阶段", p: "Node.js 事件循环的主要阶段包括：Timers（处理 setTimeout 和 setInterval）、I/O callbacks（处理大部分 I/O 回调）、idle/prepare（内部使用）、poll（轮询新 I/O 事件）、check（执行 setImmediate 回调）和 close callbacks（处理关闭事件）。这些阶段按固定顺序执行。" },
+			{ h: "setTimeout 和 setImmediate 的执行顺序是怎样的", p: "执行顺序取决于当前所处的事件循环阶段。如果两者都在主模块中定义，通常 setTimeout（延迟为0）会先于 setImmediate 执行，因为进入事件循环前可能已经满足定时条件；但如果在 I/O 回调中同时定义，则 setImmediate 通常会先执行，因为它在 check 阶段执行且优先级更高。" },
+			{ h: "poll 阶段的作用是什么", p: "poll 阶段负责获取新的 I/O 事件并执行对应的 I/O 回调。如果没有可用的 I/O 事件，该阶段可能会休眠等待，直到有新的事件到来或到达下一个 timers 阶段的时间点。" },
+		],
+		extend: ["setImmediate 和 setTimeout(func, 0) 有什么区别？", "close callbacks 阶段处理哪些回调？", "I/O callbacks 阶段具体处理什么类型的回调？", "事件循环是如何开始的？"]
+	},
+	{
+		id: "node-011",
+		cat: "node",
+		level: 1,
+		hot: 81,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的 process 对象是什么？它有哪些常用属性？",
+		short: "process 是 Node.js 中的一个全局对象，提供了与当前运行进程及操作系统交互的能力。",
+		points: [
+			"process.argv：获取命令行参数的数组。",
+			"process.env：获取用户环境信息的对象。",
+			"process.exit()：退出当前进程的方法。",
+		],
+		detail: [
+			{ h: "整体回答", p: "process 是 Node.js 中的一个全局对象，提供了与当前运行进程及操作系统交互的能力。它无需通过 require 引入，可以在任何模块中直接使用，用于获取进程信息、控制进程行为以及处理命令行参数等。" },
+			{ h: "process.argv 的作用是什么", p: "process.argv 是一个数组，包含启动 Node.js 进程时传入的命令行参数。其中前两个元素分别是 node 可执行文件路径和脚本文件路径，从第三个开始是用户传递的实际参数。例如运行 node script.js arg1 arg2 时，process.argv[2] 为 'arg1'，process.argv[3] 为 'arg2'。" },
+			{ h: "如何通过 process.env 使用环境变量", p: "process.env 是一个包含当前用户环境变量的对象。可以通过在命令行中设置（如 export NODE_ENV=production）或使用 .env 文件加载配置，在代码中通过 process.env.NODE_ENV 等方式读取，以实现不同环境下的应用配置切换。" },
+			{ h: "process.exit() 方法有什么作用", p: "process.exit() 用于终止当前 Node.js 进程。传入的参数是退出码：0 表示正常退出，非 0（如 1）表示异常退出。常用于错误处理后主动结束程序，例如在捕获致命异常后调用 process.exit(1)。" },
+		],
+		extend: ["process.cwd() 返回的是什么？", "process.memoryUsage() 提供哪些内存信息？", "process.uptime() 的用途是什么？", "什么是 process.nextTick()？它的执行时机是怎样的？"]
+	},
+	{
+		id: "node-012",
+		cat: "node",
+		level: 2,
+		hot: 80,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 的事件循环机制？它是怎么实现的？",
+		short: "Node.js 在启动时会初始化事件循环。",
+		points: [
+			"Node.js 在启动时会初始化事件循环。",
+			"Node.js 的事件循环（Event Loop）机制是 Node.js 中实现异步非阻塞I/O的核心。",
+			"事件循环是 Node.js 的运行机制，负责调度和处理各种事件（如I/O操作、定时器、网络请求等）。",
+		],
+		detail: [
+			{ h: "参考回答", p: "Node.js 的事件循环（Event Loop）机制是 Node.js 中实现异步非阻塞I/O的核心。事件循环允许 Node.js 可以在单个线程中处理高并发的请求，提高了程序的性能和响应能力。 事件循环是 Node.js 的运行机制，负责调度和处理各种事件（如I/O操作、定时器、网络请求等）。以下是事件循环的主要实现流程： Node.js 在启动时会初始化事件循环。 执行输入的脚本，可能会注册各种事…" },
+		],
+		extend: []
+	},
+	{
+		id: "node-013",
+		cat: "node",
+		level: 1,
+		hot: 79,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 全局对象？有哪些全局对象？",
+		short: "Node.js 全局对象是指在任何模块中都可以直接访问的对象，无需通过 require() 引入。",
+		points: [
+			"global：这是 Node.js 全局命名空间对象，类似于浏览器中的 window 对象。",
+			"process：提供有关当前 Node.js 进程的信息和控制功能。",
+			"Node.js 全局对象是指那些在任何地方都可以访问的对象，而不需要通过 require() 进行引入。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Node.js 全局对象是指在任何模块中都可以直接访问的对象，无需通过 require() 引入。它们提供了基本的运行时功能和工具函数，类似于浏览器环境中 window 对象的作用，但适用于服务器端 JavaScript 环境。" },
+			{ h: "Node.js 中有哪些常见的全局对象", p: "常见的 Node.js 全局对象包括：global、process、__dirname、__filename、console、module、exports、setTimeout、clearTimeout、setInterval、clearInterval 和 Buffer 等。" },
+			{ h: "global 对象在 Node.js 中的作用是什么", p: "global 是 Node.js 的全局命名空间对象，所有在全局作用域中定义的变量和函数都会成为它的属性。可以通过它在不同模块间共享全局数据，例如 global.myVar = 'test' 可在任意文件中访问。" },
+			{ h: "process 对象有哪些常用属性和方法", p: "process 对象常用的有：process.argv（获取命令行参数）、process.env（获取环境变量）、process.exit()（退出进程）、process.cwd()（获取当前工作目录）等，用于与当前 Node.js 进程进行交互和控制。" },
+		],
+		extend: ["__dirname 和 __filename 的区别是什么？", "console 是全局对象吗？有哪些常用方法？", "module 和 exports 在模块系统中的作用是什么？", "Node.js 中的定时器函数有哪些？"]
+	},
+	{
+		id: "node-014",
+		cat: "node",
+		level: 2,
+		hot: 78,
+		source: "面试鸭 · Node.js",
+		title: "什么是非阻塞 I/O？Node.js 如何实现非阻塞 I/O？",
+		short: "非阻塞 I/O 是一种输入输出处理方式，它允许程序在发起 I/O 请求后不必等待操作完成，可以立即继续执行其他任务。",
+		points: [
+			"非阻塞 I/O 是一种在输入输出操作时不需要等待数据传输完毕的方式，它允许程序继续执行其他任务，而不被当前的 I/O 操作阻塞。",
+			"Node.js 实现非阻塞 I/O 的核心技术是事件驱动和异步回调机制。",
+		],
+		detail: [
+			{ h: "整体回答", p: "非阻塞 I/O 是一种输入输出处理方式，它允许程序在发起 I/O 请求后不必等待操作完成，可以立即继续执行其他任务。这种方式避免了因等待数据传输而导致程序卡顿，提高了系统的并发性和整体效率。" },
+			{ h: "Node.js 如何实现非阻塞 I/O", p: "Node.js 通过事件驱动、异步回调机制和单线程事件循环来实现非阻塞 I/O。当进行 I/O 操作时，Node.js 将操作交给底层的 Libuv 库处理，并注册回调函数。主线程不等待结果，而是继续执行后续代码，待 I/O 操作完成后，事件循环会将对应的回调加入队列并执行。" },
+			{ h: "事件循环在 Node.js 中的作用是什么", p: "事件循环是 Node.js 实现非阻塞 I/O 的核心机制，它持续监听事件队列，按阶段处理定时器、I/O 回调、setImmediate、关闭事件等，确保异步操作的回调能够在适当的时候被执行，从而支持高效的并发处理。" },
+			{ h: "Libuv 在 Node.js 中扮演什么角色", p: "Libuv 是一个跨平台的 C 语言库，为 Node.js 提供了非阻塞 I/O 和事件循环的支持。它封装了不同操作系统底层的 I/O 能力（如 epoll、kqueue、IOCP），使 Node.js 能在多种平台上保持一致的异步行为。" },
+		],
+		extend: ["什么是回调地狱？如何解决？", "Node.js 是单线程的，如何处理高并发？", "setTimeout 和 setImmediate 的执行顺序是怎样的？", "fs.readFile 是同步还是异步方法？"]
+	},
+	{
+		id: "node-015",
+		cat: "node",
+		level: 1,
+		hot: 78,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中解析 JSON 数据？",
+		short: "在 Node.js 中，可以使用内置的 JSON.parse() 方法将 JSON 字符串转换为 JavaScript 对象。",
+		points: [
+			"在 Node.js 中解析 JSON 数据，通常使用 JSON.parse 方法。这是一个内置的方法，可以将 JSON 字符串转换为 …",
+			"const jsonString = '{\\\"name\\\": \\\"Alice\\\", \\\"age\\\": 25}';…",
+			"在 Node.js 中解析 JSON 数据，通常使用 JSON.parse 方法。",
+		],
+		detail: [
+			{ h: "整体回答", p: "在 Node.js 中，可以使用内置的 JSON.parse() 方法将 JSON 字符串转换为 JavaScript 对象。例如：JSON.parse('{\\\"name\\\": \\\"Alice\\…" },
+			{ h: "为什么在使用 JSON.parse 时需要 try-catch", p: "因为当 JSON 字符串格式不正确时，JSON.parse 会抛出语法错误。使用 try...catch 可以捕获异常，防止程序崩溃，并进行错误处理。" },
+			{ h: "如何将 JavaScript 对象转换为 JSON 字符串", p: "可以使用 JSON.stringify() 方法将 JavaScript 对象序列化为 JSON 字符串。例如：JSON.stringify({ name: 'Bob', age: 30 }) 返回 '{\\\"name\\\":\\\"Bob\\\",\\\"age\\\":30}'。" },
+			{ h: "从文件中读取并解析 JSON 数据的步骤是什么", p: "使用 fs.readFile 异步读取文件内容，然后用 JSON.parse 解析字符串。需对读取和解析过程分别处理错误，确保健壮性。" },
+		],
+		extend: ["如何验证解析后的 JSON 数据结构是否符合预期？", "JSON.parse 和 JSON.stringify 的常见用途有哪些？", "Node.js 中处理大型 JSON 文件时应注意什么？", "JSON.parse 是否能处理所有类型的 JavaScript 值？"]
+	},
+	{
+		id: "node-016",
+		cat: "node",
+		level: 1,
+		hot: 78,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 的 process.nextTick() 有什么作用？",
+		short: "process.nextTick() 用于将回调函数插入到当前执行栈的尾部，并在下一次事件循环（Event Loop）之前执行该回调。",
+		points: [
+			"事件循环（Event Loop）：在理解 process.nextTick() 之前，有必要了解 Node.js 的事件循环。Node.js …",
+			"process.nextTick() 用于将一个回调函数插入到当前执行栈的尾部，在下一次事件轮询（Event Loop）之前调用这个回调函数。",
+			"事件循环（Event Loop）：在理解 process.nextTick() 之前，有必要了解 Node.js 的事件循环。",
+		],
+		detail: [
+			{ h: "整体回答", p: "process.nextTick() 用于将回调函数插入到当前执行栈的尾部，并在下一次事件循环（Event Loop）之前执行该回调。它优先于其他 I/O 事件、定时器和 setImmediate 回调运行。" },
+			{ h: "process.nextTick() 和 setImmediate() 有什么区", p: "process.nextTick() 在当前操作完成后立即执行，早于事件循环的各个阶段；而 setImmediate() 则在事件循环的 '检查（Check）' 阶段执行。因此，process.nextTick() 的回调会比 setImmediate() 更早执行。" },
+			{ h: "为什么 process.nextTick() 会比 setTimeout(() ", p: "因为 process.nextTick() 是在当前阶段结束后、进入事件循环下一阶段前执行，而 setTimeout 的回调属于 '定时器（Timers）' 阶段，需要等待整个事件循环周期推进到该阶段，所以 process.nextTick() 具有更高的优先级。" },
+			{ h: "process.nextTick() 会在事件循环的哪个阶段执行", p: "process.nextTick() 并不属于事件循环的任何一个阶段，而是在每个阶段完成之后、切换到下一个阶段之前统一执行所有 nextTick 队列中的回调。" },
+		],
+		extend: ["频繁使用 process.nextTick() 会带来什么问题？", "如何正确使用 process.nextTick()？", "事件循环中有哪些主要阶段？", "在同一个代码块中同时使用 nextTick、setImmediate 和 …"]
+	},
+	{
+		id: "node-017",
+		cat: "node",
+		level: 1,
+		hot: 77,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 中的模块加载机制？",
+		short: "Node.js 模块加载机制主要基于 CommonJS 规范，该规范定义了模块的导入（require）和导出（module.exports）方式，实现了代码的模块化组织与复用。",
+		points: [
+			"Node.js 中的模块加载机制主要依赖于 CommonJS 规范。",
+			"首先，Node.js 会通过模块的绝对路径、相对路径或者包名进行解析。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Node.js 模块加载机制主要基于 CommonJS 规范，该规范定义了模块的导入（require）和导出（module.exports）方式，实现了代码的模块化组织与复用。" },
+			{ h: "Node.js 加载模块时的路径解析过程是怎样的", p: "Node.js 会根据模块路径类型进行解析：如果是绝对路径或相对路径，直接按路径查找；如果是包名，则从当前目录的 node_modules 开始查找，若未找到则沿目录树向上级 node_modules 查找，直到根目录为止。" },
+			{ h: "Node.js 支持哪些类型的模块文件？它们如何被识别和处理", p: "Node.js 支持 .js、.json 和 .node 三种主要模块类型。对于无后缀的模块，会依次尝试添加 .js、.json、.node 后缀进行加载。.js 文件通过 V8 引擎编译执行，.json 文件使用 JSON.parse 解析，.node 文件作为 C++ 扩展由 process.dlopen 加载。" },
+			{ h: "模块在 Node.js 中是如何被缓存的？有什么作用", p: "Node.js 会在首次加载模块后将其缓存在 require.cache 中。当再次引入同一模块时，直接返回缓存中的结果，避免重复加载和编译，提升性能。因此，模块在 Node.js 中是单例的，其代码只执行一次。" },
+		],
+		extend: ["CommonJS 与 ES Module 在 Node.js 中有何区别？如何启用 ESM？", "内置模块和第三方模块在加载上有何不同？", "为什么说 Node.js 的模块是单例的？", "如果想让一个模块不被缓存，应该怎么做？"]
+	},
+	{
+		id: "node-018",
+		cat: "node",
+		level: 1,
+		hot: 76,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的定时器函数 setImmediate() 和 setTimeout() 有什么区别？",
+		short: "setImmediate() 在当前事件循环的 check 阶段执行，而 setTimeout() 在定时器阶段执行。",
+		points: [
+			"执行时机：setImmediate() 允许在当前事件循环结束后立即执行回调函数，而 setTimeout() 会在指定的时间后执行回调函数，…",
+			"优先级：在 I/O 操作完成后，setImmediate() 的回调函数通常会比 setTimeout…",
+			"在 Node.js 中，setImmediate() 和 setTimeout() 都是用来调度异步任务的定时器函数，但它们的行为和用途有所不同。",
+		],
+		detail: [
+			{ h: "整体回答", p: "setImmediate() 在当前事件循环的 check 阶段执行，而 setTimeout() 在定时器阶段执行。因此 setImmediate() 通常在 I/O 操作后立即执行，优先于 setTimeout(fn, 0)。" },
+			{ h: "为什么 setImmediate() 比 setTimeout(fn, 0) 执", p: "因为 Node.js 事件循环中，I/O 回调之后进入 check 阶段执行 setImmediate()，而 setTimeout(fn, 0) 属于 timer 阶段，可能在下一个循环才执行，所以 setImmediate() 通常先于 setTimeout(fn, 0) 执行。" },
+			{ h: "setImmediate() 和 setTimeout() 分别适用于哪些场景", p: "setImmediate() 适合在 I/O 操作完成后立即执行任务，如处理文件读取后的逻辑；setTimeout() 更适合需要延迟执行的任务，即使延迟为0毫秒。" },
+			{ h: "在事件循环中的哪个阶段执行 setImmediate()", p: "setImmediate() 的回调在事件循环的 check 阶段执行，该阶段在 poll 阶段之后，用于处理 setImmediate() 调度的任务。" },
+		],
+		extend: ["在事件循环中的哪个阶段执行 setTimeout()？", "如果同时调用 setImmediate() 和 setTimeout(fn, 0)，…", "能否用 setTimeout(fn, 0) 替代 setImmediate()？", "在非 I/O 环境下，setImmediate() 和 setTimeout(fn, 0) …"]
+	},
+	{
+		id: "node-019",
+		cat: "node",
+		level: 1,
+		hot: 74,
+		source: "面试鸭 · Node.js",
+		title: "在 Node.js 中，如何导入和导出模块？",
+		short: "在 Node.js 中，可以使用 module.exports 或 exports 来导出模块。",
+		points: [
+			"导出模块：通过 module.exports 或 exports 将模块中的对象、函数、变量等导出。",
+			"导入模块：使用 require 函数来获取模块导出的内容。",
+			"在 Node.js 中，导入模块使用的是 require 函数，而导出模块使用的是 module.exports 或者 exports 对象。",
+		],
+		detail: [
+			{ h: "整体回答", p: "在 Node.js 中，可以使用 module.exports 或 exports 来导出模块。module.exports 可以导出任意类型的数据，如对象、函数或类；而 exports 是 module.exports 的快捷方式，适合挂载属性，但不能直接赋值覆盖。" },
+			{ h: "在 Node.js 中如何导入模块", p: "在 Node.js 中，使用 require 函数来导入模块。例如：const module = require('./module')，即可引入并使用该模块导出的内容。" },
+			{ h: "module.exports 和 exports 有什么区别", p: "exports 是 module.exports 的引用，用于方便地添加导出属性。但如果直接给 exports 赋值，不会影响 module.exports；而 module.exports 可以直接赋值为新的对象或函数，最终导出的是 module.exports 指向的内容。" },
+			{ h: "Node.js 支持 ES6 模块吗", p: "是的，Node.js 支持 ES6 模块。可以通过使用 .mjs 文件扩展名或在 package.json 中设置 \\\"type\\\": \\\"module\\\" 来启用 ES6 模块语法，从而使用 import 和 export。" },
+		],
+		extend: ["CommonJS 和 ES6 模块的主要区别是什么？", "如何在项目中启用 ES6 模块？", "能否在同一个项目中同时使用 CommonJS 和 ES6 模块？", "为什么不能直接给 exports 赋值？"]
+	},
+	{
+		id: "node-020",
+		cat: "node",
+		level: 1,
+		hot: 74,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 中的事件发射器（EventEmitter）？它有什么作用？如何使用？",
+		short: "EventEmitter 是 Node.js 的一个核心模块，用于实现事件驱动编程。",
+		points: [
+			"创建一个事件发射器对象。",
+			"使用 on() 方法为特定事件注册监听器；",
+			"在 Node.js 中，事件发射器（EventEmitter）是一个核心模块，提供了一种机制，可以创建、触发和监听自定义事件。",
+		],
+		detail: [
+			{ h: "整体回答", p: "EventEmitter 是 Node.js 的一个核心模块，用于实现事件驱动编程。它允许对象订阅和触发事件，是发布-订阅模式的一种实现。通过 EventEmitter，我们可以注册事件监听器，并在特定事件发生时执行相应的回调函数。" },
+			{ h: "EventEmitter 的主要作用是什么", p: "EventEmitter 的主要作用是支持异步事件处理。它使得代码可以对某些事件的发生做出响应，例如文件读取完成、网络请求到达等。这种机制广泛应用于 Node.js 内置模块（如 fs、http）中，也适用于自定义事件的场景。" },
+			{ h: "如何使用 EventEmitter 注册和触发事件", p: "首先引入 events 模块并创建一个 EventEmitter 实例。然后使用 on() 方法注册事件监听器，再通过 emit() 方法触发事件。例如：eventEmitter.on('greet', callback) 注册事件，eventEmitter.emit('greet') 触发事件。" },
+			{ h: "on 和 once 方法有什么区别", p: "on() 方法注册的监听器会在每次事件触发时都被调用；而 once() 方法注册的监听器只执行一次，之后会自动被移除，确保回调函数不会重复执行。" },
+		],
+		extend: ["为什么需要为 'error' 事件添加监听器？", "如何自定义一个继承 EventEmitter 的类？", "EventEmitter 如何实现事件的异步处理？", "如何移除 EventEmitter 上的事件监听器？"]
+	},
+	{
+		id: "node-021",
+		cat: "node",
+		level: 1,
+		hot: 73,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中处理 HTTP 请求的路由？",
+		short: "推荐使用Express.js，这是一个基于Node.js的极简灵活的Web开发框架。",
+		points: [
+			"在Node.js中处理HTTP请求的路由，我推荐使用Express.js，这是一个基于Node.js的极简灵活的Web开发框架。",
+			"npm install express…",
+			"const express = requ…",
+		],
+		detail: [
+			{ h: "整体回答", p: "推荐使用Express.js，这是一个基于Node.js的极简灵活的Web开发框架。通过安装Express后，可以创建应用实例并定义不同HTTP方法和路径的路由处理函数，例如使用app.get()、app.post()等来响应不同的请求。" },
+			{ h: "如何在Express中处理带参数的路由", p: "可以通过在路由路径中使用冒号（:）定义动态参数，例如app.get('/user/:id')，然后通过req.params.id获取参数值。这种方式适用于需要传递用户ID、文章ID等场景。" },
+			{ h: "什么是Express中间件？它有什么作用", p: "中间件是Express中用于处理请求和响应的函数，它可以执行如日志记录、身份验证、数据解析等任务。中间件通过调用next()将控制权传递给下一个中间件或路由处理函数，是构建功能丰富应用的基础。" },
+			{ h: "如何在Express中提供静态文件服务", p: "可以使用express.static中间件来服务静态文件。例如app.use(express.static('public'))会将public目录下的文件暴露为静态资源，允许客户端直接访问HTML、CSS、JavaScript等文件。" },
+		],
+		extend: ["如何实现Express中的路由模块化？", "Express支持哪些常见的HTTP请求方法？", "如何在Express中设置监听端口？", "为什么推荐使用Express而不是原生Node.js处理路由？"],
+		code: "npm install express"
+	},
+	{
+		id: "node-022",
+		cat: "node",
+		level: 1,
+		hot: 68,
+		source: "面试鸭 · Node.js",
+		title: "如何使用 Node.js 读取和写入文件？",
+		short: "可以使用内置的 fs 模块来读取文件。",
+		points: [
+			"使用 Node.js 读取和写入文件可以借助 fs 模块（文件系统模块）。这是 Node.js 内置的模块之一，用于与文件系统交互。…",
+			"使用 Node.js 读取和写入文件可以借助 fs 模块（文件系统模块）。",
+			"使用 fs.readFile() 异步读取文件，或 fs.readFileSync() 同步读取文件。",
+		],
+		detail: [
+			{ h: "整体回答", p: "可以使用内置的 fs 模块来读取文件。异步方式使用 fs.readFile()，同步方式使用 fs.readFileSync()，并指定编码格式（如 'utf8'）以获取字符串内容。" },
+			{ h: "Node.js 中如何写入文件", p: "可以使用 fs.writeFile() 异步写入文件，或 fs.writeFileSync() 同步写入文件。写入时可指定数据和编码格式（如 'utf8'），若文件已存在则会覆盖原内容。" },
+			{ h: "如何向文件末尾追加内容而不是覆盖", p: "可以使用 fs.appendFile() 或 fs.appendFileSync() 方法，将新内容追加到文件末尾，不会影响原有内容。" },
+			{ h: "如何检查文件是否存在", p: "可以使用 fs.existsSync() 同步检查文件是否存在，或者使用 fs.access() 异步判断，通过回调函数处理结果。" },
+		],
+		extend: ["如何删除一个文件？", "如何读取目录中的文件列表？", "fs 模块是 Node.js 的内置模块吗？", "异步和同步文件操作有什么区别？"]
+	},
+	{
+		id: "node-023",
+		cat: "node",
+		level: 1,
+		hot: 66,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中捕获和处理异常？",
+		short: "在 Node.js 中，同步代码的异常可以通过 try...catch 语句进行捕获和处理。",
+		points: [
+			"在 Node.js 中捕获和处理异常主要有两种方式：同步代码中的异常处理和异步代码中的异常处理。",
+			"对于同步代码，我们通常使用 try...catch 语句捕获异常。",
+			"对于异步代码（例如使用 Promises 或 async/await），我们可以使用 .catch() 方法或将异步代码放在 …",
+		],
+		detail: [
+			{ h: "整体回答", p: "在 Node.js 中，同步代码的异常可以通过 try...catch 语句进行捕获和处理。将可能抛出异常的代码放在 try 块中，如果发生错误，会立即跳转到 catch 块进行处理。" },
+			{ h: "Node.js 中如何处理异步代码中的异常", p: "对于基于 Promise 的异步代码，可以使用 .catch() 方法捕获异常；使用 async/await 语法时，可以将 await 表达式包裹在 try...catch 语句中来处理异常。" },
+			{ h: "什么是 uncaughtException 和 unhandledRejecti", p: "uncaughtException 用于捕获未被 try...catch 捕获的同步异常；unhandledRejection 用于捕获没有被处理的 Promise 拒绝。两者都可用于全局异常监听，防止进程意外崩溃。" },
+			{ h: "为什么需要全局异常处理", p: "全局异常处理可以捕获那些在局部未被捕获的异常，避免 Node.js 应用因未处理的错误而突然退出，同时可记录日志或发送告警，提升系统的稳定性和可观测性。" },
+		],
+		extend: ["如何在 Node.js 中记录异常日志？", "有哪些常见的 Node.js 错误监控工具？", "使用 process.on('uncaughtException') …", "async/await 如何结合 try...catch 处理异常？"]
+	},
+	{
+		id: "node-024",
+		cat: "node",
+		level: 1,
+		hot: 65,
+		source: "面试鸭 · Node.js",
+		title: "如何使用 Node.js 发送 HTTP 请求？比如 GET 和 POST 请求？",
+		short: "可以使用内置的 http 模块，通过 http.get() 方法发送 GET 请求。",
+		points: [
+			"在 Node.js 中发送 HTTP 请求可以使用内置的 http 和 https 模块。",
+			"const http = require('http');…",
+			"http.get('http://example.com', (res) => {…",
+		],
+		detail: [
+			{ h: "整体回答", p: "可以使用内置的 http 模块，通过 http.get() 方法发送 GET 请求。也可以使用第三方库如 axios 或 node-fetch，它们支持 Promise，代码更简洁。例如使用 axios：axios.get('http://example.com')。" },
+			{ h: "Node.js 中如何发送 HTTP POST 请求", p: "使用 http 模块时，需调用 http.request() 并设置 method 为 'POST'，手动写入数据并结束请求。使用 axios 则更简单：axios.post('http://example.com/path', { key: 'value' }) 即可发送 JSON 数据。" },
+			{ h: "使用 Node.js 内置模块发送请求时需要注意什么", p: "使用 http/https 模块时需要手动处理数据流的拼接、错误监听、请求结束事件，并正确设置请求头如 Content-Length。对于 HTTPS 请求需引入 https 模块而非 http。" },
+			{ h: "推荐在 Node.js 中使用哪些第三方库发送 HTTP 请求", p: "推荐使用 axios 或 node-fetch。axios 提供简洁的 API 和拦截器功能；node-fetch 实现了浏览器风格的 Fetch API，适合习惯前端开发的人员。" },
+		],
+		extend: ["如何用 async/await 语法优化 Node.js 中的 HTTP 请求？", "node-fetch 与浏览器的 fetch 是否兼容？", "request 库为什么不再推荐使用？", "如何在 Node.js 中处理 HTTPS 请求？"]
+	},
+	{
+		id: "node-025",
+		cat: "node",
+		level: 1,
+		hot: 65,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 全局变量？有哪些全局变量？",
+		short: "Node.js 全局变量是指在任何模块、函数或作用域中都可以直接访问的变量，无需通过 require 引入或在局部定义。",
+		points: [
+			"global: 相当于浏览器环境中的 window 对象，可以通过它设置全局变量和函数。",
+			"process: 提供有关当前 Node.js 进程的信息和控制，常用于获取命令行参数、环境变量等。",
+			"Node.js 全局变量是指在任何地方都可以访问和使用的变量，不需要通过 require 引入或在函数内部定义。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Node.js 全局变量是指在任何模块、函数或作用域中都可以直接访问的变量，无需通过 require 引入或在局部定义。它们在 Node.js 环境启动时就已经存在，供开发者直接使用，例如 global、process、__dirname 等。" },
+			{ h: "Node.js 中常见的全局变量有哪些", p: "常见的 Node.js 全局变量包括：global（全局对象）、process（进程信息与控制）、__dirname（当前脚本目录路径）、__filename（当前脚本文件路径）、module（当前模块对象）、exports（用于导出模块内容）和 require（引入模块的函数）。" },
+			{ h: "如何使用 process 对象获取命令行参数", p: "可以通过 process.argv 获取命令行参数，它返回一个数组，其中前两个元素是 Node.js 可执行文件路径和脚本路径，后续元素为传入的参数。例如：console.log(process.argv.slice(2)) 可获取用户输入的参数。" },
+			{ h: "如何通过 process 访问环境变量", p: "通过 process.env 可以访问操作系统中的环境变量。例如，process.env.NODE_ENV 常用于判断当前运行环境是开发、测试还是生产环境。" },
+		],
+		extend: ["__dirname 和 __filename 有什么区别？", "module 和 exports 的关系是什么？", "require 的作用是什么？如何使用？", "为什么一般不建议使用 global 定义全局变量？"]
+	},
+	{
+		id: "node-026",
+		cat: "node",
+		level: 1,
+		hot: 64,
+		source: "面试鸭 · Node.js",
+		title: "说说你对Node.js 的理解？优缺点？应用场景？",
+		short: "事件驱动和非阻塞I/O的特性能够处理高并发的请求，提高了程序的性能和响应速度；",
+		points: [
+			"事件驱动和非阻塞I/O的特性能够处理高并发的请求，提高了程序的性能和响应速度；",
+			"Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行环境，它允许开发者使用 JavaScript 进行服务器端编程。",
+			"Node.js 拥有事件驱动、非阻塞I/O的特性，能够处理高并发的请求，因此它被广泛应用于实时应用、Web 应用和 API 的开发。",
+		],
+		detail: [
+			{ h: "参考回答", p: "Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行环境，它允许开发者使用 JavaScript 进行服务器端编程。 Node.js 拥有事件驱动、非阻塞I/O的特性，能够处理高并发的请求，因此它被广泛应用于实时应用、Web 应用和 API 的开发。 以下是 Node.js 的优缺点： 优点： 事件驱动和非阻塞I/O的特性能够处理高并发的请求，提高了程序的性能和响应速度； 使用 JavaScript 进行开发，具有丰富的开源模块和…" },
+		],
+		extend: []
+	},
+	{
+		id: "node-027",
+		cat: "node",
+		level: 1,
+		hot: 64,
+		source: "面试鸭 · Node.js",
+		title: "什么是子进程？如何在 Node.js 中创建子进程？",
+		short: "子进程（Subprocess）是一个由父进程创建的独立执行环境，拥有自己的内存空间和执行上下文。",
+		points: [
+			"child_process.spawn():…",
+			"子进程（Subprocess）是一个独立的执行环境，可以由父进程创建并控制。",
+			"用于创建一个新的子进程并执行一个命令。",
+		],
+		detail: [
+			{ h: "整体回答", p: "子进程（Subprocess）是一个由父进程创建的独立执行环境，拥有自己的内存空间和执行上下文。在 Node.js 中，子进程用于执行外部命令或运行其他脚本，以避免阻塞主事件循环，常用于处理高计算任务、隔离不安全代码或实现并行处理。" },
+			{ h: "Node.js 中创建子进程有哪几种方式", p: "Node.js 提供了三种主要方式来创建子进程：child_process.spawn()、child_process.exec() 和 child_process.fork()。其中 spawn 适用于流式输出场景，exec 适合执行简单命令并获取完整输出，fork 则专用于创建 Node.js 子进程并支持进程间通信。" },
+			{ h: "child_process.spawn() 和 child_process.ex", p: "spawn() 通过流的方式实时输出数据，适合处理大量输出的场景，不会缓冲整个结果；而 exec() 会将子进程的输出全部缓冲在内存中，待命令执行完成后才返回，因此适合执行时间短、输出量小的命令，但不适合大数据量操作。" },
+			{ h: "什么时候应该使用 child_process.fork()", p: "当需要启动一个 Node.js 脚本作为子进程，并与之进行消息通信时，应使用 fork()。它会自动建立一个 IPC 通道，允许父子进程通过 send() 方法和 message 事件传递数据，非常适合需要多进程协作的应用场景。" },
+		],
+		extend: ["子进程如何与父进程通信？", "子进程有哪些典型应用场景？", "使用 exec() 处理大文件输出可能会导致什么问题？", "能否在子进程中运行非 Node.js 命令？"]
+	},
+	{
+		id: "node-028",
+		cat: "node",
+		level: 1,
+		hot: 64,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 中的 REPL？",
+		short: "Node.js 中的 REPL 是一个非常有用的工具，尤其是在开发和调试时。",
+		points: [
+			"Node.js 中的 REPL（Read-Eval-Print Loop）是一个交互式编程环境，可以实时输入和执行 JavaScript 代码。",
+			"Node.js 中的 REPL 是一个非常有用的工具，尤其是在开发和调试时。",
+			"你可以通过在命令行…",
+		],
+		detail: [
+			{ h: "如何启动 Node.js 的 REPL 环境", p: "在命令行中输入 node 命令后按回车即可启动 Node.js 的 REPL 环境。启动后会出现一个提示符 >, 用户可以在此输入 JavaScript 代码进行即时执行。" },
+			{ h: "REPL 有哪些常用的内置命令", p: "REPL 提供了一些实用的内置命令，例如 .help 显示帮助信息，.exit 退出当前会话，.save <filename> 将当前会话保存到指定文件，.load <filename> 从文件加载代码到当前会话。" },
+			{ h: "REPL 如何处理多行代码输入", p: "当输入不完整的代码（如函数定义缺少闭合括号）时，REPL 会自动进入多行模式并继续等待输入，直到代码完整为止。例如定义函数时输入 { 后未闭合，REPL 会显示 ... 提示符等待后续代码。" },
+			{ h: "REPL 是否支持代码补全功能", p: "是的，Node.js 的 REPL 支持 Tab 键自动补全功能。当输入变量名、对象属性或方法前缀时，按下 Tab 键会列出所有可能的匹配项，提升输入效率和准确性。" },
+		],
+		extend: ["在 REPL 中运行错误代码会发生什么？", "REPL 在开发过程中有什么实际用途？", "如何在 REPL 中定义和使用变量？", "能否将 REPL 中的代码保存下来？"]
+	},
+	{
+		id: "node-029",
+		cat: "node",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · Node.js",
+		title: "怎么调试 Node.js 程序？",
+		short: "在代码中插入 console.log() 语句，输出变量值或程序执行流程，帮助了解运行状态。",
+		points: [
+			"使用 console.log()：在代码中添加 console.log() 语句，输出变量值、函数执行情况等，以便了解程序运行状态。",
+			"使用内置调试器：Node.js 提供了一个内置的命令行调试器。",
+			"node inspect app.js…",
+		],
+		detail: [
+			{ h: "整体回答", p: "在代码中插入 console.log() 语句，输出变量值或程序执行流程，帮助了解运行状态。虽然简单，但适合快速排查基础问题。" },
+			{ h: "Node.js 内置调试器怎么使用", p: "通过命令 node inspect app.js 启动调试模式，或使用 node --inspect-brk app.js 在第一行暂停。在代码中添加 debugger; 语句可设置断点，调试器会在此处暂停执行。" },
+			{ h: "如何用 Chrome DevTools 调试 Node.js 应用", p: "使用 node --inspect 或 --inspect-brk 启动应用，然后在 Chrome 浏览器中访问 chrome://inspect，找到目标应用并点击 'inspect'，即可使用 DevTools 进行断点调试、变量查看等操作。" },
+			{ h: "如何在 Visual Studio Code 中调试 Node.js 程序", p: "在项目根目录下创建 .vscode/launch.json 文件，配置 type 为 node，指定启动文件如 app.js。然后按 F5 或点击 'Run and Debug' 按钮启动调试，支持断点、变量监视和控制台交互。" },
+		],
+		extend: ["除了 console.log 和内置调试器，还有哪些常用的 Node.js 调试工具？", "--inspect 和 --inspect-brk 有什么区别？", "如何在 VSCode 的 launch.json 中配置调试参数？", "为什么推荐使用 VSCode 而不是 console.log 进行调试？"],
+		code: "node inspect app.js"
+	},
+	{
+		id: "node-030",
+		cat: "node",
+		level: 1,
+		hot: 63,
+		source: "面试鸭 · Node.js",
+		title: "在 Node.js 中，如何获取命令行参数？",
+		short: "简单来说，process.argv 的第一个元素是 Node.js 的可执行文件路径，第二个元素是被执行的 JavaScript 文件路径，…",
+		points: [
+			"简单来说，process.argv 的第一个元素是 Node.js 的可执行文件路径，第二个元素是被执行的 JavaScript 文件路径，…",
+			"在 Node.js 中，可以通过 process.argv 获取命令行参数。",
+			"// script.js…",
+		],
+		detail: [
+			{ h: "process.argv 数组的前两个元素分别代表什么", p: "process.argv[0] 是 Node.js 可执行文件的路径，process.argv[1] 是当前运行的 JavaScript 文件的路径。真正的命令行参数从 process.argv[2] 开始。" },
+			{ h: "如何只获取用户传递的命令行参数", p: "可以通过 process.argv.slice(2) 来截取从第三个元素开始的所有参数，从而忽略 Node.js 执行路径和脚本路径，只保留用户传入的参数。" },
+			{ h: "如何解析键值对形式的命令行参数（如 --name=John）", p: "可以使用第三方库如 minimist 或 yargs 来解析键值对参数。例如使用 minimist(process.argv.slice(2)) 可将 --name=John 解析为 { name: 'John' } 的对象形式。" },
+			{ h: "有哪些常用的命令行参数解析库", p: "常用的命令行参数解析库包括 minimist 和 yargs。yargs 功能更强大，支持命令注册、选项校验、帮助信息生成等；而 minimist 更轻量，适合简单场景。" },
+		],
+		extend: ["如何通过环境变量向 Node.js 程序传递配置？", "为什么推荐使用 minimist 或 yargs 而不是手动解析 process.argv？", "运行 node app.js a b c 时，process.argv[2] 的值是什么？", "如何同时处理位置参数和选项参数？"]
+	},
+	{
+		id: "node-031",
+		cat: "node",
+		level: 1,
+		hot: 63,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中发送电子邮件？",
+		short: "要在 Node.js 中发送电子邮件，可以使用一个流行的 npm 包叫做 nodemailer。",
+		points: [
+			"要在 Node.js 中发送电子邮件，可以使用一个流行的 npm 包叫做 nodemailer。",
+			"npm install nodemailer…",
+			"const nodemailer = require('nodemailer');…",
+		],
+		detail: [
+			{ h: "为什么不应该在代码中直接写邮箱密码", p: "在代码中硬编码邮箱密码会带来严重的安全风险，尤其是当代码被提交到版本控制系统（如 Git）时，可能导致敏感信息泄露。正确的做法是使用环境变量存储密码，并通过 process.env.EMAIL_PASS 等方式读取，结合 .env 文件和 dotenv 模块来管理敏感配置。" },
+			{ h: "如何使用环境变量来提高邮件发送的安全性", p: "可以通过 dotenv 模块加载 .env 文件中的环境变量，在代码中使用 process.env.EMAIL_USER 和 process.env.EMAIL_PASS 来代替明文的邮箱和密码。这样可以避免将敏感信息暴露在源码中，提升应用的安全性。" },
+			{ h: "除了 Gmail，nodemailer 还支持哪些邮件服务", p: "nodemailer 支持多种邮件服务，包括 Outlook、Yahoo、iCloud 等，也支持任意标准 SMTP 服务器。你只需根据对应服务的 SMTP 配置调整 createTransport 中的设置即可，例如更改主机地址、端口和认证信息。" },
+			{ h: "如何发送带有 HTML 内容或附件的邮件", p: "可以在 mailOptions 中使用 html 字段来发送 HTML 格式的邮件内容，并通过 attachments 数组添加附件。每个附件可以是一个文件路径、字符串内容或 Buffer，支持指定文件名和内容。" },
+		],
+		extend: ["如何调试 nodemailer 的邮件发送过程？", "什么是 SMTP，它在邮件发送中起什么作用？", "如何处理邮件发送失败的情况？", "能否使用 OAuth2 认证方式发送邮件？"],
+		code: "npm install nodemailer"
+	},
+	{
+		id: "node-032",
+		cat: "node",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Stream 流？举例说明如何在 Node.js 中使用流处理数据？",
+		short: "Stream 流是 Node.js 中处理数据的一种高效方式，允许以小块数据的形式连续地读写数据，而不是一次性将所有数据加载到内存中。",
+		points: [
+			"Stream 流是 Node.js 中处理数据的一种高效方式。",
+			"Stream 流是 Node.js 中处理数据的一种高效方式，允许以小块数据的形式连续地读写数据，而不是一次性将所有数据加载到内存中。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Stream 流是 Node.js 中处理数据的一种高效方式，允许以小块数据的形式连续地读写数据，而不是一次性将所有数据加载到内存中。它特别适用于处理大文件或网络数据传输。Node.js 中的流主要分为四种类型：Readable（可读流）、Writable（可写流）、Duplex（双工流）和 Transform（转换流）。" },
+			{ h: "Node.js 中有哪些类型的流", p: "Node.js 中有四种基本类型的流：Readable（可读流），用于读取数据；Writable（可写流），用于写入数据；Duplex（双工流），既可读又可写；Transform（转换流），是一种特殊的 Duplex 流，可以在数据通过时修改或变换数据。" },
+			{ h: "如何使用 pipe 方法在流之间传输数据", p: "可以使用 pipe() 方法将一个可读流的数据自动写入到一个可写流中。例如：readableStream.pipe(writableStream) 会将 readableStream 中的数据分块读取并写入 writableStream，该方法简化了数据流动的管理，并能自动处理背压问题。" },
+			{ h: "为什么使用流处理大文件比直接读取更高效", p: "因为流以小块形式处理数据，不需要一次性将整个文件加载到内存中，从而减少了内存占用和程序的资源消耗。这对于处理大文件或高并发场景非常关键，能够提升性能并避免内存溢出。" },
+		],
+		extend: ["如何监听流中的数据、结束和错误事件？", "什么是 Transform 流？举个实际例子。", "如何将多个流串联起来使用？", "什么是背压（Backpressure）？流如何处理它？"]
+	},
+	{
+		id: "node-033",
+		cat: "node",
+		level: 1,
+		hot: 63,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中 require 方法是同步还是异步操作？为什么？",
+		short: "要更好理解 require 同步与异步特性的区别，可以从以下几个方面展开讨论：",
+		points: [
+			"Node.js 中的 require 方法是同步操作。",
+			"require 方法会缓存已经加载的模块，如果再次调用 require 同一个模块，Node…",
+		],
+		detail: [
+			{ h: "回答重点", p: "Node.js 中的 require 方法是同步操作。这是因为 require 方法在加载和解析模块时，会阻塞后续代码的执行，直到所需模块完全加载完毕。所以可以直接使用 require 返回的值，而不用等待异步回调。" },
+			{ h: "扩展知识", p: "要更好理解 require 同步与异步特性的区别，可以从以下几个方面展开讨论： 模块缓存： require 方法会缓存已经加载的模块，如果再次调用 require 同一个模块，Node…" },
+		],
+		extend: []
+	},
+	{
+		id: "node-034",
+		cat: "node",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · Node.js",
+		title: "什么是 CommonJS 模块规范？Node.js 如何实现它？",
+		short: "CommonJS 是一种 JavaScript 模块规范，主要用于服务器端的模块管理。",
+		points: [
+			"每个文件都是一个独立的模块，拥有自己的作用域。",
+			"CommonJS 模块规范是JavaScript模块管理的一种标准，主要用于服务器端的模块管理。",
+			"使用 require() 函数来引入模块，可以…",
+		],
+		detail: [
+			{ h: "整体回答", p: "CommonJS 是一种 JavaScript 模块规范，主要用于服务器端的模块管理。它通过 require 函数引入模块，通过 module.exports 或 exports 导出模块内容，实现了代码的模块化，便于复用和维护。Node.js 采用了 CommonJS 规范作为其模块系统的基础。" },
+			{ h: "Node.js 如何实现 CommonJS 模块规范", p: "Node.js 通过将每个文件视为独立模块、提供 require() 函数加载模块、使用 module.exports 和 exports 实现模块导出，并对已加载模块进行缓存来实现 CommonJS 规范。这保证了模块作用域隔离、可复用性和加载性能。" },
+			{ h: "require 的工作流程是怎样的", p: "当调用 require('module') 时，Node.js 会先解析模块路径，依次查找文件模块、核心模块或 node_modules 中的包，加载并执行模块代码，返回 module.exports 对象。之后该模块会被缓存，后续 require 直接返回缓存结果。" },
+			{ h: "exports 和 module.exports 有什么区别", p: "exports 是 module.exports 的引用。在模块初始化时，exports 指向 module.exports。如果只是添加属性，两者等效；但若要导出一个函数或类，则必须使用 module.exports 赋值，因为 exports 重新赋值会断开引用，无法改变导出对象。" },
+		],
+		extend: ["为什么 Node.js 使用 CommonJS 而不是 ESM？", "CommonJS 模块是否会被重复加载？", "如何实现模块的热更新？", "CommonJS 和 ES6 模块（ESM）的主要区别是什么？"]
+	},
+	{
+		id: "node-035",
+		cat: "node",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中创建 TCP 服务器？",
+		short: "在 Node.js 中创建 TCP 服务器需要使用内置的 net 模块。",
+		points: [
+			"首先引入 net 模块。",
+			"使用 net.createServer 方法创建一个 TCP 服务器实例，并定义客户端连接时的处理逻辑。",
+			"配置服务器监听某个端口和IP地址。",
+		],
+		detail: [
+			{ h: "整体回答", p: "在 Node.js 中创建 TCP 服务器需要使用内置的 net 模块。首先通过 require('net') 引入模块，然后调用 net.createServer() 方法创建服务器实例，并传入一个处理客户端连接的回调函数。最后调用 server.listen(port, [host]) 让服务器监听指定端口和 IP 地址。" },
+			{ h: "net.createServer 的回调函数何时执行", p: "net.createServer 的回调函数会在每次有新的客户端连接到服务器时执行，参数是代表该连接的 socket 对象，可用于收发数据和监听连接事件。" },
+			{ h: "如何处理客户端发送的数据", p: "通过监听 socket 对象的 'data' 事件来处理客户端发送的数据。例如：socket.on('data', (data) => { console.log(data.toString()); });，其中 data 是 Buffer 类型，可通过 toString() 转换为字符串。" },
+			{ h: "如何向客户端发送数据", p: "使用 socket.write(data) 方法可以向客户端发送数据。例如：socket.write('Hello Client');，该方法发送的数据可以是字符串或 Buffer。" },
+		],
+		extend: ["如何处理客户端断开连接？", "如何为 TCP 服务器添加错误处理？", "Node.js 的 TCP 服务器是否支持多客户端并发连接？", "TCP 通信中可能出现什么数据问题？如何解决？"]
+	},
+	{
+		id: "node-036",
+		cat: "node",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 中的 global 对象？它包含哪些常用属性？",
+		short: "Node.js 中的 global 对象是一个全局命名空间对象，类似于浏览器环境中的 window 对象。",
+		points: [
+			"process：提供与当前 Node.js 进程相关的信息和控制。",
+			"在 Node.js 中，global 对象是一个全局范围的对象，它类似于浏览器中的 window 对象。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Node.js 中的 global 对象是一个全局命名空间对象，类似于浏览器环境中的 window 对象。所有在全局作用域中定义的变量和函数（除了 global 本身）都会成为 global 对象的属性，可以在任何模块中直接访问，无需通过 require 引入。" },
+			{ h: "global 对象有哪些常用属性", p: "常用的 global 对象属性包括：process（进程信息）、console（控制台输出）、Buffer（二进制数据处理）、setTimeout/clearTimeout、setInterval/clearInterval（定时器控制）、__dirname（当前目录路径）、__filename（当前文件路径）、module（当前模块信息）和 require()（模块引入函数）。" },
+			{ h: "如何使用 process 对象获取环境变量和命令行参数", p: "可以通过 process.env 访问环境变量，例如 process.env.NODE_ENV；通过 process.argv 获取命令行参数，它返回一个包含启动节点命令的所有参数的数组，通常前两个是 node 和脚本路径，后续为自定义参数。" },
+			{ h: "console 对象有哪些常用方法", p: "console 对象提供了多种日志输出方法，包括 console.log()（普通输出）、console.error()（错误信息）、console.warn()（警告信息）、console.info()（提示信息）和 console.debug()（调试信息），有助于区分不同类型的日志输出。" },
+		],
+		extend: ["Buffer 在 Node.js 中的作用是什么？", "setTimeout 和 setInterval 的区别是什么？", "__dirname 和 __filename 分别表示什么？", "module 和 require 的关系是什么？"]
+	},
+	{
+		id: "node-037",
+		cat: "node",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · Node.js",
+		title: "在 Node.js 中，如何使用 JWT 进行用户认证？",
+		short: "基本流程包括三个步骤：1）生成令牌——用户登录或注册时，服务器使用 jwt.sign() 方法生成 JWT 并返回给客户端；2）验证令牌——客户端在后续请求中携带该 JWT，…",
+		points: [
+			"在 Node.js 中使用 JWT（JSON Web Token）进行用户认证大致可以分为三个步骤：生成令牌、验证令牌和中间件处理。",
+			"生成令牌：当用户登录或注册时，生成一个 JWT 作为身份令牌并返回给客户端。",
+			"验证令牌：客户端在每次请求时提供这个 JWT，服务器需要验证令牌的有效性。",
+			"中间件处理：在 Node.js 应用中编写中间件来解析和验证传入的 JWT，并将用户信息附加到请求对象上，以便后续的处理。",
+		],
+		detail: [
+			{ h: "整体回答", p: "基本流程包括三个步骤：1）生成令牌——用户登录或注册时，服务器使用 jwt.sign() 方法生成 JWT 并返回给客户端；2）验证令牌——客户端在后续请求中携带该 JWT，服务器通过 jwt.verify() 验证其有效性；3）中间件处理——编写中间件解析 Token，并将用户信息挂载到请求对象 req 上，供后续路由使用。" },
+			{ h: "如何在 Express 中实现 JWT 认证中间件", p: "可以定义一个 authenticateJWT 中间件函数，从请求头 Authorization 字段中提取 Token（通常是 'Bearer <token>' 格式），然后使用 jsonwebtoken 的 verify 方法验证 Token。若验证成功，则将解码后的用户信息赋值给 req.user 并调用 next()；否则返回 401 或 403 状态码。" },
+			{ h: "JWT 应该如何在客户端存储？有什么安全建议", p: "JWT 通常存储在前端的 localStorage 或 cookies 中。localStorage 使用简单但易受 XSS 攻击；为提高安全性，推荐使用带有 httpOnly 和 secure 标志的 cookies 存储 Token，防止 JavaScript 访问，减少 XSS 风险，同时确保只在 HTTPS 下传输。" },
+			{ h: "为什么不能将敏感信息放入 JWT payload", p: "因为 JWT 的 payload 是 Base64 编码而非加密，任何人都可以通过解码查看内容。虽然签名能保证完整性，但无法保密。因此不应在 JWT 中存放密码、身份证号等敏感信息，以防信息泄露。" },
+		],
+		extend: ["如何提高 JWT 的安全性？", "JWT 过期后如何实现自动续约？", "Node.js 中常用的 JWT 库有哪些？推荐使用哪个？", "如何处理跨域请求中的 JWT 认证？"]
+	},
+	{
+		id: "node-038",
+		cat: "node",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 中的 process？它有哪些方法和应用场景？",
+		short: "process 是 Node.js 中的一个全局变量，它是一个 EventEmitter 实例，提供了与当前运行进程相关的信息和控制能力。",
+		points: [
+			"process.argv：返回一个数组，其中包含命令行参数。第一个元素是 Node.js 可执行文件的路径，第二个元素是正在执行的 …",
+			"在 Node.js 中，process 是一个全局变量，它提供了与当前 Node.js 进程相关的信息和控制。",
+			"process.argv：返回一个数组，其中包含命令行参数。",
+		],
+		detail: [
+			{ h: "整体回答", p: "process 是 Node.js 中的一个全局变量，它是一个 EventEmitter 实例，提供了与当前运行进程相关的信息和控制能力。可以在任何模块中直接访问，无需 require 引入。" },
+			{ h: "如何使用 process.argv 获取命令行参数", p: "process.argv 是一个数组，前两个元素分别是 node 可执行文件路径和脚本文件路径，后续元素为传入的命令行参数。例如执行 node app.js foo bar，则 process.argv[2] 为 'foo'，process.argv[3] 为 'bar'。" },
+			{ h: "如何通过 process.env 读取环境变量", p: "process.env 是一个包含所有环境变量的对象。可以通过属性方式读取，如 process.env.NODE_ENV 获取当前运行环境，常用于区分开发、测试、生产环境配置。" },
+			{ h: "如何监听进程退出事件并进行资源清理", p: "可以使用 process.on('exit') 注册退出监听器，在其中执行同步的清理操作，如关闭连接、写日志等。注意该回调不支持异步操作。" },
+		],
+		extend: ["process.nextTick 的作用是什么？", "如何获取当前 Node.js 进程的 PID？", "如何更改 Node.js 进程的工作目录？", "如何安全地终止 Node.js 进程？"]
+	},
+	{
+		id: "node-039",
+		cat: "node",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中对 base64 进行编解码？",
+		short: "可以使用 Buffer.from(str).toString('base64') 方法对字符串进行 base64 编码。",
+		points: [
+			"console.log(encoded); // 输出：SGVsbG8sIFdvcmxkIQ==…",
+			"在 Node.js 中，对 base64 编解码非常简单。",
+			"const str = 'Hello, World!…",
+		],
+		detail: [
+			{ h: "整体回答", p: "可以使用 Buffer.from(str).toString('base64') 方法对字符串进行 base64 编码。例如：const encoded = Buffer.from('Hello, World!').toString('base64'); 输出为 SGVsbG8sIFdvcmxkIQ==。" },
+			{ h: "如何在 Node.js 中对 base64 字符串进行解码", p: "可以使用 Buffer.from(encodedStr, 'base64').toString('utf-8') 方法将 base64 字符串解码为原始字符串。例如：const decoded = Buffer.from('SGVsbG8sIFdvcmxkIQ==', 'base64').toString('utf-8'); 输出为 Hello, World!。" },
+			{ h: "Buffer 对象在 Node.js 中的作用是什么", p: "Buffer 是 Node.js 中用于处理二进制数据的类，常用于文件操作、网络通信等场景。它可以在不依赖字符串编码的情况下直接操作原始字节数据。" },
+			{ h: "除了 base64，Buffer 还支持哪些常见的编码格式", p: "Buffer 支持多种编码格式，包括 hex、utf-8、ascii、latin1 等。例如，使用 toString('hex') 可以将数据转换为十六进制字符串，使用 toString('ascii') 则可转为 ASCII 编码字符串。" },
+		],
+		extend: ["如何使用 Buffer 实现 hex 编码和解码？", "为什么在处理大文件时推荐使用流（stream）而不是一次性读取全部数据？", "在使用 Buffer.from() 时，如果不指定编码，默认使用什么编码方式？", "Base64 编码后的字符串末尾可能出现 '=' 符号，这是为什么？"],
+		code: "const str = 'Hello, World!';\nconst encoded = Buffer.from(str).toString('base64');\nconsole.log(encoded);  // 输出：SGVsbG8sIFdvcmxkIQ=="
+	},
+	{
+		id: "node-040",
+		cat: "node",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的 util 模块提供了哪些常用功能？",
+		short: "Node.js 的 util 模块提供了多种实用工具函数，主要包括：格式化字符串（util.format）、继承实现（util.inherits）、调试日志（util.debu…",
+		points: [
+			"格式化字符串：util.format()",
+			"继承：util.inherits()",
+			"调试：util.debuglog()",
+			"错误处理：util.callbackify()",
+		],
+		detail: [
+			{ h: "整体回答", p: "Node.js 的 util 模块提供了多种实用工具函数，主要包括：格式化字符串（util.format）、继承实现（util.inherits）、调试日志（util.debuglog）、将 Promise 函数转为回调函数（util.callbackify），以及类型判断和函数转换如 util.types 和 util.promisify。" },
+			{ h: "如何使用 util.format() 格式化字符串", p: "util.format() 接受类似于 printf 风格的格式化参数，例如：util.format('My name is %s and I am %d years old.', 'John', 30)，返回格式化后的字符串 'My name is John and I am 30 years old.'。" },
+			{ h: "util.inherits() 的作用是什么？有什么注意事项", p: "util.inherits() 用于实现原型链继承，使子构造函数继承父构造函数的原型方法。但它是旧式继承方式，现代代码推荐使用 ES6 的 class 语法，该方法主要用于兼容遗留代码。" },
+			{ h: "如何使用 util.debuglog() 进行调试", p: "util.debuglog(tag) 根据指定标签创建一个调试函数，只有当环境变量 NODE_DEBUG 包含该标签时才会输出调试信息。例如：const debuglog = util.debuglog('foo'); debuglog('Hello from foo'); 只有在 NODE_DEBUG=foo 时才会打印。" },
+		],
+		extend: ["util.callbackify() 的用途是什么？", "什么是 util.promisify()？它解决了什么问题？", "util.types 有什么作用？", "为什么现在不推荐使用 util.inherits()？"]
+	},
+	{
+		id: "node-041",
+		cat: "node",
+		level: 1,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "在 Node.js 中，如何检查一个路径是文件还是目录？",
+		short: "可以使用 fs.stat 或 fs.promises.stat 方法获取路径的 stats 对象，然后调用 stats.isFile() 判断是否为文件，或 …",
+		points: [
+			"在 Node.js 中，可以使用 fs 模块中的 fs.stat 或 fs.promises.stat 方法来检查一个路径是文件还是目录。",
+			"const fs = require('fs');…",
+			"const path = '你要检查的路径';…",
+		],
+		detail: [
+			{ h: "整体回答", p: "可以使用 fs.stat 或 fs.promises.stat 方法获取路径的 stats 对象，然后调用 stats.isFile() 判断是否为文件，或 stats.isDirectory() 判断是否为目录。" },
+			{ h: "fs.stat 和 fs.promises.stat 的区别是什么", p: "fs.stat 使用回调函数处理异步操作，而 fs.promises.stat 返回 Promise，更适合使用 async/await 语法，使代码更简洁易读。" },
+			{ h: "能否使用同步方法检查文件或目录类型", p: "可以，使用 fs.statSync 方法可以同步获取 stats 对象，但会阻塞事件循环，建议仅在启动脚本或命令行工具等非高并发场景中使用。" },
+			{ h: "fs.Stats 对象包含哪些常用方法来判断文件类型", p: "fs.Stats 提供了多个方法，如 isFile() 判断是否为文件，isDirectory() 判断是否为目录，还有 isSymbolicLink()、isBlockDevice() 等用于更细粒度的类型判断。" },
+		],
+		extend: ["当路径不存在或没有访问权限时应该如何处理？", "为什么在使用路径前需要进行规范化处理？", "如何用 async/await 语法结合 fs.promises.stat 检查路径类型？", "除了 isFile 和 isDirectory，还有哪些常见的文件类型判断方法？"]
+	},
+	{
+		id: "node-042",
+		cat: "node",
+		level: 1,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 有哪些全局对象？它们分别有什么作用？",
+		short: "global 是 Node.js 的全局命名空间对象，类似于浏览器中的 window 对象。",
+		points: [
+			"global：它是 Node.js 的全局命名空间，类似于浏览器环境中的 window 对象。在 global …",
+			"process：它是一个全局对象，提供了关于当前 Node.js 进程的信息和对其进行控制的方法。process…",
+			"Node.js 中有一些全局对象，它们可以在任何模块中直接访问，无需进行导入。",
+		],
+		detail: [
+			{ h: "整体回答", p: "global 是 Node.js 的全局命名空间对象，类似于浏览器中的 window 对象。在 global 上定义的属性和方法可以在任何模块中访问。但应避免随意添加属性，以防止全局命名空间污染。" },
+			{ h: "process 全局对象的作用是什么", p: "process 对象提供当前 Node.js 进程的相关信息和控制能力，包括环境变量（process.env）、命令行参数（process.argv）、内存使用、当前工作目录（process.cwd()）以及进程退出（process.exit()）等。" },
+			{ h: "console 全局对象有哪些常用方法", p: "console 用于输出调试信息，常用方法包括 console.log() 输出普通信息，console.error() 输出错误信息，console.warn() 输出警告信息，以及 console.time()/console.timeEnd() 用于计时。" },
+			{ h: "setTimeout 和 clearTimeout 的用途分别是什么", p: "setTimeout 用于在指定毫秒后执行一次回调函数，而 clearTimeout 用于取消一个尚未执行的由 setTimeout 设置的定时器。" },
+		],
+		extend: ["setInterval 和 clearInterval 的作用是什么？", "setImmediate 和 clearImmediate 的功能是什么？", "Buffer 在 Node.js 中的作用是什么？", "require 和 module 分别是什么？"]
+	},
+	{
+		id: "node-043",
+		cat: "node",
+		level: 1,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中创建和解析 URL？",
+		short: "在 Node.js 中可以通过 new URL(input) 构造函数来创建 URL 对象，其中 input 是一个有效的 URL 字符串。",
+		points: [
+			"要创建一个 URL 对象，可以使用 new URL() 构造函数。",
+			"要解析一个 URL 字符串，可以使用 url.parse() 方法。",
+			"推荐使用 URL 对象而不是 url.parse()，因为后者已经被弃用。",
+		],
+		detail: [
+			{ h: "整体回答", p: "在 Node.js 中可以通过 new URL(input) 构造函数来创建 URL 对象，其中 input 是一个有效的 URL 字符串。例如：const myURL = new URL('https://www.example.com/path?query=value');…" },
+			{ h: "在 Node.js 中解析 URL 推荐使用什么方法", p: "推荐使用 new URL() 构造函数来解析 URL，因为它基于 WHATWG 标准，功能更强大且符合现代 Web API 规范。不推荐使用已弃用的 url.parse() 方法。" },
+			{ h: "为什么 url.parse() 被弃用了", p: "url.parse() 基于旧的 RFC 标准，行为不够一致，尤其在处理特殊字符和国际化域名时存在缺陷。新的 URL 构造函数遵循 WHATWG URL 标准，提供更准确、一致的解析行为，因此官方推荐使用新 API。" },
+			{ h: "如何使用 URL 对象修改 URL 的路径或查询参数", p: "可以通过设置 URL 对象的属性来修改 URL，例如：myURL.pathname = '/new/path' 修改路径，使用 myURL.searchParams.append('key', 'value') 添加查询参数。" },
+		],
+		extend: ["什么是 URLSearchParams？它的作用是什么？", "如何从 URL 对象中获取查询字符串？", "URL 对象有哪些常用属性？", "如何动态构建一个复杂的 URL？"]
+	},
+	{
+		id: "node-044",
+		cat: "node",
+		level: 2,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "如何在 Node.js 中使用 WebSocket 实现实时通信？",
+		short: "可以使用 npm 安装 ws 模块：npm install ws。",
+		points: [
+			"在 Node.js 中使用 WebSocket 实现实时通信，通常会采用 ws 这个Node.js模块。",
+			"npm install ws…",
+			"const WebSocket = require('ws');…",
+		],
+		detail: [
+			{ h: "整体回答", p: "可以使用 npm 安装 ws 模块：npm install ws。然后通过 require('ws') 引入并创建 WebSocket 服务器。" },
+			{ h: "如何创建一个基本的 WebSocket 服务器", p: "使用 const wss = new WebSocket.Server({ port: 8080 }) 创建服务器，并监听 'connection' 事件处理客户端连接。" },
+			{ h: "WebSocket 服务器如何接收和响应消息", p: "在 connection 事件的回调中，通过 ws.on('message', (message) => {}) 监听消息，并使用 ws.send(data) 向客户端发送响应。" },
+			{ h: "客户端如何连接到 Node.js 的 WebSocket 服务器", p: "在浏览器中使用 const ws = new WebSocket('ws://localhost:8080') 即可建立连接，并通过 onopen、onmessage 等事件处理通信。" },
+		],
+		extend: ["WebSocket 协议的特点是什么？", "如何实现 WebSocket 消息广播？", "如何处理多个客户端的连接和断开？", "生产环境中如何保障 WebSocket 通信的安全性？"],
+		code: "npm install ws"
+	},
+	{
+		id: "node-045",
+		cat: "node",
+		level: 1,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 中的标准输入、输出和错误流？如何使用它们？",
+		short: "process.stdin 是 Node.js 中的标准输入流，是一个可读流，用于从控制台读取用户输入。",
+		points: [
+			"在 Node.js 中，标准输入、输出和错误流分别对应三个主要的流对象：process.stdin、process.stdout和process.s…",
+			"process.stdin：标准输入流，通常用于从控制台读取输入。",
+			"process.stdout：标准输出流，通常用于向控制台输出信息。",
+			"process.stderr：标准错误流，通常用于向控制台输出错误信息。",
+		],
+		detail: [
+			{ h: "整体回答", p: "process.stdin 是 Node.js 中的标准输入流，是一个可读流，用于从控制台读取用户输入。通常通过监听 'data' 事件来获取输入数据。" },
+			{ h: "如何使用 process.stdout 输出信息", p: "process.stdout 是标准输出流，是一个可写流。可以使用 process.stdout.write() 方法将字符串写入控制台输出，例如：process.stdout.write('Hello ');…" },
+			{ h: "process.stderr 的作用是什么", p: "process.stderr 是标准错误流，也是一个可写流，专门用于输出错误信息。它与 process.stdout 分离，便于区分正常输出和错误输出，常用于调试或错误报告。" },
+			{ h: "为什么需要区分 process.stdout 和 process.stderr", p: "区分 stdout 和 stderr 可以让程序在运行时将正常输出和错误信息分别导向不同的通道，有利于日志记录、错误排查以及在 Shell 环境中进行重定向操作。" },
+		],
+		extend: ["如何监听用户输入并处理？", "如何优雅地处理命令行输入？", "process.exitCode 的作用是什么？", "标准流在不同操作系统上是否一致？"]
+	},
+	{
+		id: "node-046",
+		cat: "node",
+		level: 2,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "在 Node.js 中，如何避免回调地狱？",
+		short: "回调地狱（Callback Hell）是指由于多层嵌套回调函数导致代码难以阅读和维护的现象。",
+		points: [
+			"使用 Promises。",
+			"使用 async/await 语法。",
+			"采用 模块化 编码方式。",
+			"运用 控制流库（如 async.js）。",
+		],
+		detail: [
+			{ h: "整体回答", p: "回调地狱（Callback Hell）是指由于多层嵌套回调函数导致代码难以阅读和维护的现象。通常出现在处理多个异步操作时，代码层层缩进，逻辑混乱，出错后也难以调试。" },
+			{ h: "如何使用 Promise 避免回调地狱", p: "Promise 通过链式调用 then 和 catch 方法，将嵌套的回调结构转换为线性结构，从而避免深层嵌套。每个 then 可以处理上一步的异步结果，使代码更清晰易读。" },
+			{ h: "async/await 是如何解决回调地狱的", p: "async/await 是基于 Promise 的语法糖，可以让异步代码像同步代码一样书写。使用 await 可以暂停函数执行直到 Promise 返回结果，配合 try-catch 能更优雅地处理错误，极大提升可读性和可维护性。" },
+			{ h: "模块化编码如何帮助避免回调地狱", p: "通过将复杂的回调逻辑拆分成多个独立的小函数或模块，每个函数只负责单一任务，可以减少嵌套层次，提高代码复用性和可测试性，从而缓解回调地狱问题。" },
+		],
+		extend: ["有哪些常用的控制流库可用于管理异步流程？", "Promise 和 async/await 之间有什么关系？", "使用 async/await 时如何捕获错误？", "为什么说 async/await 比 Promise 更易读？"]
+	},
+	{
+		id: "node-047",
+		cat: "node",
+		level: 2,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Node.js 的中间件？有哪些常用的中间件？",
+		short: "Node.js 的中间件是指在请求（Request）和响应（Response）之间执行的函数。",
+		points: [
+			"express.json() 和 express.urlencoded()：用于解析请求体的数据。",
+			"cors：用于处理跨源资源共享（CORS）问题。",
+			"Node.js 的中间件（Middleware）指的是介于请求（Request）和响应（Response）之间的一系列函数。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Node.js 的中间件是指在请求（Request）和响应（Response）之间执行的函数。这些函数可以访问请求对象、响应对象以及下一个中间件函数（通过 next() 调用）。中间件可以用于处理请求数据、修改响应、结束请求-响应周期，或调用堆栈中的下一个中间件。使用中间件有助于提升代码的模块化、可维护性和可扩展性。" },
+			{ h: "中间件的执行顺序重要吗？为什么", p: "是的，中间件的执行顺序非常重要。中间件是按照它们被定义的顺序依次执行的。如果某个中间件没有调用 next() 函数，那么后续的中间件将不会被执行。因此，中间件的顺序会影响程序逻辑，例如日志记录、身份验证、请求体解析等功能必须按合理顺序注册，以确保正确运行。" },
+			{ h: "如何创建一个自定义中间件", p: "可以通过定义一个接收 req、res 和 next 三个参数的函数来创建自定义中间件。例如： const myMiddleware = (req, res, next) => { console.log('请求开始时间：', Date.now()); req.requestTime = Date.now(); next(); }; app.use(myMiddleware); 这个中间件会在每个请求时记录时间，并将时间附加到请求对象上供后续处理使用。" },
+			{ h: "有哪些常见的 Express 中间件及其作用", p: "常见的 Express 中间件包括： 1）express.json() 和 express.urlencoded()：解析 JSON 或 URL 编码格式的请求体数据； 2）cors：启用跨域资源共享，允许不同源的请求； 3）morgan：记录 HTTP 请求日志，便于调试和监控； 4）helmet：增强安全性，设置安全相关的 HTTP 头； 5）cookie-parser：解析客户端发送的 Cookie 数据； 6）express-session：管理用户会话信息，常用于登录状态保持。" },
+		],
+		extend: ["body-parser 中间件的作用是什么？现在还需要单独安装吗？", "错误处理中间件有什么特点？", "全局中间件和路由中间件的区别是什么？", "如何使用 cors 中间件解决跨域问题？"]
+	},
+	{
+		id: "node-048",
+		cat: "node",
+		level: 2,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "什么是 Socket.io？如何在 Node.js 中使用它实现实时通信？",
+		short: "Socket.io 是一个为实现实时、双向通信而设计的 JavaScript 库，支持客户端与服务器之间的低延迟数据传输。",
+		points: [
+			"Socket.io 是一个为实时双向通信提供解决方案的 JavaScript 库。",
+			"要在 Node.js 中使用 Socket.io，你需要安装 socket.io 和 express 包，并编写服务器和客户端代码。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Socket.io 是一个为实现实时、双向通信而设计的 JavaScript 库，支持客户端与服务器之间的低延迟数据传输。它不仅基于 WebSocket 协议，还具备自动降级机制，在不支持 WebSocket 的环境中会使用长轮询等替代方案，确保兼容性和稳定性。" },
+			{ h: "Socket.io 和原生 WebSocket 有什么区别", p: "Socket.io 基于 WebSocket 并进行了增强，提供了自动重连、消息广播、房间管理、命名空间、中间件支持以及在不支持 WebSocket 时自动降级到长轮询等功能；而原生 WebSocket 是浏览器提供的底层 API，功能较为基础，需要自行实现断线重连、心跳检测等机制。" },
+			{ h: "如何在 Node.js 中使用 Socket.io 搭建实时通信服务", p: "首先安装 express 和 socket.io 包，然后创建 HTTP 服务器并绑定 Socket.io 实例。监听 'connection' 事件处理客户端连接，并通过 on() 和 emit() 方法收发事件消息。客户端引入 /socket.io/socket.io.js 脚本后即可建立连接并进行通信。" },
+			{ h: "Socket.io 如何处理不支持 WebSocket 的浏览器或网络环境", p: "Socket.io 会自动检测客户端环境，如果不支持 WebSocket，则会降级使用长轮询（如 XMLHttpRequest 或 JSONP 长轮询）等方式维持通信，保证应用在各种网络环境下都能正常工作。" },
+		],
+		extend: ["Socket.io 中的 '命名空间（Namespace）' 有什么作用？", "Socket.io 中的 '房间（Room）' 是什么？如何使用？", "如何在 Socket.io 中实现用户身份验证？", "Socket.io 支持哪些事件？常见的内置事件有哪些？"]
+	},
+	{
+		id: "node-049",
+		cat: "node",
+		level: 1,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "Node.js 中的 path 模块有哪些常用方法？",
+		short: "path.basename(path[, ext]) 用于获取路径的基础名称，即文件名。",
+		points: [
+			"path.basename(path[, ext]): 获取路径的基础名称，可以选择忽略文件扩展名。",
+			"path.dirname(path): 获取路径的目录名。",
+			"path.extname(path): 获取路径的扩展名。",
+			"path.join([...paths]): 将多个路径片段连接成一个路径。",
+		],
+		detail: [
+			{ h: "整体回答", p: "path.basename(path[, ext]) 用于获取路径的基础名称，即文件名。如果提供了 ext 参数，还可以去除文件扩展名。例如：path.basename('/foo/bar/baz/asdf/quux.html') 返回 'quux.html'，而加上 '.html' 作为第二个参数则返回 'quux'。" },
+			{ h: "如何使用 path.dirname() 方法", p: "path.dirname(path) 用于获取指定路径的目录部分，不包含最后一个路径片段。例如：path.dirname('/foo/bar/baz/asdf/quux.html') 返回 '/foo/bar/baz/asdf'。" },
+			{ h: "path.extname 是用来做什么的", p: "path.extname(path) 用于获取文件的扩展名，包括点号（.）。例如：path.extname('/foo/bar/baz/asdf/quux.html') 返回 '.html'；如果没有扩展名，则返回空字符串。" },
+			{ h: "path.join 和 path.resolve 的区别是什么", p: "path.join 用于将多个路径片段拼接成一个规范化的路径，基于当前工作目录进行相对处理；而 path.resolve 从右到左解析路径片段，直到构造出一个绝对路径。例如：path.join('foo', 'bar') 可能返回 'foo/bar'，而 path.resolve('foo', 'bar') 会返回以当前工作目录为基础的绝对路径。" },
+		],
+		extend: ["path.parse 和 path.format 如何配合使用？", "如何判断一个路径是否为绝对路径？", "path.relative 的用途是什么？", "在不同操作系统下 path 模块的行为有何差异？"]
+	},
+	{
+		id: "node-050",
+		cat: "node",
+		level: 1,
+		hot: 61,
+		source: "面试鸭 · Node.js",
+		title: "在 Node.js 中，如何获取和设置环境变量？",
+		short: "在 Node.js 中，可以通过 process.env 对象来获取环境变量。",
+		points: [
+			"获取环境变量：可以通过 process.env.VARIABLE_NAME 来获取，VARIABLE_NAME 是环境变量的名称。例如，获取名为 …",
+			"在 Node.js 中，获取和设置环境变量通常使用 process.env 对象。",
+			"获取环境变量：可以通过 process.env.VARIABLE_NAME 来获取，VARIABLE_NAME 是环境变量的名称。",
+		],
+		detail: [
+			{ h: "整体回答", p: "在 Node.js 中，可以通过 process.env 对象来获取环境变量。例如，要获取名为 NODE_ENV 的环境变量，可以使用 process.env.NODE_ENV。" },
+			{ h: "如何在 Node.js 中设置环境变量", p: "可以在代码中直接设置，例如 process.env.VAR_NAME = 'value'；也可以在运行脚本时通过命令行设置，如在 Unix 系统中使用 NODE_ENV=production node app.js。" },
+			{ h: "如何使用 dotenv 库加载环境变量", p: "首先安装 dotenv：npm install dotenv，然后在入口文件中引入并调用 require('dotenv').config()，它会自动读取 .env 文件中的变量并载入 process.env。" },
+			{ h: "为什么在项目中使用 .env 文件管理环境变量", p: "使用 .env 文件可以集中管理配置，方便不同环境（开发、测试、生产）切换，并且可以避免将敏感信息（如 API 密钥、数据库密码）硬编码到代码中，提高安全性。" },
+		],
+		extend: ["如何在 Windows 命令行中设置 Node.js 环境变量？", "如何在 Linux 或 macOS 中设置 Node.js 环境变量？", "环境变量在 Node.js 应用中有哪些常见用途？", "直接在代码中修改 process.env 是否推荐？"]
+	},
+]

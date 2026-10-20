@@ -1,0 +1,1056 @@
+/**
+ * 题库 · JavaScript 问答详解
+ *
+ * 题目清单与解析参考自「面试鸭」：https://www.mianshiya.com
+ * 字段：short 一句话回答 / points 回答重点 / detail 详细答案 / extend 扩展追问
+ * 共 50 题
+ */
+
+export const qaQuestions = [
+	{
+		id: "js-001",
+		cat: "js",
+		level: 2,
+		hot: 99,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 有哪些数据类型？它们的区别是什么？",
+		short: "JavaScript 有八种基本数据类型，分为两大类：原始类型和引用类型。",
+		points: [
+			"Undefined：表示变量未初始化。一个变量声明后但未赋值时，它的默认值是 undefined。",
+			"Null：表示一个空的值或一个不存在的对象。null 是一个特殊的关键字，它代表“无值”。",
+			"Boolean：只有两个值：true 和 false，用于逻辑判断。",
+		],
+		detail: [
+			{ h: "整体回答", p: "JavaScript 有八种基本数据类型，分为两大类：原始类型和引用类型。原始类型包括 Undefined、Null、Boolean、Number、String、Symbol 和 BigInt；引用类型主要是 Object，包括普通对象、数组、函数等。" },
+			{ h: "原始类型和引用类型的主要区别是什么", p: "主要区别在于存储方式和赋值行为。原始类型存储在栈中，值直接保存在变量位置，赋值时复制的是值本身，互不影响；引用类型实际对象存储在堆中，变量保存的是指向堆内存的引用（指针），赋值时复制的是引用，多个变量会共享同一对象，一个变量的修改会影响其他变量。" },
+			{ h: "为什么 typeof null 返回 'object'", p: "typeof null 返回 'object' 是 JavaScript 早期实现中的一个 bug。null 应该表示“无值”，其类型应为 null，但由于底层实现问题，它被错误地标识为 object，这个错误一直被保留至今，成为语言的一个历史遗留问题。" },
+			{ h: "如何正确检测一个值是否为数组", p: "不能使用 typeof 来检测数组，因为 typeof [] 返回 'object'。应该使用 Array.isArray() 方法或 instanceof 操作符，例如：Array.isArray([1, 2, 3]) 返回 true，[1, 2, 3] instanceof Array 也返回 true。" },
+		],
+		extend: ["Symbol 类型的作用是什么？", "BigInt 与 Number 的主要区别是什么？", "JavaScript 中的堆和栈有什么区别？", "如何进行显式类型转换？"]
+	},
+	{
+		id: "js-002",
+		cat: "js",
+		level: 1,
+		hot: 93,
+		source: "面试鸭 · JavaScript 基础",
+		title: "如何判断 JavaScript 变量是数组？",
+		short: "使用 Object.prototype.toString.call() 做判断…",
+		points: [
+			"使用 Object.prototype.toString.call() 做判断…",
+			"这是一个通用的类型判断方法，适用于判断各种数据类型，Object.prototype.toString.call(obj) 会返回一个类似 …",
+			"Object.prototype.toString.call(obj).slice(8,-1) === 'Arra…",
+		],
+		detail: [
+			{ h: "参考回答", p: "使用 Object.prototype.toString.call() 做判断 这是一个通用的类型判断方法，适用于判断各种数据类型，Object.prototype.toString.call(obj) 会返回一个类似 [object Array] 的字符串，通过切片操作获取其中的类型部分并与 'Array' 比较，示例如下： Object.prototype.toString.call(obj).slice(8,-1) === 'Arra…" },
+		],
+		extend: []
+	},
+	{
+		id: "js-003",
+		cat: "js",
+		level: 2,
+		hot: 92,
+		source: "面试鸭 · JavaScript 基础",
+		title: "为什么 JavaScript 中 0.1 + 0.2 !== 0.3，如何让其相等？",
+		short: "因为 JavaScript 使用二进制浮点数表示数字，而像 0.1 和 0.2 这样的十进制小数在二进制中是无限循环的，无法被精确表示。",
+		points: [
+			"1 的二进制表示约为：0.0001100110011001100110011001100110011001100110011001101...…",
+			"2 的二进制表示约为：0.00110011001100110011001100110011001100110011001100110…",
+			"在 JavaScript 中，数字是以二进制浮点数表示的。",
+		],
+		detail: [
+			{ h: "整体回答", p: "因为 JavaScript 使用二进制浮点数表示数字，而像 0.1 和 0.2 这样的十进制小数在二进制中是无限循环的，无法被精确表示。当它们相加时，由于精度限制，结果是一个非常接近但不完全等于 0.3 的值，例如 0.30000000000000004，因此使用全等比较时返回 false。" },
+			{ h: "JavaScript 中如何解决 0.1 + 0.2 !== 0.3 的问题", p: "可以通过以下方法解决：1）使用 Number.EPSILON 判断两个数的差值是否在可接受的误差范围内；2）使用 toFixed() 方法将结果四舍五入到指定小数位后再转换为数字进行比较；3）使用 toPrecision() 方法控制数值的有效数字位数来减少精度误差。" },
+			{ h: "Number.EPSILON 在比较浮点数时的作用是什么", p: "Number.EPSILON 表示 JavaScript 中可以表示的最小差异值，用于定义一个可接受的误差范围。通过判断两个数的绝对差是否小于 Number.EPSILON，可以安全地比较浮点数是否“近似相等”。" },
+			{ h: "使用 toFixed() 方法时需要注意什么", p: "toFixed() 方法会返回一个字符串类型的结果，而不是数字类型。因此在进行数值比较之前，需要使用 Number() 或 parseFloat() 将其转换回数字类型，否则可能导致类型不匹配的问题。" },
+		],
+		extend: ["toPrecision() 方法是如何帮助处理浮点数精度问题的？"]
+	},
+	{
+		id: "js-004",
+		cat: "js",
+		level: 2,
+		hot: 89,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中 null 和 undefined 的区别是什么？",
+		short: "使用 typeof 检测 undefined 会返回 \\\"undefined\\\"。",
+		points: [
+			"使用 typeof 检测 undefined 会返回 \\\"undefined\\\"。",
+			"使用 typeof 检测 null 会返回 \\\"object\\\"，这是一个历史遗留问题。",
+			"undefined 是 JavaScript 的一种内置数据类型，表示变量声明了但未赋值。",
+		],
+		detail: [
+			{ h: "参考回答", p: "undefined 是 JavaScript 的一种内置数据类型，表示变量声明了但未赋值。null 同样是一种内置数据类型，表示一个空对象引用。" },
+			{ h: "两者区别", p: "类型检测 使用 typeof 检测 undefined 会返回 \\\"undefined\\\"。 使用 typeof 检测 null 会返回 \\\"object\\\"，这是一个历史遗留问题。 console.log(typeof und…" },
+		],
+		extend: []
+	},
+	{
+		id: "js-005",
+		cat: "js",
+		level: 2,
+		hot: 89,
+		source: "面试鸭 · JavaScript 基础",
+		title: "typeof 和 instanceof 有什么区别？",
+		short: "typeof 是一个操作符，用于检测变量的基本数据类型，返回一个表示数据类型的字符串，例如 'number'、'string'、'boolean'、'object'、'func…",
+		points: [
+			"\\\"undefined\\\"：表示值未定义。",
+			"\\\"boolean\\\"：表示布尔值。",
+			"\\\"number\\\"：表示数字。",
+			"\\\"string\\\"：表示字符串。",
+		],
+		detail: [
+			{ h: "整体回答", p: "typeof 是一个操作符，用于检测变量的基本数据类型，返回一个表示数据类型的字符串，例如 'number'、'string'、'boolean'、'object'、'function' 等。它适用于基本类型和函数的类型判断。" },
+			{ h: "instanceof 的作用是什么", p: "instanceof 是一个操作符，用于检测某个对象是否是另一个构造函数的实例，通过检查原型链来确定对象的类型关系，常用于判断复杂引用类型的实例归属，如数组、自定义对象等。" },
+			{ h: "typeof 能否正确识别数组和 null", p: "不能。typeof 对数组和 null 都返回 'object'，这是 JavaScript 的历史遗留问题，因此无法通过 typeof 区分普通对象、数组或 null 值。" },
+			{ h: "为什么 typeof null 返回 'object'", p: "这是一个 JavaScript 的历史 bug。在最初的 JavaScript 实现中，值被存储为类型标签和值，而 null 的标签恰好与对象的标签相同，导致 typeof null 被误判为 'object'，该问题一直未被修复以保持向后兼容性。" },
+		],
+		extend: ["instanceof 能否用于检测基本数据类型？", "如何准确判断一个变量是否为数组？", "new String('hello') 和 'hello' 的类型分别是什么？", "instanceof 的判断机制是什么？"]
+	},
+	{
+		id: "js-006",
+		cat: "js",
+		level: 1,
+		hot: 88,
+		source: "面试鸭 · JavaScript 基础",
+		title: "typeof null 的结果是什么？为什么？",
+		short: "JavaScript 在最初设计时，使用了32位系统。",
+		points: [
+			"JavaScript 在最初设计时，使用了32位系统。为了优化性能，JavaScript 的值被存储为二进制数据，低位用来表示数据的类型。",
+			"对象的类型标识符是 000，而 null 被认为是一个空指针（即零地址），它的二进制表示全是 0，也即 00000000。",
+			"typeof null 的结果是 \\\"object\\\"",
+		],
+		detail: [
+			{ h: "参考回答", p: "typeof null 的结果是 \\\"object\\\"" },
+			{ h: "为什么 typeof null 是 \\\"object", p: "JavaScript 在最初设计时，使用了32位系统。为了优化性能，JavaScript 的值被存储为二进制数据，低位用来表示数据的类型。 对象的类型标识符是 000，而 null 被认为是一个空指针（即零地址），它的二进制表示全是 0，也即 00000000。 由于 null 的二进制表示和对象的类…" },
+		],
+		extend: []
+	},
+	{
+		id: "js-007",
+		cat: "js",
+		level: 2,
+		hot: 87,
+		source: "面试鸭 · 前端 ES6",
+		title: "ES6 箭头函数和普通函数有什么区别？",
+		short: "箭头函数使用 => 语法，省略了 function 关键字。",
+		points: [
+			"定义方式：箭头函数使用箭头(=>)语法，省略了 function 关键字。",
+			"参数处理：如果只有一个参数，箭头函数可以省略括号。",
+			"函数体：如果函数体只有一条语句，箭头函数可以省略花括号和 return 关键字。",
+			"箭头函数没有自己的 this 对象，而是从其作用域链的上一层继承 this。‌箭头函数中 this 的指向在它被定义的时候就已经确定了。",
+		],
+		detail: [
+			{ h: "整体回答", p: "箭头函数使用 => 语法，省略了 function 关键字。如果只有一个参数，可以省略括号；如果函数体只有一条语句，可以省略花括号和 return 关键字。而普通函数必须使用 function 关键字定义，参数和函数体都不能省略相应符号。" },
+			{ h: "箭头函数的 this 指向与普通函数有何不同", p: "箭头函数没有自己的 this，其 this 指向定义时所在外层作用域的 this，且一旦确定不会改变。普通函数的 this 在调用时根据执行上下文动态绑定，可通过 call、apply、bind 改变。" },
+			{ h: "能否使用 call、apply 或 bind 方法改变箭头函数的 this 指向", p: "不能。箭头函数的 this 指向在其定义时就已经确定，并继承自外层作用域，无法通过 call、apply 或 bind 方法修改。" },
+			{ h: "箭头函数能否作为构造函数使用 new 调用", p: "不可以。箭头函数不能作为构造函数，使用 new 调用会抛出错误，因为箭头函数没有自己的 this，也无法创建实例。" },
+		],
+		extend: ["箭头函数是否有自己的 arguments 对象？", "箭头函数有没有 prototype 属性？", "箭头函数能否用作 Generator 函数或使用 yield 关键字？", "箭头函数是否支持 super 关键字？"]
+	},
+	{
+		id: "js-008",
+		cat: "js",
+		level: 2,
+		hot: 82,
+		source: "面试鸭 · 前端 ES6",
+		title: "️ES6 有哪些新特性？",
+		short: "let 和 const 都具有块级作用域。",
+		points: [
+			"let 和 const：具有块级作用域，let 用来声明变量可重新赋值，const 用来声明常量不可再次赋值。",
+			"箭头函数：新的函数声明方式，语法简洁。",
+			"模版字符串：字符串插值功能，可定义多行字符串。",
+			"解构赋值：是一种 JavaScript 表达式，‌它允许从数组或对象中提取属性或值，‌并将这些值赋给其他变量。‌…",
+		],
+		detail: [
+			{ h: "整体回答", p: "let 和 const 都具有块级作用域。let 声明的变量可以重新赋值，而 const 声明的是常量，一旦赋值后不能重新赋值。但需要注意的是，const 声明的对象或数组，其属性或元素是可以修改的，只是引用不能改变。" },
+			{ h: "什么是箭头函数？它与普通函数有什么区别", p: "箭头函数是 ES6 提供的简洁函数语法，使用 => 定义。它没有自己的 this、arguments、super 或 new.target，会继承外层上下文的 this 值，因此在事件回调或定时器中使用时能避免 this 指向问题。" },
+			{ h: "ES6 如何实现字符串插值和多行字符串", p: "ES6 使用模板字符串，用反引号 包裹，通过 ${} 插入表达式实现字符串插值，并且可以直接换行定义多行字符串，无需拼接。" },
+			{ h: "解构赋值的作用是什么？请举例说明。", p: "解构赋值允许从数组或对象中提取值并赋给变量。例如：const [a, b] = [1, 2]; 解构数组；const {name, age} = {name: 'John', age: 25}; 解构对象，提升代码可读性和简洁性。" },
+		],
+		extend: ["ES6 中的默认参数如何使用？", "扩展运算符 (...) 有哪些用途？", "ES6 中的 class 是什么？如何定义类和继承？", "Promise 用来解决什么问题？它的状态有哪些？"]
+	},
+	{
+		id: "js-009",
+		cat: "js",
+		level: 2,
+		hot: 80,
+		source: "面试鸭 · 前端 ES6",
+		title: "️ES6 箭头函数能当构造函数吗？",
+		short: "不能。箭头函数没有自己的this对象，也没有prototype属性，且无法通过new关键字调用，因此不能作为构造函数使用。",
+		points: [
+			"创建一个构造函数： 首先会创建一个新的对象，将新建的对象设置给函数中 this，在构造函数中可以使用 this 来引用新建的对象…",
+			"> 在 JavaScript 中，用 new 关键字来调用的函数，称为构造函数。",
+		],
+		detail: [
+			{ h: "整体回答", p: "不能。箭头函数没有自己的this对象，也没有prototype属性，且无法通过new关键字调用，因此不能作为构造函数使用。" },
+			{ h: "为什么箭头函数不能作为构造函数", p: "因为箭头函数没有自己的this指向，其this是在定义时确定的，无法在实例化时绑定到新创建的对象上；同时箭头函数没有prototype属性，而构造函数需要prototype来连接实例的原型链，因此无法充当构造函数。" },
+			{ h: "构造函数的关键特征有哪些", p: "构造函数可以通过new关键字调用，会创建一个新的对象实例，并将该实例绑定到函数内部的this；构造函数拥有prototype属性，用于实现继承和原型链机制。" },
+			{ h: "箭头函数有哪些缺失的属性", p: "箭头函数没有arguments、caller、prototype属性，也不能作为构造函数被new调用。" },
+		],
+		extend: ["如何验证箭头函数不能用new调用？", "箭头函数的this指向什么时候确定？", "普通函数和箭头函数在使用new时有何区别？", "箭头函数是否有__proto__属性？"]
+	},
+	{
+		id: "js-010",
+		cat: "js",
+		level: 2,
+		hot: 75,
+		source: "面试鸭 · JavaScript 进阶",
+		title: "说说你对 JS 作用域的理解？",
+		short: "作用域是指变量或函数在代码中可访问的范围。",
+		points: [
+			"作用域，其实就是一个变量或函数在代码中的可访问范围。在 JavaScript 中，主要有两种作用域：全局作用域和局部作用域。…",
+			"全局作用域：定义在所有函数体以及其他代码块之外的变量，称为全局变量。它们在脚本的任何地方都是可访问的。",
+			"局部作用域：局部变量定义在函数内或代码块内（如 if、for 块），它们只能在函数内或代码块内访问。局部作用域又可细分为函…",
+		],
+		detail: [
+			{ h: "整体回答", p: "作用域是指变量或函数在代码中可访问的范围。JavaScript中有两种主要作用域：全局作用域和局部作用域。全局作用域中的变量在整个脚本中都可以访问，而局部作用域中的变量只能在特定函数或代码块内访问。" },
+			{ h: "全局作用域和局部作用域有什么区别", p: "全局作用域的变量是在所有函数和代码块之外声明的，可以在整个程序的任何地方访问；而局部作用域的变量是在函数内部或代码块（如if、for）中声明的，只能在该函数或代码块内部访问。" },
+			{ h: "函数作用域和块作用域的区别是什么", p: "函数作用域指的是使用var声明的变量只在函数内部有效；块作用域是ES6引入let和const后支持的，变量在{}代码块内（如if、for语句块）中声明时，仅在该块内有效，外部无法访问。" },
+			{ h: "什么是变量提升（Hoisting）", p: "变量提升是JavaScript的一种机制，它会将变量和函数的声明提升到当前作用域的顶部。var声明的变量会被提升但初始化不会，值为undefined；而函数声明会被完整提升，因此可以在声明前调用。" },
+		],
+		extend: ["什么是作用域链？", "什么是闭包？它与作用域有什么关系？", "IIFE的作用是什么？", "严格模式对作用域有何影响？"]
+	},
+	{
+		id: "js-011",
+		cat: "js",
+		level: 2,
+		hot: 74,
+		source: "面试鸭 · JavaScript 进阶",
+		title: "说说你对 fetch 的理解，它有哪些优点和不足？",
+		short: "fetch 是浏览器提供的原生 JavaScript 接口，用于发起 HTTP 请求。",
+		points: [
+			"原生支持 Promise：fetch 基于 Promise 实现，支持链式调用和 async/await 语法，让异步请求的处理更加优雅。",
+			"请求和响应对象：提供了 Request 和 Response 对象，让开发者能更灵活地处理请求和响应。",
+			"Fetch 是一个现代的网络请求 API，用于在浏览器中发起 HTTP 请求。",
+		],
+		detail: [
+			{ h: "整体回答", p: "fetch 是浏览器提供的原生 JavaScript 接口，用于发起 HTTP 请求。它是 XMLHttpRequest 的现代替代方案，基于 Promise 设计，语法更简洁，支持链式调用和 async/await，能更方便地处理异步操作。" },
+			{ h: "fetch 的优点有哪些", p: "fetch 的主要优点包括：基于 Promise，支持 async/await，代码更优雅；提供了 Request 和 Response 对象，灵活性更高；支持 HTTP/2 流式传输，可通过 Response.body 获取流数据，适用于实现如 ChatGPT 的流式输出效果。" },
+			{ h: "fetch 的缺点是什么", p: "fetch 的不足之处包括：默认不携带 cookie，需手动设置 credentials；无法原生取消请求，需借助 AbortController；不能直接监听上传或下载进度，对大文件上传的进度反馈支持较差。" },
+			{ h: "fetch 在什么情况下会 reject", p: "fetch 只有在网络错误（如断网、DNS 解析失败）时才会触发 Promise 的 reject。HTTP 状态码如 404 或 500 不会导致 reject，此时仍需通过检查 response.ok 来判断请求是否成功。" },
+		],
+		extend: ["如何让 fetch 请求携带 Cookie？", "如何取消一个 fetch 请求？", "如何为 fetch 添加超时机制？", "fetch 如何处理响应流以实现流式输出？"]
+	},
+	{
+		id: "js-012",
+		cat: "js",
+		level: 2,
+		hot: 74,
+		source: "面试鸭 · JavaScript 进阶",
+		title: "let、const 和 var 的区别是什么？",
+		short: "var 是函数作用域，变量在函数内部有效，如果在全局声明则会成为全局对象的属性；let 和 const 是块级作用域，变量只在所在的花括号 {} 内有效，如 if 语句或 …",
+		points: [
+			"var 在函数作用域内有效，并且能在函数外被访问（如果定义在全局作用域）。",
+			"let 和 const 在块级作用域（如花括号 {} 内）有效。",
+			"var 可以重新赋值和重新声明。",
+			"let 可以重新赋值但不能重新声明。",
+		],
+		detail: [
+			{ h: "整体回答", p: "var 是函数作用域，变量在函数内部有效，如果在全局声明则会成为全局对象的属性；let 和 const 是块级作用域，变量只在所在的花括号 {} 内有效，如 if 语句或 for 循环中。" },
+			{ h: "var、let 和 const 是否可以重复声明变量", p: "var 可以在同一作用域内重复声明同一个变量；let 不允许重复声明，否则会报错；const 不仅不能重复声明，还必须在声明时初始化，且之后不能重新赋值。" },
+			{ h: "什么是暂时性死区（Temporal Dead Zone）", p: "暂时性死区是指使用 let 和 const 声明的变量虽然被提升到作用域顶部，但在声明之前访问它们会抛出 ReferenceError。这个从作用域开始到变量声明之间的区域就是暂时性死区，它有助于避免因变量提升导致的错误。" },
+			{ h: "var 声明的变量和 let/const 在全局对象中的表现有何不同", p: "在全局作用域下，var 声明的变量会成为全局对象（如浏览器中的 window）的一个属性，而 let 和 const 声明的变量不会挂载到全局对象上，避免了对全局命名空间的污染。" },
+		],
+		extend: ["为什么说 let 比 var 更适合用于 for 循环？", "const 声明的变量真的完全不可变吗？", "var 的变量提升和 let/const 的提升有何异同？", "在现代 JavaScript 中推荐使用哪个关键字声明变量？"]
+	},
+	{
+		id: "js-013",
+		cat: "js",
+		level: 2,
+		hot: 74,
+		source: "面试鸭 · JavaScript 进阶",
+		title: "JavaScript 中 Object.keys 的返回值是无序的吗？",
+		short: "回答重点 Object.keys 方法返回一个数组，该数组的元素是一个对象自身可枚举属性的字符串键。",
+		points: [
+			"Object.keys 方法返回一个数组，该数组的元素是一个对象自身可枚举属性的字符串键。",
+			"数字属性（包括可以转换为数字的字符串属性）会被优先返回，并按照数值大小升序排序。",
+			"非数字的字符串属性按照它们被添…",
+		],
+		detail: [
+			{ h: "Object.keys如何处理数字属性和字符串属性的排序", p: "Object.keys会将数字属性（包括能转换为32位无符号整数的字符串键）优先返回，并按照数值大小升序排列；非数字的字符串属性则按照它们被添加到对象中的顺序返回。" },
+			{ h: "为什么Object.keys不返回Symbol类型的属性", p: "因为Object.keys只返回字符串类型的可枚举属性键，Symbol类型的属性不会被包含在内。如果需要获取Symbol属性，应该使用Object.getOwnPropertySymbols方法。" },
+			{ h: "Object.keys能否正确处理数组和类数组对象", p: "可以。对于数组，Object.keys会返回所有数字索引和可枚举的字符串属性；对于类数组对象，它会返回所有符合数字属性规则的键以及其它字符串键，例如'length'也会被包含在结果中。" },
+			{ h: "Object.keys与for...in循环在遍历属性时有何区别", p: "Object.keys只返回对象自身的可枚举属性键，而for...in会遍历对象自身及其原型链上所有的可枚举属性键。此外，Object.keys返回一个数组，可用于进一步操作，而for...in是一种语句结构，用于执行循环逻辑。" },
+		],
+		extend: ["如何判断一个属性名是否被视为数字属性？", "有哪些方法可以获取对象的所有自身属性名？", "如果需要保证严格的插入顺序，应该使用什么数据结构？", "Object.keys的返回值是否包含原型链上的属性？"]
+	},
+	{
+		id: "js-014",
+		cat: "js",
+		level: 1,
+		hot: 72,
+		source: "面试鸭 · JavaScript 进阶",
+		title: "使用 let 全局声明变量，能通过 window 对象取到吗？",
+		short: "不能。在 JavaScript 中，使用 let 声明的全局变量不会被绑定到 window 对象上，因此无法通过 window.variableName 访问。",
+		points: [
+			"在 JavaScript 中，使用 let 声明的全局变量不能通过 window 对象直接访问。",
+			"let globalLet = \\\"This is a let variable\\\";…",
+			"var globalVar = \\\"This is a var variable\\\";…",
+		],
+		detail: [
+			{ h: "整体回答", p: "不能。在 JavaScript 中，使用 let 声明的全局变量不会被绑定到 window 对象上，因此无法通过 window.variableName 访问。" },
+			{ h: "var 声明的全局变量是否可以通过 window 访问", p: "可以。使用 var 声明的全局变量会作为属性添加到 window 对象上，因此可以通过 window.variableName 访问。" },
+			{ h: "为什么 let 声明的变量不会挂载到 window 上", p: "这是 ES6 的设计改进。为了减少全局污染，let 和 const 声明的变量虽然处于全局作用域，但不会成为全局对象（如 window）的属性，从而避免意外覆盖和命名冲突。" },
+			{ h: "function 声明的函数能否通过 window 访问", p: "可以。在全局作用域中使用 function 声明的函数会成为 window 对象的属性，因此可以通过 window.functionName 访问。" },
+		],
+		extend: ["let 和 var 在全局作用域中的主要区别是什么？", "什么是暂时性死区（TDZ）？", "ES6 模块中的变量是否会成为 window 的属性？", "如何验证 let 声明的变量不在 window 上？"]
+	},
+	{
+		id: "js-015",
+		cat: "js",
+		level: 1,
+		hot: 71,
+		source: "面试鸭 · JavaScript 基础",
+		title: "typeof NaN 的结果是什么？",
+		short: "NaN 是唯一一个不等于自身的值。",
+		points: [
+			"NaN 代表“不是一个数字”（Not a Number），它通常用来表示无法执行数学运算或运算结果未定义的情况。",
+			"console.log(typeof NaN); // 输出: \\\"number\\\"",
+			"NaN 是唯一一个不等于自身的值。",
+		],
+		detail: [
+			{ h: "参考回答", p: "NaN 代表“不是一个数字”（Not a Number），它通常用来表示无法执行数学运算或运算结果未定义的情况。尽管 NaN 表示“不是一个数字”，但它的类型却是 number，示例如下： console.log(typeof NaN); // 输出: \\\"number\\\"" },
+			{ h: "NaN 的特点", p: "NaN 是唯一一个不等于自身的值。这意味着 NaN !== NaN 总是返回 true，示例如下：" },
+		],
+		extend: [],
+		code: "console.log(typeof NaN); // 输出: \\\"number\\\""
+	},
+	{
+		id: "js-016",
+		cat: "js",
+		level: 2,
+		hot: 69,
+		source: "面试鸭 · JavaScript 进阶",
+		title: "JavaScript 的 BigInt 和 Number 类型有什么区别？",
+		short: "BigInt 和 Number 是 JavaScript 中表示数值的两种类型。",
+		points: [
+			"Number 类型：受 64 位双精度浮点数限制，安全整数范围是 -(2^53-1) 到 2^53-1 之间。",
+			"BigInt 类型：可以表示任意大的整数，没有位数限制。",
+			"Number 类型：小数计算可能存在精度损失。",
+		],
+		detail: [
+			{ h: "整体回答", p: "BigInt 和 Number 是 JavaScript 中表示数值的两种类型。Number 使用 64 位双精度浮点数，安全整数范围为 -(2^53-1) 到 2^53-1，支持小数但可能存在精度问题；BigInt 可表示任意大的整数，无位数限制，但只能用于整数，不能表示小数。BigInt 字面量需以 n 结尾或使用 BigInt() 构造函数创建。" },
+			{ h: "BigInt 和 Number 能否混合运算", p: "不能直接混合运算。例如，1n + 1 会抛出 TypeError。必须显式转换类型，如使用 BigInt(num) 将 Number 转为 BigInt，或使用 Number(bigInt) 将 BigInt 转为 Number（注意精度丢失风险）。" },
+			{ h: "如何创建 BigInt 类型", p: "可以通过在整数字面量后加 n 来创建，例如 123n；也可以使用 BigInt() 构造函数，传入整数或字符串形式的整数，如 BigInt(123) 或 BigInt('9007199254740991')。注意不能传入小数或无效格式的字符串。" },
+			{ h: "BigInt 和 Number 在比较时的行为是怎样的", p: "可以使用比较运算符（>, <, >=, <=）进行比较，例如 1n > 0 返回 true。但严格相等（===）要求类型和值都相同，因此 1n === 1 为 false；而抽象相等（==）会进行类型转换，1n == 1 为 true。" },
+		],
+		extend: ["BigInt 有哪些使用场景？", "BigInt 是否支持 Math 对象的方法？", "如何将 BigInt 转换为 Number？", "为什么不能用一元加号转换 BigInt？"]
+	},
+	{
+		id: "js-017",
+		cat: "js",
+		level: 2,
+		hot: 69,
+		source: "面试鸭 · JavaScript 进阶",
+		title: "什么是 JavaScript 的尾调用？使用尾调用有什么好处？",
+		short: "尾调用是指函数的最后一步操作是调用另一个函数。",
+		points: [
+			"必须是严格模式（'use strict'）",
+			"尾调用是指函数的最后一步操作是调用另一个函数。",
+			"function f(x) {…",
+		],
+		detail: [
+			{ h: "整体回答", p: "尾调用是指函数的最后一步操作是调用另一个函数。例如：return g(x);。在这种情况下，当前函数不需要再进行其他计算，直接返回被调用函数的结果。" },
+			{ h: "尾调用优化的条件有哪些", p: "尾调用优化需要满足以下条件：必须在严格模式下（'use strict'）；调用是函数的最后一步操作；尾调用函数不能引用当前函数作用域中的变量；尾调用的结果就是函数的返回值。" },
+			{ h: "尾调用和普通函数调用的主要区别是什么", p: "普通函数调用在执行完成后需要返回到原函数继续执行后续操作，因此必须保留调用帧；而尾调用是函数的最后一步，无需再执行其他操作，因此可以复用当前调用帧，节省内存。" },
+			{ h: "为什么尾调用能防止栈溢出", p: "因为尾调用优化会复用当前函数的调用帧，而不是为每次递归创建新的调用帧，从而避免了调用栈无限增长，有效防止了栈溢出错误。" },
+		],
+		extend: ["尾递归是如何优化性能的？", "请举例说明如何将普通递归改为尾递归。", "尾调用优化在哪些 JavaScript 引擎中被支持？", "严格模式对尾调用优化有什么影响？"],
+		code: "function f(x) {\n  return g(x);\n}"
+	},
+	{
+		id: "js-018",
+		cat: "js",
+		level: 2,
+		hot: 68,
+		source: "面试鸭 · JavaScript 基础",
+		title: "== 操作符的强制类型转换规则是什么？",
+		short: "== 操作符在比较不同类型的值时会进行强制类型转换，将两个操作数转换为相同的类型后再进行比较。",
+		points: [
+			"== 会在比较两个值时进行强制类型转换。",
+			"console.log(null == undefined); // true…",
+			"console.log(null == null); // true…",
+		],
+		detail: [
+			{ h: "整体回答", p: "== 操作符在比较不同类型的值时会进行强制类型转换，将两个操作数转换为相同的类型后再进行比较。" },
+			{ h: "null 和 undefined 在 == 比较中的表现是怎样的", p: "null == undefined 返回 true，它们仅相等于自身和对方；与其他任何值（如数字、字符串等）比较都返回 false。" },
+			{ h: "当布尔值参与 == 比较时，是如何处理的", p: "当布尔值参与 == 比较时，JavaScript 会先将布尔值转换为数字：true 转换为 1，false 转换为 0，然后再进行比较。" },
+			{ h: "字符串和数字使用 == 比较时遵循什么规则", p: "当字符串和数字进行 == 比较时，JavaScript 会将字符串尝试转换为数字，然后与另一个数字进行比较。例如 '42' == 42 会将字符串 '42' 转换为数字 42 后再比较，结果为 true。" },
+		],
+		extend: ["对象与原始类型进行 == 比较时会发生什么？", "Symbol 类型在 == 比较中有什么限制？", "为什么 '' == 0 的结果是 true？", "如何避免 == 带来的意外类型转换问题？"]
+	},
+	{
+		id: "js-019",
+		cat: "js",
+		level: 2,
+		hot: 68,
+		source: "面试鸭 · JavaScript 基础",
+		title: "isNaN 和 Number.isNaN 函数有什么区别？",
+		short: "isNaN 会先尝试将参数转换为数字，再判断转换后的值是否为 NaN；而 Number.isNaN 不进行类型转换，只有当参数本身是 NaN 时才返回 true。",
+		points: [
+			"isNaN 函数会先尝试将传入的参数转换为数字，然后检查转换后的值是否为 NaN。",
+			"console.log(isNaN(NaN)); // 输出: true…",
+			"console.log(isNaN('hello')); // 输出: true…",
+		],
+		detail: [
+			{ h: "整体回答", p: "isNaN 会先尝试将参数转换为数字，再判断转换后的值是否为 NaN；而 Number.isNaN 不进行类型转换，只有当参数本身是 NaN 时才返回 true。因此，Number.isNaN 更加严格和准确。" },
+			{ h: "为什么 isNaN('hello') 返回 true", p: "因为 isNaN 函数会先尝试将 'hello' 转换为数字，而 Number('hello') 的结果是 NaN，所以 isNaN('hello') 返回 true。" },
+			{ h: "为什么 Number.isNaN('hello') 返回 false", p: "因为 Number.isNaN 不会进行类型转换，它只检查传入的值是否为 NaN 本身。'hello' 是一个字符串，不是 NaN，因此返回 false。" },
+			{ h: "在什么场景下应该使用 isNaN", p: "当你需要检测一个值（可能为非数字类型）是否无法被解析为有效数字时，可以使用 isNaN。例如，用于检查用户输入的字符串是否能被成功转换为数字。" },
+		],
+		extend: ["在什么场景下应该使用 Number.isNaN？", "isNaN(undefined) 和 Number.isNaN(undefined) …", "Number.isNaN 如何实现更精确的判断？", "能否用 typeof 配合 isNaN 来提高判断准确性？"]
+	},
+	{
+		id: "js-020",
+		cat: "js",
+		level: 2,
+		hot: 66,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 其他值到字符串的转换规则是什么？",
+		short: "null 转换为字符串是 \\\"null\\\"，undefined 转换为字符串是 \\\"undefined\\\"。",
+		points: [
+			"Null 和 Undefined 类型…",
+			"值到字符串的转换规则非常明确。",
+			"console.log(String(null)); // \\\"null\\\"",
+		],
+		detail: [
+			{ h: "整体回答", p: "null 转换为字符串是 \\\"null\\\"，undefined 转换为字符串是 \\\"undefined\\\"。" },
+			{ h: "布尔值 true 和 false 如何转换为字符串", p: "true 转换为字符串是 \\\"true\\\"，false 转换为字符串是 \\\"false\\\"。" },
+			{ h: "数字类型转换为字符串时遵循什么规则", p: "数字直接转换为其对应的字符串形式，极小或极大的数字会使用指数表示法，例如 1e21 转换为 \\\"1e+21\\\"。" },
+			{ h: "Symbol 类型能否隐式转换为字符串", p: "Symbol 值不能隐式转换为字符串，否则会抛出 TypeError 错误；只能通过 String() 或 toString() 显式转换。" },
+		],
+		extend: ["普通对象转换为字符串时的默认行为是什么？", "如何让对象在转换为字符串时返回自定义内容？", "数组转换为字符串的结果是什么样的？", "Date 对象如何转换为字符串？"]
+	},
+	{
+		id: "js-021",
+		cat: "js",
+		level: 1,
+		hot: 65,
+		source: "面试鸭 · JavaScript 基础",
+		title: "说说你对 JSON 的理解？",
+		short: "JSON（JavaScript Object Notation）是一种轻量级的数据交换格式，易于人阅读和编写，也易于机器解析和生成。",
+		points: [
+			"JSON（JavaScript Object Notation，JavaScript对象表示法）是一种轻量级的数据交换格式。",
+			"JSON 支持几种基本类型的数据，包括字符串、数字、布尔值、数组、对象和 null。",
+		],
+		detail: [
+			{ h: "整体回答", p: "JSON（JavaScript Object Notation）是一种轻量级的数据交换格式，易于人阅读和编写，也易于机器解析和生成。它基于JavaScript的一个子集，但独立于编程语言，广泛用于Web应用中前后端之间的数据传输。" },
+			{ h: "JSON支持哪些数据类型", p: "JSON支持以下几种基本数据类型：字符串、数字、布尔值（true/false）、数组、对象（键值对集合）以及null。不支持函数、日期和正则表达式等复杂类型直接序列化。" },
+			{ h: "JSON的键名和字符串值为什么要用双引号", p: "根据JSON规范，所有键名和字符串值必须使用双引号包围，这是语法要求。单引号或无引号都会导致JSON格式错误，无法被正确解析。" },
+			{ h: "JSON常用于哪些场景", p: "JSON主要用于客户端与服务器之间的数据交换，如AJAX请求和RESTful API接口返回数据；也常用于配置文件存储，因其结构清晰、易读易改。" },
+		],
+		extend: ["如何在JavaScript中解析和生成JSON？", "为什么不应该用eval()来解析JSON？", "JSON与JavaScript对象有何区别？", "JSON相比XML有什么优势？"]
+	},
+	{
+		id: "js-022",
+		cat: "js",
+		level: 2,
+		hot: 65,
+		source: "面试鸭 · JavaScript 基础",
+		title: "Object.is() 与比较操作符 == 和 === 的区别是什么？",
+		short: "Object.is() 不会进行类型转换，而 == 在类型不同时会先进行类型转换再比较。",
+		points: [
+			"如果类型不同，会进行类型转换。",
+			"将 null 和 undefined 视为相等。",
+			"将布尔值转换为数字再进行比较。",
+			"将字符串和数字进行比较时，会将字符串转换为数字。",
+		],
+		detail: [
+			{ h: "整体回答", p: "Object.is() 不会进行类型转换，而 == 在类型不同时会先进行类型转换再比较。例如，2 == '2' 返回 true，但 Object.is(2, '2') 返回 false。" },
+			{ h: "Object.is() 与 === 的主要区别是什么", p: "Object.is() 与 === 大部分行为相同，但在两个特殊情况下不同：一是 NaN 与 NaN 被认为相等，二是 +0 和 -0 被认为不相等。例如，Object.is(NaN, NaN) 返回 true，而 === 返回 false；Object.is(+0, -0) 返回 false，而 === 返回 true。" },
+			{ h: "为什么需要 Object.is()，而不仅仅是使用 ===", p: "因为 === 认为 NaN 不等于自身，且 +0 等于 -0，这在某些精确判断场景下不够准确。Object.is() 提供了更语义化的相等性判断，符合 IEEE 754 标准对 NaN 和零值的处理。" },
+			{ h: "在什么情况下 Object.is() 返回 true 而 === 返回 fals", p: "当比较 NaN 与 NaN 时，Object.is(NaN, NaN) 返回 true，而 NaN === NaN 返回 false。" },
+		],
+		extend: ["在什么情况下 Object.is() 返回 false 而 === 返回 true？", "Object.is() 是否会进行类型转换？", "null 和 undefined 使用 Object.is() 比较结果是什么？", "Object.is() 的设计目的是什么？"]
+	},
+	{
+		id: "js-023",
+		cat: "js",
+		level: 2,
+		hot: 65,
+		source: "面试鸭 · JavaScript 基础",
+		title: "什么是 JavaScript 中的包装类型？",
+		short: "包装类型是 JavaScript 中的一种机制，它允许原始值临时拥有对象的属性和方法。",
+		points: [
+			"JavaScript 中，原始值没有方法或属性，但为了能够使用方法和属性，JavaScript 提供了包装类型，使得原始值可以像对象一样被操作。",
+			"包装类型是 JavaScript 中的一种机制，它允许原始值临时拥有对象的属性和方法。",
+			"Boolean…",
+		],
+		detail: [
+			{ h: "JavaScript 中有哪些包装类型", p: "JavaScript 中有三个包装类型：String 对应字符串原始类型，Number 对应数字原始类型，Boolean 对应布尔原始类型。它们在访问原始值的方法或属性时被临时创建。" },
+			{ h: "为什么原始值能调用方法，比如 toUpperCase()", p: "因为当访问原始值的方法时，JavaScript 会自动创建一个对应的包装对象（例如 new String(str)），在这个对象上调用方法。操作完成后，临时对象被销毁，原始值本身不变。" },
+			{ h: "原始值和包装对象有什么区别", p: "原始值是基本数据类型，而包装对象是引用类型。例如，'hello' 是 string 类型，而 new String('hello') 是 object 类型。两者使用 === 比较会返回 false，因为类型不同，但 == 比较时包装对象会被转换为原始值，因此返回 true。" },
+			{ h: "包装对象的生命周期是怎样的", p: "包装对象是临时创建的，仅在访问原始值的属性或方法时存在。一旦操作完成，该对象就会被自动销毁，因此对原始值的任何后续属性赋值都不会保留。" },
+		],
+		extend: ["能否给原始值添加自定义属性？", "String('hello') 和 new String('hello') 有什么区别？", "什么时候应该使用包装对象？", "为什么 new Boolean(false) 在 if 语句中被视为 true？"]
+	},
+	{
+		id: "js-024",
+		cat: "js",
+		level: 2,
+		hot: 65,
+		source: "面试鸭 · 前端 ES6",
+		title: "️ES6 箭头函数的 this 指向哪⾥？",
+		short: "箭头函数的 this 指向定义它时所处上下文的对象的 this，也就是说它的 this 是在函数定义时就确定的，并且不会改变。",
+		points: [
+			"ES6 箭头函数的 this 指向定义它时所处上下文的对象的 this。",
+			"箭头函数的 this 指向是固定的，‌在函数定义时就确定了，之后不会再改变。",
+			"箭头函数和普通函数不同，普通函数的 this 是在调用时决定的。",
+		],
+		detail: [
+			{ h: "整体回答", p: "箭头函数的 this 指向定义它时所处上下文的对象的 this，也就是说它的 this 是在函数定义时就确定的，并且不会改变。箭头函数没有自己的 this，而是继承外层作用域的 this。" },
+			{ h: "箭头函数的 this 为什么是固定的", p: "因为箭头函数本身不绑定 this，它会捕获其定义时所在执行上下文中的 this 值，并始终使用该值。无论怎样调用箭头函数，它的 this 都不会改变。" },
+			{ h: "普通函数和箭头函数的 this 有什么区别", p: "普通函数的 this 是动态的，取决于调用方式：可能指向全局对象、调用者对象或通过 call/apply/bind 显式绑定的对象；而箭头函数的 this 是静态的，在定义时确定，始终指向外层作用域的 this。" },
+			{ h: "箭头函数可以作为构造函数使用吗", p: "不可以。箭头函数没有自己的 this、prototype，也不支持 new 调用，因此不能用作构造函数，否则会报错。" },
+		],
+		extend: ["在 setTimeout 或 setInterval 中使用箭头函数有什么优势？", "如何让普通函数的 this 表现得像箭头函数一样固定？", "在对象的方法中使用箭头函数定义函数会有什么问题？", "箭头函数适合用在哪些场景？"]
+	},
+	{
+		id: "js-025",
+		cat: "js",
+		level: 2,
+		hot: 65,
+		source: "面试鸭 · JavaScript 基础",
+		title: "什么是 DOM 和 BOM？",
+		short: "DOM（Document Object Model，文档对象模型）是将HTML或XML文档表示为树结构的编程接口，它把网页内容转换成JavaScript可以操作的对象，…",
+		points: [
+			"它将文档解析为一个由节点和对象组成的结构集合。",
+			"它定义了文档的结构，以及如何访问和操作文档。",
+			"DOM（ 全拼是：Document Object Model）文档对象模型，BOM（全拼是：Browser Object …",
+		],
+		detail: [
+			{ h: "整体回答", p: "DOM（Document Object Model，文档对象模型）是将HTML或XML文档表示为树结构的编程接口，它把网页内容转换成JavaScript可以操作的对象，允许程序动态地访问和更新文档的内容、结构和样式。" },
+			{ h: "DOM的主要特点是什么", p: "DOM的主要特点是：将文档解析为由节点和对象组成的树形结构集合，并定义了文档的逻辑结构以及如何访问和操作这些结构。" },
+			{ h: "DOM的作用有哪些", p: "DOM的作用包括：允许脚本动态地读取、修改页面内容、结构和样式；提供标准化的API来操作网页元素，使开发者能够实现交互式功能。" },
+			{ h: "常见的DOM操作有哪些", p: "常见的DOM操作有：通过document.getElementById()或querySelector()获取元素；使用innerHTML或textContent修改内容；通过style属性修改样式；使用createElement()和appendChild()添加新元素；以及删除或移动现有元素等。" },
+		],
+		extend: ["什么是BOM？", "BOM的主要组成部分有哪些？", "BOM的作用是什么？", "常见的BOM操作有哪些？"]
+	},
+	{
+		id: "js-026",
+		cat: "js",
+		level: 2,
+		hot: 65,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中 Map 和 Object 的区别是什么？",
+		short: "Map 的键可以是任意类型，包括字符串、数字、布尔值、对象、函数和 Symbol；而 Object 的键只能是字符串或 Symbol，其他类型的键会被自动转换为字符串。",
+		points: [
+			"Map 的键可以是任意类型，包括字符串、数字、布尔值、对象、函数和 Symbol；而 Object 的键只能是字符串或 Symbol，…",
+		],
+		detail: [
+			{ h: "整体回答", p: "Map 的键可以是任意类型，包括字符串、数字、布尔值、对象、函数和 Symbol；而 Object 的键只能是字符串或 Symbol，其他类型的键会被自动转换为字符串。" },
+			{ h: "Map 和 Object 在键的顺序方面有何不同", p: "Map 中的键是有序的，会按照插入的顺序进行迭代；而 Object 的属性在 ES5 及之前没有固定的顺序，虽然现代引擎在某些情况下保持插入顺序，但不保证所有场景下都如此。" },
+			{ h: "如何获取 Map 和 Object 的大小", p: "Map 提供了 size 属性可以直接获取键值对的数量；而 Object 没有内置的 size 属性，需要通过 Object.keys(obj).length 等方法手动计算属性个数。" },
+			{ h: "Map 和 Object 哪个更适合频繁增删键值对的场景", p: "Map 更适合频繁增删键值对的场景，因为其内部结构针对这些操作进行了优化，性能表现优于 Object。" },
+		],
+		extend: ["Map 和 Object 在迭代方式上有何差异？", "为什么说 Object 可能存在意外的键冲突问题？", "能否使用函数作为 Map 和 Object 的键？", "什么时候应该使用 Map 而不是 Object？"]
+	},
+	{
+		id: "js-027",
+		cat: "js",
+		level: 2,
+		hot: 65,
+		source: "面试鸭 · 前端 ES6",
+		title: "ES6 的 Proxy 可以实现什么功能？",
+		short: "ES6 的 Proxy 主要可以实现以下功能：1）拦截和自定义对象的基本操作，如属性访问、赋值、删除、函数调用等；2）实现数据验证、属性保护、默认值填充等自定义行为；…",
+		points: [
+			"ES6 的 Proxy 是一个强大的工具，可以用来创建虚拟化的对象，通过自定义基本操作（如属性查找、赋值、枚举、函数调用等）的行为来实现各种高级功能…",
+			"拦截和定义对象的基本操作，比如属性访问、赋值、删除、函数调用等。",
+			"实现自定义的行为，比如数据验证、属性保护、自动填充默认值等。",
+			"实现观察者模式，可以轻松实现对象的监听和变化追踪。",
+		],
+		detail: [
+			{ h: "整体回答", p: "ES6 的 Proxy 主要可以实现以下功能：1）拦截和自定义对象的基本操作，如属性访问、赋值、删除、函数调用等；2）实现数据验证、属性保护、默认值填充等自定义行为；3）实现观察者模式，监听对象变化；4）创建虚拟属性和方法，增强代码的灵活性；5）代理外部接口，将 API 调用封装为本地对象操作。" },
+			{ h: "如何使用 Proxy 实现数据验证", p: "通过在 set 陷阱中添加校验逻辑，例如限制属性值的类型或范围。比如 age 属性必须是非负整数，否则抛出 TypeError，从而在赋值时进行实时验证。" },
+			{ h: "如何用 Proxy 实现只读属性（属性保护）", p: "可以在 set 和 deleteProperty 陷阱中判断属性名，如果是受保护的属性（如 id），则禁止修改或删除并抛出错误，从而实现属性保护。" },
+			{ h: "Proxy 如何实现观察者模式", p: "通过 set 陷阱，在设置属性时触发回调函数或打印日志，实现对对象属性变化的监听和响应，从而轻松实现观察者模式。" },
+		],
+		extend: ["什么是虚拟属性？如何用 Proxy 实现？", "Proxy 能否拦截函数调用？如何实现？", "除了 set 和 get，Proxy 还有哪些常用陷阱方法？", "Proxy 与 Object.defineProperty 相比有什么优势？"]
+	},
+	{
+		id: "js-028",
+		cat: "js",
+		level: 1,
+		hot: 64,
+		source: "面试鸭 · JavaScript 基础",
+		title: "const 对象的属性可以修改吗？",
+		short: "简单来说，const 声明的对象，它的属性是可以修改的。",
+		points: [
+			"简单来说，const 声明的对象，它的属性是可以修改的。",
+			"const myObject = { name: \\\"Alice\\\" };…",
+			"myObject.name = \\\"B…",
+		],
+		detail: [
+			{ h: "参考回答", p: "简单来说，const 声明的对象，它的属性是可以修改的。首先，const 关键字确实创建了一个常量，但这个\\\"常量\\\"指的是变量标识符的引用，而不是它所指向的值。对于基本数据类型（如数字、字符串），const 确实会阻止值的改变。但对于对象和数组这样的引用类型，情况就不同了，我们看代码： const myObject = { name: \\\"Alice\\\" }; myObject.name = \\\"B…" },
+		],
+		extend: []
+	},
+	{
+		id: "js-029",
+		cat: "js",
+		level: 2,
+		hot: 64,
+		source: "面试鸭 · JavaScript 基础",
+		title: "ajax、axios、fetch 的区别是什么？",
+		short: "Ajax 是一种使用 XMLHttpRequest 等技术实现异步请求的方法，最早用于在不刷新页面的情况下更新部分网页内容。",
+		points: [
+			"是最早的异步请求解决方案…",
+			"可以与服务器交换数据并更新部分网页内容，而无需重新加载整个页面…",
+			"使用回调函数处理响应…",
+		],
+		detail: [
+			{ h: "整体回答", p: "Ajax 是一种使用 XMLHttpRequest 等技术实现异步请求的方法，最早用于在不刷新页面的情况下更新部分网页内容。Fetch 是现代浏览器提供的原生 API，基于 Promise，用于替代传统的 XMLHttpRequest。Axios 是一个基于 Promise 的第三方 HTTP 客户端，支持浏览器和 Node.js，提供了丰富的功能。" },
+			{ h: "Ajax、Axios 和 Fetch 在语法上有何区别", p: "Ajax 使用回调函数处理请求和响应，语法较为繁琐；Fetch 基于 Promise，支持链式调用和 async/await，语法更简洁；Axios 同样基于 Promise，API 设计更加友好，自动转换 JSON 数据，使用起来更方便。" },
+			{ h: "Fetch 和 Axios 在错误处理方面有何不同", p: "Fetch 只有在网络错误时才会 reject Promise，对于 HTTP 状态码如 404 或 500 不会自动抛出错误，需要手动检查 response.ok 或 status。Axios 则会在响应状态码不在 2xx 范围内时自动触发 catch，提供更直观的错误处理机制。" },
+			{ h: "如何取消请求？三者在这方面的支持情况如何", p: "Ajax 可以通过调用 xhr.abort() 方法取消请求；Fetch 使用 AbortController 接口来实现请求中止；Axios 提供了 CancelToken 或 AbortController（新版本）来取消请求，API 更加易用。" },
+		],
+		extend: ["三者的浏览器兼容性如何？", "Axios 相比 Fetch 有哪些额外功能？", "Fetch 是否支持自动发送 Cookie？如果不支持，如何配置？", "为什么说 Axios 更适合复杂项目？"]
+	},
+	{
+		id: "js-030",
+		cat: "js",
+		level: 2,
+		hot: 64,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中 || 和 && 操作符的返回值是什么？",
+		short: "逻辑或操作符（||）返回第一个真值操作数；如果所有操作数都为假值，则返回最后一个操作数。它不会总是返回布尔值，而是可能返回操作数本身的值。",
+		points: [
+			"对第一个操作数进行条件判断。",
+			"如果第一个操作数的条件判断结果为 true，则返回第一个操作数的值。",
+			"如果第一个操作数的条件判断结果为 false，则返回第二个操作数的值。",
+		],
+		detail: [
+			{ h: "整体回答", p: "逻辑或操作符（||）返回第一个真值操作数；如果所有操作数都为假值，则返回最后一个操作数。它不会总是返回布尔值，而是可能返回操作数本身的值。" },
+			{ h: "JavaScript中&&操作符的返回值规则是什么", p: "逻辑与操作符（&&）返回第一个假值操作数；如果所有操作数都为真值，则返回最后一个操作数。和||一样，它也可能返回操作数本身，而不一定是布尔值。" },
+			{ h: "为什么在JavaScript中||和&&不总是返回布尔值", p: "因为JavaScript的逻辑操作符会短路求值，并直接返回参与运算的操作数的原始值，而不是将其强制转换为布尔类型后再返回。这使得它们可以用于提供默认值或条件执行。" },
+			{ h: "使用||操作符如何实现默认值赋值", p: "可以利用||返回第一个真值的特性来设置默认值，例如：const name = user.name || '匿名'；当user.name为假值时，name将被赋值为'default'。" },
+		],
+		extend: ["使用&&操作符在条件访问时的作用是什么？", "表达式 '' || 'default' 的返回值是什么？", "表达式 null && 'fallback' 的返回值是什么？", "表达式 'hello' && 123 的返回结果是什么？"]
+	},
+	{
+		id: "js-031",
+		cat: "js",
+		level: 2,
+		hot: 64,
+		source: "面试鸭 · JavaScript 基础",
+		title: "Object.assign 和对象扩展运算符有什么区别？是深拷贝还是浅拷贝？",
+		short: "两者都是浅拷贝，只复制对象的第一层属性。",
+		points: [
+			"Object.assign(target, ...sources)：将一个或多个源对象的所有可枚举属性复制到目标对象，并返回目标对象。…",
+			"Object.assign 和对象扩展运算符 ... 都是执行浅拷贝，即只复制对象的第一层属性，不会递归复制整个对象结构。",
+			"Object.assign(target, ...sources)：将一个或多个源对象的所有可枚举属性复制到目标对象，并返回目标对象。",
+		],
+		detail: [
+			{ h: "整体回答", p: "两者都是浅拷贝，只复制对象的第一层属性。对于嵌套的对象或数组等引用类型，只会复制其引用，而不会递归地复制整个内部结构。" },
+			{ h: "为什么 Object.assign 和对象扩展运算符被称为浅拷贝", p: "因为它们仅复制对象自身的可枚举属性到第一层。如果属性值是对象或数组，复制的是该值的引用，而不是创建新的对象副本，因此源对象和目标对象会共享同一引用，导致修改一个会影响另一个。" },
+			{ h: "Object.assign 和对象扩展运算符在处理相同属性时的行为是什么", p: "当多个源对象具有相同的属性时，后出现的对象属性会覆盖前面的属性。例如，在 Object.assign({}, obj1, obj2) 或 { ...obj1, ...obj2 } 中，obj2 的同名属性会覆盖 obj1 的属性。" },
+			{ h: "Object.assign 的返回值是什么？是否影响原对象", p: "Object.assign 返回的是目标对象本身。如果目标对象是一个新对象（如 {}），则不会影响原始源对象；但如果目标对象是已有对象，则会直接修改该对象。" },
+		],
+		extend: ["对象扩展运算符 ... 可以用在哪些场景中？", "使用对象扩展运算符时是否会创建新对象？", "如何实现真正的深拷贝？", "Object.assign 和对象扩展运算符的主要区别是什么？"]
+	},
+	{
+		id: "js-032",
+		cat: "js",
+		level: 2,
+		hot: 64,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中如何进行隐式类型转换？",
+		short: "隐式类型转换也称为类型强制转换，是指JavaScript在表达式求值时自动将一种数据类型转换为另一种数据类型的过程。",
+		points: [
+			"隐式类型转换也称为类型强制转换，是指 JavaScript 在表达式求值时自动将一种数据类型转换为另一种数据类型的过程。",
+			"console.log(5 + \\\"5\\\"); // \\\"55\\\"（字符串拼接）",
+			"console.log(\\\"5\\\" + 5); // \\\"55\\\"（字符串拼接）",
+		],
+		detail: [
+			{ h: "整体回答", p: "隐式类型转换也称为类型强制转换，是指JavaScript在表达式求值时自动将一种数据类型转换为另一种数据类型的过程。这种转换不需要开发者显式调用转换函数，而是由JavaScript引擎根据上下文自动完成。" },
+			{ h: "JavaScript中哪些运算会触发隐式类型转换", p: "JavaScript中主要在三种情况下会发生隐式类型转换：算术运算（如+、-、*、/）、比较运算（如==、>、<）和逻辑运算（如!、||、&&）。此外，字符串与数字之间的操作也会触发隐式转换。" },
+			{ h: "为什么5 + '5'的结果是'55'而不是10", p: "因为在算术加法运算中，当一个操作数是字符串时，JavaScript会优先执行字符串拼接。此时另一个操作数会被转换为字符串，因此5被转换为'5'，最终结果是字符串'55'。" },
+			{ h: "为什么5 == '5'返回true而5 === '5'返回false", p: "因为双等号（==）会进行隐式类型转换，将字符串'5'转换为数字5后再比较，所以相等；而三等号（===）不进行类型转换，要求值和类型都相同，由于一个是number，一个是string，类型不同，因此返回false。" },
+		],
+		extend: ["在逻辑运算中，哪些值会被转换为false？", "逻辑运算符||和&&如何进行隐式类型转换？", "为什么'6' < '12'返回false？", "减法运算中字符串如何处理？"]
+	},
+	{
+		id: "js-033",
+		cat: "js",
+		level: 2,
+		hot: 64,
+		source: "面试鸭 · JavaScript 基础",
+		title: "什么是 AJAX？如何实现一个 AJAX 请求？",
+		short: "AJAX是Asynchronous JavaScript and XML的缩写，指的是通过JavaScript的异步通信技术，从服务器获取数据（早期多为XML格式，…",
+		points: [
+			"创建一个 XMLHttpRequest 对象。",
+			"在这个对象上使用 open 方法创建一个 HTTP 请求，open 方法所需要的参数是请求的方法、请求的地址、是否异步和用户的认证信息。",
+			"AJAX是 Asynchronous JavaScript and XML 的缩写，指的是通过 JavaScript 的 异步通信，从服务器获取 …",
+		],
+		detail: [
+			{ h: "整体回答", p: "AJAX是Asynchronous JavaScript and XML的缩写，指的是通过JavaScript的异步通信技术，从服务器获取数据（早期多为XML格式，现在多为JSON），并更新网页的局部内容，而无需重新加载整个页面。它提升了用户体验，使网页能够实现局部刷新。" },
+			{ h: "AJAX的核心对象是什么", p: "AJAX的核心对象是XMLHttpRequest，它是浏览器提供的用于与服务器进行HTTP通信的API，通过它可以创建异步请求，发送数据并接收响应。" },
+			{ h: "使用XMLHttpRequest发送AJAX请求的基本步骤有哪些", p: "基本步骤包括：1）创建XMLHttpRequest实例；2）调用open方法设置请求方法、URL、是否异步等；3）可选地设置请求头和监听readyState变化；4）调用send方法发送请求，POST请求需传入数据体。" },
+			{ h: "XMLHttpRequest的readyState有哪几个状态", p: "readyState共有5个状态：0（未初始化）、1（已建立连接）、2（已发送请求）、3（正在接收响应）、4（响应完成）。当readyState为4时，表示服务器响应已完成，可以处理数据。" },
+		],
+		extend: ["如何判断AJAX请求成功？", "如何在AJAX中设置请求头？", "为什么AJAX能实现页面局部更新？", "Fetch API相比XMLHttpRequest有什么优势？"]
+	},
+	{
+		id: "js-034",
+		cat: "js",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 有哪些内置对象？",
+		short: "JavaScript 的常见内置对象包括：Object、Array、String、Number、Boolean、Function、Date、RegExp、Math、JSON、S…",
+		points: [
+			"Boolean…",
+			"Function…",
+			"WeakMap…",
+			"WeakSet…",
+		],
+		detail: [
+			{ h: "整体回答", p: "JavaScript 的常见内置对象包括：Object、Array、String、Number、Boolean、Function、Date、RegExp、Math、JSON、Symbol、Map、Set、WeakMap、WeakSet 和 Promise。这些对象提供了处理数据、执行操作和管理程序逻辑的常用方法。" },
+			{ h: "Object 对象的作用是什么？有哪些常用方法", p: "Object 是所有对象的基类，其他对象都继承自它。常用方法有 Object.keys() 获取对象的所有键，Object.values() 获取所有值，Object.entries() 获取键值对数组等。" },
+			{ h: "Array 对象提供了哪些常用的操作方法", p: "Array 用于存储有序数据，常用方法包括 push() 添加元素，pop() 移除最后一个元素，forEach() 遍历，map() 映射新数组，filter() 过滤元素，以及 reduce() 累积计算等。" },
+			{ h: "如何使用 String 对象处理字符串", p: "String 对象用于处理文本，常用方法有 length 获取长度，indexOf() 查找子串位置，slice() 截取字符串，toUpperCase() 转大写，toLowerCase() 转小写等。" },
+		],
+		extend: ["Number 对象有哪些常用的数值处理方法？", "Function 在 JavaScript 中有什么特殊性？", "Date 对象能做什么？有哪些常用方法？", "RegExp 对象的作用是什么？如何使用？"]
+	},
+	{
+		id: "js-035",
+		cat: "js",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · 前端 ES6",
+		title: "️ES6 新增的 Symbol 基础数据类型有什么作用？",
+		short: "Symbol 的主要作用是提供一种唯一且不可变的值，用作对象属性名以避免命名冲突，同时可用于定义特殊行为的内置方法（如迭代、类型转换等）。",
+		points: [
+			"用作对象属性名：可以确保属性名称的唯一性。",
+			"防止属性冲突：可以避免在不同模块不同库之间发生属性命名冲突。",
+			"内置 Symbol：ES6 提供了一些内置的 Symbol，如 Symbol.iterator、Symbol.match 等。",
+			"全局注册表：用 Symbol.for() 方法创建的 Symbol 会被放入一个全局注册表中。通过 Symbol.keyFor() …",
+		],
+		detail: [
+			{ h: "整体回答", p: "Symbol 的主要作用是提供一种唯一且不可变的值，用作对象属性名以避免命名冲突，同时可用于定义特殊行为的内置方法（如迭代、类型转换等）。" },
+			{ h: "为什么 Symbol 可以防止属性名冲突", p: "因为每个通过 Symbol() 创建的值都是唯一的，即使使用相同的描述符，两个 Symbol 值也不相等，因此作为属性名时不会发生覆盖或冲突。" },
+			{ h: "如何使用 Symbol 作为对象属性", p: "使用中括号语法将 Symbol 作为键来定义属性，例如：let sym = Symbol('key'); let obj = { [sym]: 'value' }; 访问时也需使用 obj[sym]。" },
+			{ h: "Symbol 定义的属性能否被遍历到", p: "不能。Symbol 作为属性名时不会出现在 for...in、for...of 循环中，也不会被 Object.keys() 或 Object.getOwnPropertyNames() 返回，只能通过 Object.getOwnPropertySymbols() 获取。" },
+		],
+		extend: ["Symbol.for 和 Symbol 有什么区别？", "如何检测一个 Symbol 是否在全局注册表中？", "什么是内置 Symbol？常见的有哪些？", "如何让一个对象支持 for...of 遍历？"]
+	},
+	{
+		id: "js-036",
+		cat: "js",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中 for...in 和 for...of 的区别是什么？",
+		short: "最主要的区别在于遍历对象和返回值不同：for...in 用于遍历对象的可枚举属性（包括原型链上的），返回的是键名；而 for...of …",
+		points: [
+			"for...in 循环…",
+			"用于遍历对象的可枚举属性，包括其原型链上的可枚举属性…",
+			"返回的是属性名（键名）",
+			"可以遍历普通对象，也可以遍历数组（但不推荐）。",
+		],
+		detail: [
+			{ h: "整体回答", p: "最主要的区别在于遍历对象和返回值不同：for...in 用于遍历对象的可枚举属性（包括原型链上的），返回的是键名；而 for...of 用于遍历可迭代对象（如数组、字符串、Map、Set等），返回的是元素的值。" },
+			{ h: "for...in 可以遍历哪些数据类型", p: "for...in 主要用于遍历普通对象的可枚举属性，也可以遍历数组，但不推荐，因为它会遍历到所有可枚举属性，包括手动添加的非数字属性，还可能遍历到原型链上的属性。" },
+			{ h: "for...of 可以遍历普通对象吗", p: "不可以。普通对象不是可迭代对象，没有实现 @@iterator 协议，因此不能直接使用 for...of 遍历。如果需要，可以通过 Object.entries() 将对象转为可迭代形式后再使用 for...of。" },
+			{ h: "for...in 和 for...of 的遍历顺序是否可预测", p: "for...in 不保证遍历顺序，尤其在不同引擎下可能不一致；而 for...of 按照可迭代对象的迭代器定义的顺序遍历，顺序是确定的。" },
+		],
+		extend: ["for...in 会遍历原型链上的属性吗？", "for...of 的性能比 for...in 好吗？", "如何用 for...of 遍历数组的索引和值？", "如何用 for...of 遍历对象的键值对？"]
+	},
+	{
+		id: "js-037",
+		cat: "js",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 脚本延迟加载的方式有哪些？",
+		short: "JavaScript脚本延迟加载的主要方式有四种：使用async属性、使用defer属性、动态创建脚本元素、使用模块化加载工具。",
+		points: [
+			"使用async属性…",
+			"使用defer属性…",
+			"动态创建脚本元素…",
+			"使用模块化加载工具…",
+		],
+		detail: [
+			{ h: "整体回答", p: "JavaScript脚本延迟加载的主要方式有四种：使用async属性、使用defer属性、动态创建脚本元素、使用模块化加载工具。" },
+			{ h: "async属性的作用和特点是什么", p: "async属性使脚本异步加载，不阻塞HTML解析，脚本下载完成后立即执行，但多个async脚本的执行顺序不确定，适用于独立性高的脚本，如统计或广告代码。" },
+			{ h: "defer属性与async有什么区别", p: "defer属性也异步加载脚本，但会保证脚本按照在文档中出现的顺序执行，并且是在HTML解析完成后才执行；而async脚本一旦下载完成就立即执行，执行顺序不可控。" },
+			{ h: "什么时候应该使用defer属性", p: "当脚本依赖于完整的DOM结构时，比如需要操作DOM元素，应使用defer属性，因为它确保脚本在HTML解析完成后执行，且多个defer脚本按顺序执行。" },
+		],
+		extend: ["如何通过JavaScript动态加载脚本？", "动态创建脚本元素的优点是什么？", "什么是模块化加载工具？请举例说明。", "Webpack中如何实现脚本的延迟加载？"]
+	},
+	{
+		id: "js-038",
+		cat: "js",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · 前端 ES6",
+		title: "ES Module 与 CommonJS 模块方案有什么异同？",
+		short: "两者都是 JavaScript 的模块化规范，都可以用于导入和导出模块，实现代码的复用和解耦。",
+		points: [
+			"相同点：两者都是 JavaScript 的模块化规范，都可以用来导入导出模块。",
+			"ES Module (ESM) 是 ES6 引入的标准化模块系统，支持动态导入，在编译时加载，可以异步加载模块。",
+			"CommonJS (CJS) 出现在 ES6 之前，不支持动态导入，在运行时加载，采取的是同步加载模块的方式。",
+		],
+		detail: [
+			{ h: "整体回答", p: "两者都是 JavaScript 的模块化规范，都可以用于导入和导出模块，实现代码的复用和解耦。" },
+			{ h: "ES Module 和 CommonJS 在语法上有什么区别", p: "ES Module 使用 export 和 import 关键字进行模块的导出和导入，且导入时需遵循 URL 语法，通常要带文件后缀；CommonJS 使用 module.exports 或 exports 导出，使用 require 导入，可以省略文件后缀。" },
+			{ h: "ES Module 和 CommonJS 的加载时机有何不同", p: "ES Module 是在编译时加载模块，采用异步加载方式，支持静态分析；而 CommonJS 是在运行时加载模块，采用同步加载方式，必须等到模块完全加载并执行后才能继续执行后续代码。" },
+			{ h: "为什么说 ES Module 支持动态导入而 CommonJS 不支持", p: "ES Module 支持通过 import() 动态导入模块，该方法返回一个 Promise，可用于按需加载；CommonJS 的 require 是同步的，无法实现异步或动态加载，因此不支持动态导入。" },
+		],
+		extend: ["ES Module 导出的是引用还是值的拷贝？CommonJS 呢？", "ES Module 和 CommonJS 分别适用于哪些运行环境？", "ES Module 中顶层 this 的值是什么？CommonJS 呢？", "Tree Shaking 优化依赖于哪种模块系统？为什么？"]
+	},
+	{
+		id: "js-039",
+		cat: "js",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 其他值到数字值的转换规则是什么？",
+		short: "undefined 转换为数字时结果是 NaN。",
+		points: [
+			"Undefined 类型…",
+			"Null 类型…",
+			"console.log(Number(undefined)); // NaN…",
+		],
+		detail: [
+			{ h: "整体回答", p: "undefined 转换为数字时结果是 NaN。" },
+			{ h: "null 转换为数字时的结果是什么", p: "null 转换为数字时结果是 0。" },
+			{ h: "Boolean 类型值 true 和 false 转换为数字时分别得到什么", p: "true 转换为数字是 1，false 转换为数字是 0。" },
+			{ h: "字符串转换为数字的规则是什么", p: "字符串会按照 Number() 函数规则转换：纯数字字符串（如 '42'）转为对应数字；小数格式（如 '3.14'）正常转换；空字符串 '' 转为 0；包含非数字字符的字符串（如 'hello' 或 '42abc'）转为 NaN。" },
+		],
+		extend: ["Symbol 值可以转换为数字吗？", "对象转换为数字的过程是怎样的？", "数组如何转换为数字？", "为什么 Number([1, 2, 3]) 的结果是 NaN？"],
+		code: "console.log(Number(undefined)); // NaN"
+	},
+	{
+		id: "js-040",
+		cat: "js",
+		level: 2,
+		hot: 63,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中 + 操作符什么时候用于字符串的拼接？",
+		short: "根据 ECMAScript 规范，+ 操作符的具体行为取决于操作数的类型，规则如下： 1）字符串拼接 如果两个操作数中有一个是字符串，则 + 操作符将执行字符串拼接，…",
+		points: [
+			"console.log(\\\"hello\\\" + \\\" world\\\"); // \\\"hello world\\\"",
+			"console.log(5 + \\\"5\\\"); // \\\"55\\\"",
+			"console.log(\\\"The answer is \\\" + 42); // \\\"The answer is 42\\\"",
+		],
+		detail: [
+			{ h: "如果一个操作数是数字，另一个是字符串，+ 操作符会如何处理", p: "在这种情况下，+ 操作符会将数字转换为字符串，然后执行字符串拼接。例如：10 + \\\"20\\\" 的结果是字符串 \\\"1020\\\"。" },
+			{ h: "布尔值与字符串相加时会发生什么", p: "当布尔值与字符串使用 + 操作符时，由于存在字符串，会触发字符串拼接。布尔值会被先转换为字符串（true 变为 \\\"true\\\"，false 变为 \\\"false\\\"），然后与原字符串拼接。例如：false + \\\"test\\\" 的结果是 \\\"falsetest\\\"。" },
+			{ h: "对象或数组与字符串相加时，+ 操作符的行为是什么", p: "当对象或数组与字符串相加时，对象会首先通过 toString() 方法转换为字符串，然后再进行拼接。例如：[1,2] + \\\"abc\\\" 结果是 \\\"1,2abc\\\"，{} + \\\"test\\\" 在多数环境中结果是 \\\"[object Object]test\\\"。" },
+			{ h: "null 或 undefined 与字符串相加时的结果是什么", p: "当 null 或 undefined 与字符串相加时，它们会被转换为对应的字符串形式参与拼接。null 转换为字符串 \\\"null\\\"，undefined 转换为 \\\"undefined\\\"。例如：null + \\\"hello\\\" 结果是 \\\"nullhello\\\"，undefined + \\\"world\\\" 结果是 \\\"undefinedworld\\\"。" },
+		],
+		extend: [],
+		code: "console.log(\\\"hello\\\" + \\\" world\\\"); // \\\"hello world\\\"\nconsole.log(5 + \\\"5\\\"); // \\\"55\\\"\nconsole.log(\\\"The answer is \\\" + 42); // \\\"The answer is 42\\\""
+	},
+	{
+		id: "js-041",
+		cat: "js",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中怎么删除数组最后一个元素？",
+		short: "主要有四种方法：1）使用 pop() 方法，直接删除并返回最后一个元素；2）使用 splice() 方法，通过指定位置和数量删除最后一个元素；3）使用 slice(0, …",
+		points: [
+			"使用 pop() 方法，最直接、最常用的方法就是使用数组的 pop() 方法。这个方法不仅会删除数组的最后一个元素，还会返回被删除的元素。",
+			"在 JavaScript 中，我们有几种方法可以实现这个功能，",
+			"使用 pop() 方法，最直接、最常用的方法就是使用数组的 pop() 方法。",
+		],
+		detail: [
+			{ h: "整体回答", p: "主要有四种方法：1）使用 pop() 方法，直接删除并返回最后一个元素；2）使用 splice() 方法，通过指定位置和数量删除最后一个元素；3）使用 slice(0, -1) 创建一个不包含最后一个元素的新数组；4）修改数组的 length 属性，将其减一来截断数组。" },
+			{ h: "pop() 方法有什么特点", p: "pop() 方法会直接修改原数组，删除并返回最后一个元素。其时间复杂度为 O(1)，性能高效。但如果数组为空，它会返回 undefined，使用时需注意空数组情况。" },
+			{ h: "splice() 方法如何删除最后一个元素", p: "可以通过 fruits.splice(-1, 1) 来删除最后一个元素。其中 -1 表示从末尾开始的位置，1 表示删除一个元素。该方法返回被删除元素组成的数组，并会修改原数组。" },
+			{ h: "如何在不修改原数组的情况下删除最后一个元素", p: "可以使用 slice(0, -1) 方法，它会返回一个新数组，包含原数组除最后一个元素外的所有元素，原数组保持不变。" },
+		],
+		extend: ["修改 length 属性如何实现删除最后一个元素？", "这几种方法的时间复杂度和内存开销有何不同？", "如何删除数组的第一个元素？", "什么是浅拷贝和深拷贝？"]
+	},
+	{
+		id: "js-042",
+		cat: "js",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中判断数据类型的方式有哪些？",
+		short: "typeof 操作符用于判断一个变量的基本数据类型，例如 number、string、boolean、undefined 和 function。",
+		points: [
+			"typeof 操作符…",
+			"typeof 42; // \\\"number\\\"",
+			"typeof \\\"hello\\\"; // \\\"string\\\"",
+		],
+		detail: [
+			{ h: "整体回答", p: "typeof 操作符用于判断一个变量的基本数据类型，例如 number、string、boolean、undefined 和 function。但需要注意的是，typeof null 返回 'object'，这是一个历史遗留问题。" },
+			{ h: "为什么 typeof null 返回 'object'", p: "这是 JavaScript 语言早期实现中的一个 bug，null 被错误地归类为 'object'。尽管后来被发现，但为了保持向后兼容性，这一行为被保留了下来。" },
+			{ h: "如何准确判断一个值是否为数组", p: "可以使用 Array.isArray() 方法或 Object.prototype.toString.call() 来准确判断。例如：Array.isArray([]) 返回 true；Object.prototype.toString.call([]) 返回 '[object Array]'。" },
+			{ h: "instanceof 操作符的原理和用途是什么", p: "instanceof 用于判断一个对象是否是某个构造函数的实例，其原理是通过原型链向上查找，检查右侧构造函数的 prototype 是否出现在左侧对象的原型链中。常用于判断自定义对象或内置对象类型，如数组、正则等。" },
+		],
+		extend: ["为什么不能仅用 typeof 来判断对象的具体类型？", "Object.prototype.toString.call() 为什么能准确判断数据类型？", "如何判断一个变量是不是函数？", "Array.isArray() 和 instanceof Array 有什么区别？"]
+	},
+	{
+		id: "js-043",
+		cat: "js",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中为什么会有 BigInt 的提案？",
+		short: "JavaScript 中的数字类型是基于 IEEE 754 双精度浮点数标准实现的。",
+		points: [
+			"JavaScript 中的数字类型是基于 IEEE 754 双精度浮点数标准实现的。",
+			"console.log(Number.MAX_SAFE_INTEGER); // 900719925474099…",
+		],
+		detail: [
+			{ h: "Number.MAX_SAFE_INTEGER 的值是多少", p: "Number.MAX_SAFE_INTEGER 的值是 9007199254740991，表示 JavaScript 中 Number 类型能够安全表示的最大整数。" },
+			{ h: "为什么 Number 类型在处理大整数时会丢失精度", p: "因为 JavaScript 的 Number 类型使用 IEEE 754 双精度浮点数格式存储，这种格式用 64 位表示数字，其中只有 53 位用于表示有效数字（含隐含位）。当整数超过 53 位精度时，低位数字无法被准确表示，从而导致精度丢失。" },
+			{ h: "BigInt 如何创建", p: "可以通过在整数后面添加后缀 'n' 来创建 BigInt，例如：123n；也可以使用 BigInt() 构造函数，传入字符串或数字形式的整数，例如：BigInt('12345678901234567890') 或 BigInt(123)。" },
+			{ h: "BigInt 和 Number 可以直接混合运算吗", p: "不可以。BigInt 和 Number 是不同的原始类型，JavaScript 不允许它们直接混合运算，否则会抛出 TypeError。必须显式转换为同一类型才能进行运算。" },
+		],
+		extend: ["如何将 Number 转换为 BigInt？", "BigInt 支持哪些运算？", "BigInt 是否能与 Number 安全比较？", "BigInt 有哪些限制？"]
+	},
+	{
+		id: "js-044",
+		cat: "js",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "常见的 DOM 操作有哪些？",
+		short: "从事前端开发，我们常常需要与 DOM（Document Object Model）进行互动。",
+		points: [
+			"获取元素：使用 document.getElementById(), document.getElementsByClassName(), 以及 …",
+			"创建元素：使用 document.createElement() 方法。",
+			"从事前端开发，我们常常需要与 DOM（Document Object Model）进行互动。",
+		],
+		detail: [
+			{ h: "如何获取DOM元素", p: "可以通过 document.getElementById() 获取单个元素，通过 document.getElementsByClassName()、document.getElementsByTagName() 获取元素集合，也可以使用 document.querySelector() 和 document.querySelectorAll() 来获取匹配的元素或元素列表。" },
+			{ h: "如何创建和插入新的DOM元素", p: "使用 document.createElement() 创建新元素，该元素最初存在于内存中；然后通过 parentNode.appendChild() 或 insertBefore() 方法将其插入到DOM树中。" },
+			{ h: "修改元素属性有哪些方式", p: "可以使用 element.setAttribute() 设置属性，element.removeAttribute() 移除属性。对于某些属性如id或class，也可以直接通过 element.id = 'new-id' 或 element.className = 'new-class' 进行设置。" },
+			{ h: "innerHTML 和 textContent 有什么区别", p: "innerHTML 可以解析HTML字符串并渲染为DOM节点，而 textContent 只处理纯文本内容，不会解析HTML标签，更安全且性能更高。" },
+		],
+		extend: ["如何添加和删除DOM元素？", "如何给元素绑定事件？", "什么是DOM节点遍历？有哪些相关属性？", "如何操作元素的CSS类名？"]
+	},
+	{
+		id: "js-045",
+		cat: "js",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 的数组有哪些原生方法？",
+		short: "JavaScript数组可以使用toString()、toLocaleString()和join()方法将数组转换为字符串。",
+		points: [
+			"1 ) 数组和字符串的转换方法：toString()、toLocalString()、join() 其中 join() …",
+			"const fruits = [\\\"apple\\\", \\\"banana\\\", \\\"orange\\\"];…",
+			"const fruitString = fruits.toString();…",
+		],
+		detail: [
+			{ h: "整体回答", p: "JavaScript数组可以使用toString()、toLocaleString()和join()方法将数组转换为字符串。其中，toString()使用逗号分隔，join()可以指定分隔符，toLocaleString()会根据本地化规则格式化每个元素后再拼接。" },
+			{ h: "如何在数组的末尾添加或删除元素", p: "使用push()方法可以在数组末尾添加一个或多个元素，并返回新长度；使用pop()方法可以删除并返回数组最后一个元素。这两个方法都会直接修改原数组。" },
+			{ h: "如何在数组的开头添加或删除元素", p: "使用unshift()方法可以在数组开头添加一个或多个元素，并返回新长度；使用shift()方法可以删除并返回数组的第一个元素。这两个方法都会改变原数组。" },
+			{ h: "concat()方法的作用是什么", p: "concat()方法用于合并两个或多个数组，返回一个新的数组，原数组不会被改变。它可以接受多个数组或值作为参数进行拼接。" },
+		],
+		extend: ["sort()方法默认是如何排序的？", "forEach和map方法有什么区别？", "find()和findIndex()方法的区别是什么？", "some()和every()方法分别做什么？"]
+	},
+	{
+		id: "js-046",
+		cat: "js",
+		level: 1,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 中如何合并对象？",
+		short: "常见的对象合并方法包括使用展开运算符（...）、Object.assign()、递归实现深度合并，以及使用第三方库如Lodash的merge方法。",
+		points: [
+			"const obj1 = { a: 1, b: 2 };…",
+			"const obj2 = { b: 3, c: 4 };…",
+			"可以使用 Object.assign() 或扩展运算符 ... 来浅度合并 js 对象，如果需要深度合并，可以使用 递归来实现…",
+		],
+		detail: [
+			{ h: "整体回答", p: "常见的对象合并方法包括使用展开运算符（...）、Object.assign()、递归实现深度合并，以及使用第三方库如Lodash的merge方法。" },
+			{ h: "展开运算符合并对象是浅拷贝还是深拷贝", p: "展开运算符合并对象是浅拷贝。如果对象属性存在嵌套，只会复制引用，不会递归合并嵌套对象。" },
+			{ h: "Object.assign()合并对象时会改变原对象吗", p: "如果第一个参数是空对象{}，则不会改变原对象；但如果传入的是已有对象，则会修改该对象。为了不改变原对象，建议将第一个参数设为空对象。" },
+			{ h: "如何实现JavaScript中的深度对象合并", p: "可以通过递归遍历对象属性，判断属性是否为对象类型，如果是则递归调用合并函数。也可以使用Lodash的_.merge方法来实现可靠的深度合并。" },
+		],
+		extend: ["使用递归进行深度合并有什么注意事项？", "展开运算符和Object.assign()在合并对象时有何异同？", "为什么需要使用Lodash的merge方法而不是原生方法？", "当两个对象有相同键但值类型不同时，深度合并应如何处理？"]
+	},
+	{
+		id: "js-047",
+		cat: "js",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 数组的遍历方法有哪些？",
+		short: "常用的数组遍历方法包括：for 循环、forEach、for...of、map、filter。",
+		points: [
+			"const arr = [1, 2, 3, 4, 5];…",
+			"for (let i = 0; i < arr.length; i++) {…",
+			"console.log(arr[i]);…",
+		],
+		detail: [
+			{ h: "整体回答", p: "常用的数组遍历方法包括：for 循环、forEach、for...of、map、filter。此外还有 reduce、some、every 等不常用于纯遍历但具有遍历功能的方法。" },
+			{ h: "for 循环遍历数组有什么特点", p: "for 循环是最传统的遍历方式，通过索引访问数组元素，性能较好，并且可以在循环中使用 break 或 continue 提前终止或跳过循环。" },
+			{ h: "forEach 和 for 循环有何区别", p: "forEach 是数组方法，语法更简洁，自动遍历所有元素，无法使用 break 提前退出，也不支持异步操作的正确等待；而 for 循环更灵活，支持中断和异步控制。" },
+			{ h: "for...of 循环适用于哪些场景", p: "for...of 用于可迭代对象（如数组），可以直接获取每个元素的值，语法清晰，支持 await 异步操作，适合同步或异步的顺序遍历。" },
+		],
+		extend: ["map 方法的作用是什么？", "filter 方法的用途是什么？", "reduce 方法如何使用？", "some 和 every 方法的区别是什么？"],
+		code: "const arr = [1, 2, 3, 4, 5];\nfor (let i = 0; i < arr.length; i++) {\n  console.log(arr[i]);\n}"
+	},
+	{
+		id: "js-048",
+		cat: "js",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 脚本异步加载如何实现？各有什么区别？",
+		short: "JavaScript 脚本异步加载主要有三种方式：1）使用 async 属性；2）使用 defer 属性；3）动态创建 script 标签并插入 DOM。",
+		points: [
+			"使用 async 属性。",
+			"使用 defer 属性。",
+			"动态创建脚本标签并添加到 DOM 中。",
+			"async 属性：脚本会在后台异步加载，一旦加载完成就立即执行，不会等待 HTML 的解析完成。",
+		],
+		detail: [
+			{ h: "整体回答", p: "JavaScript 脚本异步加载主要有三种方式：1）使用 async 属性；2）使用 defer 属性；3）动态创建 script 标签并插入 DOM。此外，现代开发中还常用模块化加载（如 ESM）和 Service Workers 实现更高级的异步加载策略。" },
+			{ h: "async 和 defer 的区别是什么", p: "async 是异步加载脚本，加载完成后立即执行，不保证执行顺序，且可能在 HTML 解析完成前执行；defer 也是异步加载，但会延迟到 HTML 解析完成后才按顺序执行，适合依赖 DOM 或其他脚本的场景。" },
+			{ h: "什么时候应该使用 async", p: "async 适用于独立、无依赖的脚本，例如统计代码、广告脚本等，这些脚本不需要等待页面解析完成，也不依赖其他脚本，可以加载后立即执行。" },
+			{ h: "什么时候应该使用 defer", p: "defer 适用于需要在 DOM 构建完成后执行，并且有执行顺序要求的脚本。它确保脚本在 HTML 解析完成后执行，常用于页面功能逻辑脚本，特别是多个脚本之间存在依赖关系时。" },
+		],
+		extend: ["动态创建 script 标签有什么优势？", "动态创建 script 时 async 默认是 true 吗？", "ESM 模块如何实现异步加载？", "多个 defer 脚本的执行顺序是怎样的？"]
+	},
+	{
+		id: "js-049",
+		cat: "js",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 的 forEach 和 map 方法有什么区别？",
+		short: "forEach 方法没有返回值，它只是对数组的每个元素执行一次对应的函数。",
+		points: [
+			"forEach 方法没有返回值，它只是对数组的每个元素执行一次对应的函数。",
+			"map 方法会返回一个新数组，这个新数组由原数组中的每个元素经过指定函数处理后的值组成。",
+			"forEach 和 map 方法都是用来遍历数组的，最关键的区别在于它们的返回值…",
+		],
+		detail: [
+			{ h: "参考回答", p: "forEach 和 map 方法都是用来遍历数组的，最关键的区别在于它们的返回值…" },
+			{ h: "返回值区别", p: "forEach 方法没有返回值，它只是对数组的每个元素执行一次对应的函数。 map 方法会返回一个新数组，这个新数组由原数组中的每个元素经过指定函数处理后的值组成。" },
+			{ h: "使用场景区别", p: "forEach 主要用于执行副作用（例如修改原数组、打印元素、修改外部状态…" },
+		],
+		extend: []
+	},
+	{
+		id: "js-050",
+		cat: "js",
+		level: 2,
+		hot: 62,
+		source: "面试鸭 · JavaScript 基础",
+		title: "JavaScript 的 splice 和 slice 函数会改变原数组吗？",
+		short: "splice() 会改变原数组，可以用来添加或删除元素。",
+		points: [
+			"splice() 会改变原数组，可以用来添加或删除元素。",
+			"slice() 不会改变原数组，而是返回一个新的数组，包含原数组的一部分浅拷贝。",
+			"splice() 方法可以在数组中添加、删除或替换元素，并返回被删除的元素…",
+		],
+		detail: [
+			{ h: "参考回答", p: "splice() 会改变原数组，可以用来添加或删除元素。 slice() 不会改变原数组，而是返回一个新的数组，包含原数组的一部分浅拷贝。" },
+			{ h: "splice 方法", p: "splice() 方法可以在数组中添加、删除或替换元素，并返回被删除的元素 const arr = [1, 2, 3, 4, 5]; const removed = arr.splice(2, 2); // 从索引2开始删除2个元素 console.log(arr);…" },
+		],
+		extend: []
+	},
+]

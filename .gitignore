@@ -1,0 +1,28 @@
+# ---------- 构建产物 ----------
+unpackage/
+dist/
+.hbuilderx/
+
+# ---------- 依赖 ----------
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ---------- 日志与临时文件 ----------
+*.log
+npm-debug.log*
+yarn-error.log*
+*.tmp
+*.bak
+*.local
+
+# ---------- 编辑器 / 系统 ----------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- 本地工具目录 ----------
+.workbuddy/

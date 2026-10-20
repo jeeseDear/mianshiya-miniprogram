@@ -1,0 +1,177 @@
+{
+	"pages": [
+		// pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/interview/index/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "面试鸭"
+			}
+		},
+		{
+			"path": "pages/interview/bank/bank",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "题库"
+			}
+		},
+		{
+			"path": "pages/interview/collect/collect",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "我的题单"
+			}
+		},
+		{
+			"path": "pages/interview/mine/mine",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/interview/search/search",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "搜索"
+			}
+		},
+		{
+			"path": "pages/interview/knowledge/knowledge",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "知识点"
+			}
+		},
+		{
+			"path": "pages/interview/qa/qa",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "问答详解"
+			}
+		}
+		// #ifdef APP-PLUS
+		,{
+			"path": "platforms/app-plus/speech/speech",
+			"style": {
+				"navigationBarTitleText": "语音识别"
+			}
+		}
+		,{
+			"path": "platforms/app-plus/orientation/orientation",
+			"style": {
+				"navigationBarTitleText": "方向传感器"
+			}
+		}
+		,{
+			"path": "platforms/app-plus/proximity/proximity",
+			"style": {
+				"navigationBarTitleText": "距离传感器"
+			}
+		}
+		,{
+			"path": "platforms/app-plus/push/push",
+			"style": {
+				"navigationBarTitleText": "推送"
+			}
+		}
+		,{
+			"path": "platforms/app-plus/shake/shake",
+			"style": {
+				"navigationBarTitleText": "摇一摇"
+			}
+		}
+		,{
+			"path": "platforms/app-plus/feedback/feedback",
+			"style": {
+				"navigationBarTitleText": "问题反馈"
+			}
+		}
+		// #endif
+		// #ifdef H5 || APP-PLUS
+		,{
+			"path": "pages/about/about",
+			"style": {
+				"navigationBarTitleText": "关于"
+			}
+		}
+		// #endif
+		// #ifdef H5
+		,{
+			"path": "pages/error/404",
+			"style": {
+				"navigationBarTitleText": "Not Found"
+			}
+		}
+		// #endif
+		// #ifdef APP-PLUS
+		,{
+			"path": "uni_modules/uni-upgrade-center-app/pages/upgrade-popup",
+			"style": {
+				"app-plus": {
+					"animationDuration": 200,
+					"animationType": "fade-in",
+					"background": "transparent",
+					"backgroundColorTop": "transparent",
+					"popGesture": "none",
+					"scrollIndicator": false,
+					"titleNView": false
+				},
+				"disableScroll": true
+			}
+		}
+		// #endif
+
+],
+	"subPackages": [],
+	"globalStyle": {
+		"pageOrientation": "portrait",
+		"navigationBarTitleText": "面试鸭",
+		"navigationBarTextStyle": "black",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F3F5F4",
+		"backgroundColorTop": "#F3F5F4",
+		"backgroundColorBottom": "#F3F5F4",
+		"mp-360": {
+			"navigationStyle": "custom"
+		},
+		"h5": {
+			"maxWidth": 480,
+			"rpxCalcMaxDeviceWidth": 480,
+			"rpxCalcBaseDeviceWidth": 480,
+			"navigationBarTextStyle": "black",
+			"navigationBarBackgroundColor": "#FFFFFF"
+		}
+	},
+	"tabBar": {
+		"color": "#999999",
+		"selectedColor": "#00B578",
+		"borderStyle": "white",
+		"backgroundColor": "#FFFFFF",
+		"list": [{
+				"pagePath": "pages/interview/index/index",
+				"iconPath": "static/tabbar/home.png",
+				"selectedIconPath": "static/tabbar/home-active.png",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/interview/bank/bank",
+				"iconPath": "static/tabbar/bank.png",
+				"selectedIconPath": "static/tabbar/bank-active.png",
+				"text": "题库"
+			},
+			{
+				"pagePath": "pages/interview/collect/collect",
+				"iconPath": "static/tabbar/star.png",
+				"selectedIconPath": "static/tabbar/star-active.png",
+				"text": "题单"
+			},
+			{
+				"pagePath": "pages/interview/mine/mine",
+				"iconPath": "static/tabbar/mine.png",
+				"selectedIconPath": "static/tabbar/mine-active.png",
+				"text": "我的"
+			}
+		]
+	}
+}

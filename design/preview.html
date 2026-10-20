@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>前端面试鸭 · 支付宝式版式</title>
+<style>
+	* { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+	body {
+		font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+		background: #eceeec;
+		padding: 40px 32px 70px;
+		color: #1a1a1a;
+	}
+	.head-note { max-width: 1400px; margin: 0 auto 32px; }
+	.head-note h1 { font-size: 24px; font-weight: 700; letter-spacing: -.4px; }
+	.head-note p { margin-top: 8px; font-size: 13px; color: #6b7a72; line-height: 1.7; }
+	.head-note .tags { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+	.head-note .tag {
+		font-size: 12px; padding: 5px 11px; border-radius: 999px;
+		background: #fff; color: #00875a; box-shadow: 0 2px 8px rgba(20,32,26,.06);
+	}
+	.stage { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; max-width: 1500px; margin: 0 auto; }
+	.item { width: 390px; }
+	.item-name { font-size: 13px; font-weight: 600; color: #48564e; margin-bottom: 12px; padding-left: 4px; }
+	.phone {
+		width: 390px; height: 844px; background: #f3f5f4; border-radius: 34px; overflow: hidden;
+		position: relative; box-shadow: 0 18px 50px rgba(20,32,26,.14); border: 1px solid rgba(0,0,0,.04);
+		display: flex; flex-direction: column;
+	}
+	.scroll { flex: 1; overflow: hidden; }
+	.sbar { height: 26px; flex-shrink: 0; }
+
+	/* ---------- 渐变头部 ---------- */
+	.head {
+		position: relative; flex-shrink: 0;
+		background: linear-gradient(135deg, #3ad598 0%, #00b578 48%, #009e6b 100%);
+		border-radius: 0 0 20px 20px; overflow: hidden;
+	}
+	.head::before {
+		content: ''; position: absolute; top: -90px; right: -60px; width: 210px; height: 210px;
+		border-radius: 50%; background: rgba(255,255,255,.16);
+	}
+	.head::after {
+		content: ''; position: absolute; bottom: -110px; left: -80px; width: 190px; height: 190px;
+		border-radius: 50%; background: rgba(255,255,255,.08);
+	}
+	.head > * { position: relative; z-index: 2; }
+
+	.h-top { display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 16px 0; }
+	.h-brand { font-size: 23px; font-weight: 700; color: #fff; letter-spacing: .5px; line-height: 1.2; }
+	.h-sub { margin-top: 5px; font-size: 12px; color: rgba(255,255,255,.84); }
+	.h-date {
+		flex-shrink: 0; margin-top: 5px; height: 22px; line-height: 22px; padding: 0 9px;
+		border-radius: 999px; background: rgba(255,255,255,.22); font-size: 10.5px; color: #fff;
+	}
+
+	.h-search {
+		display: flex; align-items: center; height: 42px; margin: 14px 16px 0; padding: 0 5px 0 13px;
+		background: #fff; border-radius: 999px; box-shadow: 0 3px 9px rgba(0,90,60,.12);
+	}
+	.h-search img { width: 16px; height: 16px; opacity: .35; }
+	.mag { position: relative; width: 15px; height: 15px; flex-shrink: 0; }
+	.mag::before {
+		content: ''; position: absolute; left: 0; top: 0; width: 11px; height: 11px;
+		border: 1.5px solid #7d8b84; border-radius: 50%;
+	}
+	.mag::after {
+		content: ''; position: absolute; right: 0; bottom: 1px; width: 7px; height: 1.5px;
+		background: #7d8b84; transform: rotate(45deg); border-radius: 2px;
+	}
+	.h-search span { flex: 1; margin-left: 7px; font-size: 13px; color: #9aa5a0; }
+	.h-search b {
+		height: 31px; line-height: 31px; padding: 0 15px; border-radius: 999px;
+		background: linear-gradient(135deg,#22c98c,#00b578); color: #fff; font-size: 12.5px; font-weight: 600;
+	}
+	.h-space { height: 38px; }
+
+	/* ---------- 金刚区 ---------- */
+	.grid-wrap { margin: -26px 12px 0; position: relative; z-index: 3; }
+	.grid {
+		display: flex; flex-wrap: wrap; background: #fff; border-radius: 12px;
+		padding: 17px 3px 5px; box-shadow: 0 2px 9px rgba(20,32,26,.04);
+	}
+	.gi { width: 25%; display: flex; flex-direction: column; align-items: center; padding-bottom: 13px; }
+	.gt {
+		width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+		box-shadow: 0 3px 7px rgba(20,32,26,.12);
+	}
+	.gt img { width: 22px; height: 22px; }
+	.gl { margin-top: 6px; font-size: 11.5px; color: #333; line-height: 1.2; }
+
+	/* ---------- 卡片 ---------- */
+	.card {
+		background: #fff; border-radius: 12px; box-shadow: 0 2px 9px rgba(20,32,26,.04);
+		margin: 0 12px;
+	}
+	.sec-head { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; margin: 18px 0 9px; }
+	.sec-title { font-size: 16px; font-weight: 700; letter-spacing: -.1px; }
+	.sec-more { display: flex; align-items: center; gap: 3px; font-size: 12px; color: #999; }
+	.arw { width: 7px; height: 7px; border-top: 1.5px solid #c9cfcc; border-right: 1.5px solid #c9cfcc; transform: rotate(45deg); }
+	.arw-g { border-color: #00b578; }
+	.arw-w { border-color: rgba(255,255,255,.9); }
+
+	/* ---------- 今日进度 ---------- */
+	.hero { margin-top: 10px; padding: 15px 14px 13px; }
+	.hero-top { display: flex; align-items: flex-start; justify-content: space-between; }
+	.hero-label { font-size: 12px; color: #999; }
+	.hero-num-row { display: flex; align-items: baseline; margin-top: 3px; }
+	.hero-num { font-size: 31px; font-weight: 700; line-height: 1; letter-spacing: -1px; }
+	.hero-unit { margin-left: 5px; font-size: 12.5px; color: #999; }
+	.hero-badge {
+		width: 59px; height: 59px; border-radius: 12px; display: flex; flex-direction: column;
+		align-items: center; justify-content: center; background: linear-gradient(150deg,#e8f9f2,#d6f4e7);
+	}
+	.hero-badge-n { font-size: 20px; font-weight: 700; color: #00875a; line-height: 1; }
+	.hero-badge-t { margin-top: 3px; font-size: 10px; color: #4fa384; }
+	.bar { margin-top: 13px; height: 6px; border-radius: 999px; background: #f0f3f1; overflow: hidden; }
+	.bar-in { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#5be0ac,#00b578); }
+	.hero-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 11px; }
+	.hero-tip { font-size: 11.5px; color: #666; }
+	.hero-cta {
+		display: flex; align-items: center; gap: 3px; height: 33px; padding: 0 12px; border-radius: 999px;
+		background: linear-gradient(135deg,#22c98c,#00b578); box-shadow: 0 3px 8px rgba(0,181,120,.26);
+		font-size: 12.5px; font-weight: 600; color: #fff;
+	}
+
+	/* ---------- 每日一题 ---------- */
+	.daily { padding: 14px; }
+	.daily-head { display: flex; align-items: center; justify-content: space-between; }
+	.daily-badge {
+		height: 18px; line-height: 18px; padding: 0 6px; border-radius: 4px;
+		background: #fff4e6; color: #c56a05; font-size: 9.5px; font-weight: 700; letter-spacing: .5px;
+	}
+	.daily-date { font-size: 10.5px; color: #999; }
+	.daily-title { margin-top: 9px; font-size: 15px; font-weight: 600; line-height: 1.5; }
+	.daily-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+	.chips { display: flex; gap: 5px; }
+	.chip {
+		height: 21px; line-height: 21px; padding: 0 8px; border-radius: 5px;
+		background: #e8f9f2; color: #00875a; font-size: 11px; font-weight: 500;
+	}
+	.chip-plain { background: #f4f5f5; color: #777; }
+	.go { display: flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 600; color: #00875a; }
+
+	/* ---------- 分类 / 列表行 ---------- */
+	.row { display: flex; align-items: center; padding: 12px 13px; }
+	.row + .row { border-top: 1px solid #f1f1f1; }
+	.cat-tile {
+		width: 39px; height: 39px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+		flex-shrink: 0; margin-right: 11px; color: #fff; font-size: 13px; font-weight: 700;
+	}
+	.cat-info { flex: 1; min-width: 0; }
+	.cat-name { font-size: 14.5px; font-weight: 600; }
+	.cat-desc { margin-top: 2px; font-size: 11px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.cat-count { font-size: 11.5px; color: #999; margin-right: 4px; }
+
+	/* ---------- 高频榜 ---------- */
+	.hot-no {
+		width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+		flex-shrink: 0; margin-right: 10px; font-size: 11px; font-weight: 700; color: #fff;
+	}
+	.hot-1 { background: linear-gradient(135deg,#ffd666,#ffb000); }
+	.hot-2 { background: linear-gradient(135deg,#dfe6ea,#b8c4cb); }
+	.hot-3 { background: linear-gradient(135deg,#f3c79a,#d99a63); }
+	.hot-n { background: #f4f5f5; color: #b0b8b4; }
+	.hot-body { flex: 1; min-width: 0; }
+	.hot-t { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.hot-m { margin-top: 4px; font-size: 10.5px; color: #999; display: flex; gap: 4px; }
+
+	/* ---------- tabBar ---------- */
+	.tabbar {
+		flex-shrink: 0; display: flex; align-items: center; height: 60px; background: #fff;
+		border-top: 1px solid #f0f0f0; padding-bottom: 8px;
+	}
+	.tb { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+	.tb img { width: 24px; height: 24px; }
+	.tb span { font-size: 10px; color: #999; }
+	.tb.on span { color: #00b578; font-weight: 600; }
+
+	/* ---------- 题库页 ---------- */
+	.bank-head { padding-bottom: 34px; }
+	.bank-head-main { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 0; }
+	.bank-title { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+	.bank-sub { margin-top: 4px; font-size: 12px; color: rgba(255,255,255,.84); }
+	.act {
+		width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.22);
+		display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+	}
+	.act img { width: 18px; height: 18px; }
+
+	.cat-card {
+		margin: -24px 12px 0; padding: 14px 13px 12px; background: #fff; border-radius: 12px;
+		box-shadow: 0 3px 11px rgba(20,32,26,.07); position: relative; z-index: 2;
+	}
+	.cat-card-top { display: flex; align-items: flex-end; justify-content: space-between; }
+	.cc-name { font-size: 16px; font-weight: 700; line-height: 1.3; }
+	.cc-desc { margin-top: 3px; font-size: 11px; color: #999; }
+	.cc-pct { display: flex; align-items: baseline; flex-shrink: 0; }
+	.cc-pct b { font-size: 23px; font-weight: 700; color: #00b578; line-height: 1; letter-spacing: -.5px; }
+	.cc-pct i { font-style: normal; font-size: 11px; font-weight: 600; color: #00b578; margin-left: 1px; }
+	.cc-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+	.cc-foot span { font-size: 10.5px; color: #999; }
+	.cc-tag {
+		height: 19px; line-height: 19px; padding: 0 8px; border-radius: 4px;
+		background: #e8f9f2; color: #00875a; font-size: 10.5px; font-weight: 600;
+	}
+
+	.tabs { display: flex; gap: 7px; padding: 14px 12px 0; }
+	.tab {
+		height: 34px; line-height: 34px; padding: 0 15px; border-radius: 999px; background: #fff;
+		box-shadow: 0 1px 4px rgba(20,32,26,.04); font-size: 13px; color: #666;
+	}
+	.tab.on { background: linear-gradient(135deg,#22c98c,#00b578); color: #fff; font-weight: 600; box-shadow: 0 3px 8px rgba(0,181,120,.26); }
+
+	.q-list { margin: 12px 12px 0; }
+	.q-state {
+		width: 23px; height: 23px; border-radius: 50%; border: 1px solid #e6eae8; flex-shrink: 0;
+		margin-right: 11px; display: flex; align-items: center; justify-content: center;
+		font-size: 10.5px; font-weight: 700; color: #fff;
+	}
+	.q-state.ok { border: none; background: linear-gradient(135deg,#22c98c,#00b578); }
+	.q-state.no { border: none; background: linear-gradient(135deg,#ffb04d,#ff8f1f); }
+	.q-t { font-size: 14px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+	.q-m { margin-top: 5px; font-size: 10.5px; color: #999; display: flex; gap: 4px; }
+	.q-m .hard { color: #ff8f1f; }
+
+	/* ---------- 答题页 ---------- */
+	.nav-row { display: flex; align-items: center; height: 44px; padding: 0 14px 0 9px; }
+	.nav-back { width: 28px; display: flex; align-items: center; }
+	.nav-back i { width: 8px; height: 8px; border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff; transform: rotate(45deg); }
+	.nav-mid { flex: 1; display: flex; align-items: baseline; justify-content: center; }
+	.nav-mid b { font-size: 18px; font-weight: 700; color: #fff; line-height: 1; }
+	.nav-mid span { margin-left: 3px; font-size: 11px; color: rgba(255,255,255,.72); }
+	.nav-type {
+		width: 54px; height: 22px; line-height: 22px; text-align: center; border-radius: 999px;
+		background: rgba(255,255,255,.22); font-size: 10.5px; color: #fff; flex-shrink: 0;
+	}
+	.nav-bar { margin: 3px 16px 0; height: 4px; border-radius: 999px; background: rgba(255,255,255,.26); overflow: hidden; }
+	.nav-bar-in { height: 100%; background: #fff; border-radius: 999px; }
+	.quiz-head { padding-bottom: 11px; }
+
+	.quiz-body { padding: 12px 12px 0; }
+	.qcard { padding: 15px 14px; background: #fff; border-radius: 12px; box-shadow: 0 2px 9px rgba(20,32,26,.04); }
+	.qcard-meta { display: flex; align-items: center; gap: 5px; margin-bottom: 9px; }
+	.qcard-src { margin-left: auto; font-size: 10px; color: #b6c1bb; }
+	.qcard-title { font-size: 16.5px; font-weight: 600; line-height: 1.55; }
+	.code { margin-top: 12px; background: #0e2a20; border-radius: 10px; overflow: hidden; }
+	.code-head { display: flex; align-items: center; gap: 4px; height: 27px; padding: 0 10px; background: rgba(255,255,255,.05); }
+	.code-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.2); }
+	.code-lang { margin-left: auto; font-size: 9.5px; color: rgba(255,255,255,.35); font-family: Menlo, monospace; }
+	.code pre {
+		padding: 10px 11px 11px; font-family: Menlo, Consolas, monospace; font-size: 11.5px;
+		color: #a8e6c4; line-height: 1.75; white-space: pre-wrap; word-break: break-all;
+	}
+	.opts { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+	.opt {
+		display: flex; align-items: flex-start; padding: 13px 12px; background: #fff; border: 1px solid transparent;
+		border-radius: 12px; box-shadow: 0 2px 9px rgba(20,32,26,.04);
+	}
+	.opt-key {
+		width: 23px; height: 23px; border-radius: 7px; background: #f4f6f5; color: #666;
+		font-size: 11.5px; font-weight: 600; text-align: center; line-height: 23px; margin-right: 9px; flex-shrink: 0;
+	}
+	.opt-text { flex: 1; font-size: 14px; line-height: 1.6; padding-top: 1px; }
+	.opt.on { border-color: #00b578; background: #f4fdf9; }
+	.opt.on .opt-key { background: linear-gradient(135deg,#22c98c,#00b578); color: #fff; }
+	.opt.ok { border-color: #00b578; background: #f4fdf9; }
+	.opt.ok .opt-key { background: linear-gradient(135deg,#22c98c,#00b578); color: #fff; }
+	.opt.ok .opt-mark { color: #00b578; }
+	.opt-mark { margin-left: 6px; font-size: 13px; font-weight: 700; padding-top: 3px; }
+
+	.analysis { margin-top: 8px; padding: 14px; border-radius: 12px; background: #f2fcf7; border: 1px solid #d5f2e2; }
+	.an-head { display: flex; align-items: center; }
+	.an-badge { height: 21px; line-height: 21px; padding: 0 8px; border-radius: 4px; background: linear-gradient(135deg,#22c98c,#00b578); color: #fff; font-size: 10.5px; font-weight: 600; }
+	.an-ans { margin-left: auto; font-size: 10.5px; color: #666; }
+	.an-title { margin-top: 11px; font-size: 12px; font-weight: 700; letter-spacing: .5px; }
+	.an-text { margin-top: 4px; font-size: 13px; color: #3e4c45; line-height: 1.8; }
+
+	.quiz-foot {
+		flex-shrink: 0; display: flex; align-items: center; gap: 7px; padding: 8px 12px 14px;
+		background: #fff; box-shadow: 0 -2px 10px rgba(20,32,26,.05);
+	}
+	.fav {
+		width: 44px; height: 44px; border-radius: 50%; background: #f4f6f5; display: flex;
+		align-items: center; justify-content: center; font-size: 17px; color: #b3beb8; flex-shrink: 0;
+	}
+	.fav.on { color: #ffb000; }
+	.prev { height: 44px; line-height: 44px; padding: 0 14px; border-radius: 999px; background: #f4f6f5; font-size: 12.5px; color: #666; }
+	.main {
+		flex: 1; height: 44px; line-height: 44px; text-align: center; border-radius: 999px;
+		background: linear-gradient(135deg,#22c98c,#00b578); box-shadow: 0 4px 10px rgba(0,181,120,.28);
+		color: #fff; font-size: 15px; font-weight: 600;
+	}
+
+	/* ---------- 题单页 ---------- */
+	.seg-card {
+		display: flex; margin: -25px 12px 0; padding: 4px; background: #fff; border-radius: 12px;
+		box-shadow: 0 3px 11px rgba(20,32,26,.07); position: relative; z-index: 2; gap: 4px;
+	}
+	.seg { flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 9px; font-size: 13.5px; color: #666; }
+	.seg.on {
+		background: linear-gradient(135deg,#22c98c,#00b578); box-shadow: 0 3px 8px rgba(0,181,120,.24);
+		color: #fff; font-weight: 600;
+	}
+	.seg.on i { font-style: normal; font-size: 11px; color: rgba(255,255,255,.85); }
+	.tip { padding: 0 3px 8px; font-size: 11px; color: #999; }
+
+	.foot-btn {
+		flex-shrink: 0; padding: 8px 12px 14px; background: #fff; box-shadow: 0 -2px 10px rgba(20,32,26,.05);
+	}
+	.foot-btn div {
+		height: 46px; line-height: 46px; text-align: center; border-radius: 999px;
+		background: linear-gradient(135deg,#22c98c,#00b578); box-shadow: 0 4px 10px rgba(0,181,120,.28);
+		color: #fff; font-size: 15px; font-weight: 600;
+	}
+
+	/* ---------- 我的 ---------- */
+	.mine-head { padding-bottom: 42px; }
+	.profile { display: flex; align-items: center; padding: 18px 16px 0; }
+	.avatar {
+		width: 62px; height: 62px; border-radius: 50%; background: #fff; display: flex;
+		align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;
+		border: 2px solid rgba(255,255,255,.6);
+	}
+	.avatar span { font-size: 26px; font-weight: 700; color: #00b578; }
+	.name-row { display: flex; align-items: center; gap: 7px; }
+	.name { font-size: 21px; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+	.lv {
+		height: 20px; line-height: 20px; padding: 0 8px; border-radius: 999px;
+		background: rgba(255,255,255,.24); color: #fff; font-size: 10.5px; font-weight: 600;
+	}
+	.lv-name { margin-top: 5px; font-size: 12px; color: rgba(255,255,255,.84); }
+
+	.stats-card {
+		display: flex; align-items: center; margin: -30px 12px 0; padding: 17px 0; background: #fff;
+		border-radius: 12px; box-shadow: 0 3px 11px rgba(20,32,26,.07); position: relative; z-index: 2;
+	}
+	.stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
+	.stat b { font-size: 23px; font-weight: 700; line-height: 1.1; letter-spacing: -.5px; }
+	.stat b i { font-style: normal; font-size: 12px; font-weight: 600; }
+	.stat span { margin-top: 5px; font-size: 11px; color: #999; }
+	.stat-line { width: 1px; height: 23px; background: #f0f2f1; }
+
+	.prog { margin: 10px 12px 0; padding: 14px 13px; }
+	.pg-h { display: flex; align-items: center; justify-content: space-between; }
+	.pg-h b { font-size: 14px; font-weight: 700; }
+	.pg-h span { font-size: 11.5px; color: #999; }
+	.pg-f { display: flex; align-items: center; justify-content: space-between; margin-top: 9px; }
+	.pg-f span { font-size: 11px; color: #999; }
+	.pg-f em { font-style: normal; font-size: 11.5px; font-weight: 600; color: #00875a; display: flex; align-items: center; gap: 2px; }
+
+	.mine-grid { margin: 0 12px; }
+	.menu-tile {
+		width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+		margin-right: 11px; flex-shrink: 0; font-size: 13px; font-weight: 600;
+	}
+	.m-title { font-size: 14px; font-weight: 500; }
+	.m-desc { margin-top: 2px; font-size: 10.5px; color: #999; }
+	.version { text-align: center; margin-top: 22px; font-size: 10.5px; color: #b3beb8; }
+</style>
+</head>
+<body>
+
+<div class="head-note">
+	<h1>前端面试鸭 · 支付宝式版式</h1>
+	<p>版式结构照支付宝来：主色大渐变头部（状态栏 + 标题 + 白色搜索胶囊）→ 白卡金刚区上浮 → 白卡信息流。主色仍是绿色 #00B578，金刚区用多彩渐变块区分功能，这是支付宝的标志性做法。</p>
+	<div class="tags">
+		<span class="tag">主色 #00B578</span>
+		<span class="tag">头部渐变 #3AD598 → #009E6B</span>
+		<span class="tag">卡片圆角 24rpx / 投影 0 4rpx 18rpx</span>
+		<span class="tag">金刚区 4 列 × 2 行</span>
+		<span class="tag">标题 32rpx 加粗 + 更多 ›</span>
+	</div>
+</div>
+
+<div class="stage">
+
+	<!-- ============ 首页 ============ -->
+	<div class="item">
+		<div class="item-name">首页</div>
+		<div class="phone">
+			<div class="head">
+				<div class="sbar"></div>
+				<div class="h-top">
+					<div>
+						<div class="h-brand">面试鸭</div>
+						<div class="h-sub">早上好，今天也刷两题吧</div>
+					</div>
+					<div class="h-date">10 月 20 日 · 周二</div>
+				</div>
+				<div class="h-search">
+					<i class="mag"></i>
+					<span>搜索题目、知识点</span>
+					<b>搜索</b>
+				</div>
+				<div class="h-space"></div>
+			</div>
+
+			<div class="scroll">
+				<div class="grid-wrap">
+					<div class="grid">
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#FFC24D,#FFA31A)"><img src="../static/icons/ic-calendar.png" alt=""></div>
+							<div class="gl">每日一题</div>
+						</div>
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#4CB8FF,#1E90FF)"><img src="../static/icons/ic-book.png" alt=""></div>
+							<div class="gl">全部题库</div>
+						</div>
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#FFCE5C,#FFB000)"><img src="../static/icons/ic-star.png" alt=""></div>
+							<div class="gl">我的收藏</div>
+						</div>
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#FF8A80,#FF5252)"><img src="../static/icons/ic-wrong.png" alt=""></div>
+							<div class="gl">错题本</div>
+						</div>
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#FF9C6E,#FF7A45)"><img src="../static/icons/ic-chart.png" alt=""></div>
+							<div class="gl">高频榜</div>
+						</div>
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#52D9B0,#00B578)"><img src="../static/icons/ic-bolt.png" alt=""></div>
+							<div class="gl">随机一题</div>
+						</div>
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#8EA6FF,#5B6EF5)"><img src="../static/icons/ic-search.png" alt=""></div>
+							<div class="gl">搜一搜</div>
+						</div>
+						<div class="gi">
+							<div class="gt" style="background:linear-gradient(135deg,#5FD3E8,#12B7D8)"><img src="../static/icons/ic-user.png" alt=""></div>
+							<div class="gl">学习数据</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="card hero">
+					<div class="hero-top">
+						<div>
+							<div class="hero-label">今日已练</div>
+							<div class="hero-num-row">
+								<div class="hero-num">3</div>
+								<div class="hero-unit">/ 5 题</div>
+							</div>
+						</div>
+						<div class="hero-badge">
+							<div class="hero-badge-n">7</div>
+							<div class="hero-badge-t">天连续</div>
+						</div>
+					</div>
+					<div class="bar"><div class="bar-in" style="width:60%"></div></div>
+					<div class="hero-foot">
+						<div class="hero-tip">再刷 2 题即可达标</div>
+						<div class="hero-cta">继续刷题 <i class="arw arw-w"></i></div>
+					</div>
+				</div>
+
+				<div class="sec-head">
+					<div class="sec-title">每日一题</div>
+					<div class="sec-more">全部题目 <i class="arw"></i></div>
+				</div>
+				<div class="card daily">
+					<div class="daily-head">
+						<div class="daily-badge">TODAY</div>
+						<div class="daily-date">10 月 20 日</div>
+					</div>
+					<div class="daily-title">下面代码的输出是什么？</div>
+					<div class="daily-foot">
+						<div class="chips">
+							<div class="chip">JavaScript</div>
+							<div class="chip chip-plain">中等</div>
+						</div>
+						<div class="go">去作答 <i class="arw arw-g"></i></div>
+					</div>
+				</div>
+
+				<div class="sec-head">
+					<div class="sec-title">题库分类</div>
+					<div class="sec-more">全部题库 <i class="arw"></i></div>
+				</div>
+				<div class="card">
+					<div class="row">
+						<div class="cat-tile" style="background:linear-gradient(135deg,#FFC24D,#FFA31A)">JS</div>
+						<div class="cat-info">
+							<div class="cat-name">JavaScript</div>
+							<div class="cat-desc">变量提升、作用域、原型链、this 绑定</div>
+						</div>
+						<div class="cat-count">155 题</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="cat-tile" style="background:linear-gradient(135deg,#4CB8FF,#1E90FF)">CSS</div>
+						<div class="cat-info">
+							<div class="cat-name">CSS 与布局</div>
+							<div class="cat-desc">盒模型、BFC、Flex、层叠上下文</div>
+						</div>
+						<div class="cat-count">0 题</div>
+						<i class="arw"></i>
+					</div>
+				</div>
+
+				<div class="sec-head">
+					<div class="sec-title">高频面试题</div>
+					<div class="sec-more">按热度排序</div>
+				</div>
+				<div class="card">
+					<div class="row">
+						<div class="hot-no hot-1">1</div>
+						<div class="hot-body">
+							<div class="hot-t">下面代码的输出是什么？</div>
+							<div class="hot-m"><span>JavaScript</span><span>·</span><span>中等</span><span>·</span><span>热度 100</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="hot-no hot-2">2</div>
+						<div class="hot-body">
+							<div class="hot-t">所有选项的输出是什么？</div>
+							<div class="hot-m"><span>JavaScript</span><span>·</span><span>中等</span><span>·</span><span>热度 99</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="hot-no hot-3">3</div>
+						<div class="hot-body">
+							<div class="hot-t">输出是什么？</div>
+							<div class="hot-m"><span>JavaScript</span><span>·</span><span>简单</span><span>·</span><span>热度 98</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="hot-no hot-n">4</div>
+						<div class="hot-body">
+							<div class="hot-t">哪些方法会改变原数组？</div>
+							<div class="hot-m"><span>JavaScript</span><span>·</span><span>困难</span><span>·</span><span>热度 96</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+				</div>
+			</div>
+
+			<div class="tabbar">
+				<div class="tb on"><img src="../static/tabbar/home-active.png" alt=""><span>首页</span></div>
+				<div class="tb"><img src="../static/tabbar/bank.png" alt=""><span>题库</span></div>
+				<div class="tb"><img src="../static/tabbar/star.png" alt=""><span>题单</span></div>
+				<div class="tb"><img src="../static/tabbar/mine.png" alt=""><span>我的</span></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ============ 题库 ============ -->
+	<div class="item">
+		<div class="item-name">题库</div>
+		<div class="phone">
+			<div class="head bank-head">
+				<div class="sbar"></div>
+				<div class="bank-head-main">
+					<div>
+						<div class="bank-title">JavaScript</div>
+						<div class="bank-sub">已掌握 42 / 155 题 · 正确率 86%</div>
+					</div>
+					<div class="act"><img src="../static/icons/ic-search.png" alt=""></div>
+				</div>
+			</div>
+
+			<div class="scroll">
+				<div class="cat-card">
+					<div class="cat-card-top">
+						<div>
+							<div class="cc-name">JavaScript</div>
+							<div class="cc-desc">变量提升、作用域、原型链、this 绑定</div>
+						</div>
+						<div class="cc-pct"><b>27</b><i>%</i></div>
+					</div>
+					<div class="bar" style="margin-top:11px"><div class="bar-in" style="width:27%"></div></div>
+					<div class="cc-foot">
+						<span>已掌握 42 题，还剩 113 题</span>
+						<div class="cc-tag">155 题</div>
+					</div>
+				</div>
+
+				<div class="tabs">
+					<div class="tab on">JavaScript</div>
+					<div class="tab">CSS 布局</div>
+					<div class="tab">Vue</div>
+				</div>
+
+				<div class="card q-list">
+					<div class="row">
+						<div class="q-state ok">✓</div>
+						<div class="hot-body">
+							<div class="q-t">下面代码的输出是什么？</div>
+							<div class="q-m"><span>NO.001</span><span>·</span><span>单选</span><span>·</span><span>简单</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="q-state no">✕</div>
+						<div class="hot-body">
+							<div class="q-t">所有选项的输出是什么？</div>
+							<div class="q-m"><span>NO.002</span><span>·</span><span>单选</span><span>·</span><span>中等</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="q-state"></div>
+						<div class="hot-body">
+							<div class="q-t">输出是什么？</div>
+							<div class="q-m"><span>NO.003</span><span>·</span><span>单选</span><span>·</span><span>简单</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="q-state"></div>
+						<div class="hot-body">
+							<div class="q-t">哪些方法会改变原数组？</div>
+							<div class="q-m"><span>NO.004</span><span>·</span><span>多选</span><span>·</span><span class="hard">困难</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="q-state"></div>
+						<div class="hot-body">
+							<div class="q-t">输出是什么？</div>
+							<div class="q-m"><span>NO.005</span><span>·</span><span>单选</span><span>·</span><span>简单</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="q-state"></div>
+						<div class="hot-body">
+							<div class="q-t">下面代码的输出是什么？</div>
+							<div class="q-m"><span>NO.006</span><span>·</span><span>单选</span><span>·</span><span>中等</span></div>
+						</div>
+						<i class="arw"></i>
+					</div>
+				</div>
+			</div>
+
+			<div class="tabbar">
+				<div class="tb"><img src="../static/tabbar/home.png" alt=""><span>首页</span></div>
+				<div class="tb on"><img src="../static/tabbar/bank-active.png" alt=""><span>题库</span></div>
+				<div class="tb"><img src="../static/tabbar/star.png" alt=""><span>题单</span></div>
+				<div class="tb"><img src="../static/tabbar/mine.png" alt=""><span>我的</span></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ============ 答题 ============ -->
+	<div class="item">
+		<div class="item-name">答题</div>
+		<div class="phone">
+			<div class="head quiz-head">
+				<div class="sbar"></div>
+				<div class="nav-row">
+					<div class="nav-back"><i></i></div>
+					<div class="nav-mid"><b>7</b><span>/ 155</span></div>
+					<div class="nav-type">单选题</div>
+				</div>
+				<div class="nav-bar"><div class="nav-bar-in" style="width:5%"></div></div>
+			</div>
+
+			<div class="scroll">
+				<div class="quiz-body">
+					<div class="qcard">
+						<div class="qcard-meta">
+							<div class="chip">JavaScript</div>
+							<div class="chip chip-plain">中等</div>
+							<div class="qcard-src">JS Questions</div>
+						</div>
+						<div class="qcard-title">下面代码的输出是什么？</div>
+						<div class="code">
+							<div class="code-head">
+								<div class="code-dot"></div>
+								<div class="code-dot"></div>
+								<div class="code-dot"></div>
+								<div class="code-lang">javascript</div>
+							</div>
+							<pre>let a = 3
+let b = new Number(3)
+console.log(a == b)
+console.log(a === b)</pre>
+						</div>
+					</div>
+
+					<div class="opts">
+						<div class="opt">
+							<div class="opt-key">A</div>
+							<div class="opt-text">true、false</div>
+						</div>
+						<div class="opt ok">
+							<div class="opt-key">B</div>
+							<div class="opt-text">false、false</div>
+							<div class="opt-mark">✓</div>
+						</div>
+						<div class="opt">
+							<div class="opt-key">C</div>
+							<div class="opt-text">true、true</div>
+						</div>
+						<div class="opt">
+							<div class="opt-key">D</div>
+							<div class="opt-text">false、true</div>
+						</div>
+					</div>
+
+					<div class="analysis">
+						<div class="an-head">
+							<div class="an-badge">回答正确</div>
+							<div class="an-ans">答案 B</div>
+						</div>
+						<div class="an-title">解析</div>
+						<div class="an-text">new Number(3) 是一个对象，不是数字。a == b 时，b 会被转换成原始值 3，但这里比较的是对象与数字，结果仍为 false；a === b 要求类型相同，同样为 false。</div>
+					</div>
+				</div>
+				<div style="height:12px"></div>
+			</div>
+
+			<div class="quiz-foot">
+				<div class="fav on">★</div>
+				<div class="prev">上一题</div>
+				<div class="main">下一题</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ============ 题单 ============ -->
+	<div class="item">
+		<div class="item-name">我的题单</div>
+		<div class="phone">
+			<div class="head" style="padding-bottom:36px">
+				<div class="sbar"></div>
+				<div style="padding:10px 16px 0">
+					<div class="bank-title">我的题单</div>
+					<div class="bank-sub">收藏 12 题 · 错题 5 题</div>
+				</div>
+			</div>
+
+			<div class="scroll">
+				<div class="seg-card">
+					<div class="seg on">收藏夹 <i>12</i></div>
+					<div class="seg">错题本 <i>5</i></div>
+				</div>
+
+				<div style="padding:12px 12px 0">
+					<div class="tip">收藏的题目随时回看，重点反复刷</div>
+				</div>
+
+				<div class="card">
+					<div class="row">
+						<div class="cat-tile" style="background:#fff8e1;color:#8a6d1f;font-size:11px">JS</div>
+						<div class="hot-body">
+							<div class="q-t">下面代码的输出是什么？</div>
+							<div class="q-m"><span>中等</span><span>·</span><span>JS Questions</span></div>
+						</div>
+						<div style="width:28px;height:28px;border-radius:50%;background:#f4f6f5;display:flex;align-items:center;justify-content:center;color:#a8b0ac;font-size:12px">×</div>
+					</div>
+					<div class="row">
+						<div class="cat-tile" style="background:#fff8e1;color:#8a6d1f;font-size:11px">JS</div>
+						<div class="hot-body">
+							<div class="q-t">所有选项的输出是什么？</div>
+							<div class="q-m"><span>简单</span><span>·</span><span>JS Questions</span></div>
+						</div>
+						<div style="width:28px;height:28px;border-radius:50%;background:#f4f6f5;display:flex;align-items:center;justify-content:center;color:#a8b0ac;font-size:12px">×</div>
+					</div>
+					<div class="row">
+						<div class="cat-tile" style="background:#fff8e1;color:#8a6d1f;font-size:11px">JS</div>
+						<div class="hot-body">
+							<div class="q-t">哪些方法会改变原数组？</div>
+							<div class="q-m"><span>困难</span><span>·</span><span>JS Questions</span></div>
+						</div>
+						<div style="width:28px;height:28px;border-radius:50%;background:#f4f6f5;display:flex;align-items:center;justify-content:center;color:#a8b0ac;font-size:12px">×</div>
+					</div>
+					<div class="row">
+						<div class="cat-tile" style="background:#fff8e1;color:#8a6d1f;font-size:11px">JS</div>
+						<div class="hot-body">
+							<div class="q-t">输出是什么？</div>
+							<div class="q-m"><span>中等</span><span>·</span><span>JS Questions</span></div>
+						</div>
+						<div style="width:28px;height:28px;border-radius:50%;background:#f4f6f5;display:flex;align-items:center;justify-content:center;color:#a8b0ac;font-size:12px">×</div>
+					</div>
+					<div class="row">
+						<div class="cat-tile" style="background:#fff8e1;color:#8a6d1f;font-size:11px">JS</div>
+						<div class="hot-body">
+							<div class="q-t">下面代码的输出是什么？</div>
+							<div class="q-m"><span>简单</span><span>·</span><span>JS Questions</span></div>
+						</div>
+						<div style="width:28px;height:28px;border-radius:50%;background:#f4f6f5;display:flex;align-items:center;justify-content:center;color:#a8b0ac;font-size:12px">×</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="foot-btn"><div>开始练习 · 12 题</div></div>
+		</div>
+	</div>
+
+	<!-- ============ 我的 ============ -->
+	<div class="item">
+		<div class="item-name">我的</div>
+		<div class="phone">
+			<div class="head mine-head">
+				<div class="sbar"></div>
+				<div class="profile">
+					<div class="avatar"><span>鸭</span></div>
+					<div>
+						<div class="name-row">
+							<div class="name">前端刷题人</div>
+							<div class="lv">Lv.3</div>
+						</div>
+						<div class="lv-name">进阶鸭 · 已刷 42 题</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="scroll">
+				<div class="stats-card">
+					<div class="stat"><b>42</b><span>累计答题</span></div>
+					<div class="stat-line"></div>
+					<div class="stat"><b>86<i>%</i></b><span>正确率</span></div>
+					<div class="stat-line"></div>
+					<div class="stat"><b>7</b><span>连续天数</span></div>
+				</div>
+
+				<div class="card prog">
+					<div class="pg-h"><b>题库进度</b><span>42 / 155</span></div>
+					<div class="bar" style="margin-top:10px"><div class="bar-in" style="width:27%"></div></div>
+					<div class="pg-f">
+						<span>进展不错，保持节奏</span>
+						<em>继续刷题 <i class="arw arw-g"></i></em>
+					</div>
+				</div>
+
+				<div class="sec-head">
+					<div class="sec-title">我的题单</div>
+					<div class="sec-more">全部题库 <i class="arw"></i></div>
+				</div>
+
+				<div class="grid mine-grid">
+					<div class="gi">
+						<div class="gt" style="background:linear-gradient(135deg,#FFCE5C,#FFB000)"><img src="../static/icons/ic-star.png" alt=""></div>
+						<div class="gl">我的收藏</div>
+					</div>
+					<div class="gi">
+						<div class="gt" style="background:linear-gradient(135deg,#FF8A80,#FF5252)"><img src="../static/icons/ic-wrong.png" alt=""></div>
+						<div class="gl">错题本</div>
+					</div>
+					<div class="gi">
+						<div class="gt" style="background:linear-gradient(135deg,#4CB8FF,#1E90FF)"><img src="../static/icons/ic-book.png" alt=""></div>
+						<div class="gl">全部题库</div>
+					</div>
+					<div class="gi">
+						<div class="gt" style="background:linear-gradient(135deg,#FF9C6E,#FF7A45)"><img src="../static/icons/ic-chart.png" alt=""></div>
+						<div class="gl">高频排行</div>
+					</div>
+				</div>
+
+				<div class="sec-head">
+					<div class="sec-title">更多设置</div>
+				</div>
+
+				<div class="card">
+					<div class="row">
+						<div class="menu-tile" style="background:#eef1f8;color:#4d5f8f">关</div>
+						<div class="hot-body">
+							<div class="m-title">关于面试鸭</div>
+							<div class="m-desc">题库来源、许可与数据说明</div>
+						</div>
+						<i class="arw"></i>
+					</div>
+					<div class="row">
+						<div class="menu-tile" style="background:#fff1f0;color:#d9363e">清</div>
+						<div class="hot-body">
+							<div class="m-title">清空学习数据</div>
+							<div class="m-desc">收藏、错题与记录都会被清除</div>
+						</div>
+						<i class="arw"></i>
+					</div>
+				</div>
+
+				<div class="version">面试鸭 v1.0.0</div>
+			</div>
+
+			<div class="tabbar">
+				<div class="tb"><img src="../static/tabbar/home.png" alt=""><span>首页</span></div>
+				<div class="tb"><img src="../static/tabbar/bank.png" alt=""><span>题库</span></div>
+				<div class="tb"><img src="../static/tabbar/star.png" alt=""><span>题单</span></div>
+				<div class="tb on"><img src="../static/tabbar/mine-active.png" alt=""><span>我的</span></div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<script>
+	/* 设计稿里的 tabBar 可点击：切换选中态（实心绿图标 + 绿色文字） */
+	document.querySelectorAll('.tabbar').forEach(function (bar) {
+		bar.querySelectorAll('.tb').forEach(function (item) {
+			item.style.cursor = 'pointer';
+			item.addEventListener('click', function () {
+				bar.querySelectorAll('.tb').forEach(function (x) {
+					x.classList.remove('on');
+					var im = x.querySelector('img');
+					im.src = im.src.replace('-active.png', '.png');
+				});
+				item.classList.add('on');
+				var cur = item.querySelector('img');
+				if (cur.src.indexOf('-active.png') === -1) {
+					cur.src = cur.src.replace(/\.png$/, '-active.png');
+				}
+			});
+		});
+	});
+</script>
+
+</body>
+</html>
