@@ -130,6 +130,19 @@
 				</view>
 				<view class="duck-ic-arrow"></view>
 			</view>
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goMatch">
+				<view class="menu-tile match-tile">
+					<view class="mt-dot d1"></view>
+					<view class="mt-dot d2"></view>
+					<view class="mt-dot d3"></view>
+					<view class="mt-dot d4"></view>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">消消乐</text>
+					<text class="menu-desc">三消连锁，25 步刷高分</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
 		</view>
 
 		<!-- 更多 -->
@@ -228,6 +241,9 @@
 			},
 			goGo() {
 				uni.navigateTo({ url: '/pages/interview/game/go' })
+			},
+			goMatch() {
+				uni.navigateTo({ url: '/pages/interview/game/match' })
 			},
 			about() {
 				uni.showModal({
@@ -544,6 +560,42 @@
 		background: radial-gradient(circle at 34% 28%, #ffffff, #e6e0d3 80%);
 		border: 2rpx solid #d3cab8;
 		box-shadow: 0 2rpx 4rpx rgba(30, 20, 10, 0.18);
+	}
+
+	.match-tile {
+		position: relative;
+		background: linear-gradient(135deg, #fff2e6, #ffd6ad);
+	}
+
+	.mt-dot {
+		position: absolute;
+		width: 22rpx;
+		height: 22rpx;
+		border-radius: 7rpx;
+	}
+
+	.mt-dot.d1 {
+		left: 12rpx;
+		top: 12rpx;
+		background: linear-gradient(160deg, #ff9a9a, #e0433f);
+	}
+
+	.mt-dot.d2 {
+		right: 12rpx;
+		top: 12rpx;
+		background: linear-gradient(160deg, #ffe08a, #f2b705);
+	}
+
+	.mt-dot.d3 {
+		left: 12rpx;
+		bottom: 12rpx;
+		background: linear-gradient(160deg, #7fe0b4, #00a86b);
+	}
+
+	.mt-dot.d4 {
+		right: 12rpx;
+		bottom: 12rpx;
+		background: linear-gradient(160deg, #7fb6ff, #2b6fe0);
 	}
 
 	.menu-main {

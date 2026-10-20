@@ -70,6 +70,13 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "围棋"
 			}
+		},
+		{
+			"path": "pages/interview/game/match",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "消消乐"
+			}
 		}
 		// #ifdef APP-PLUS
 		,{
