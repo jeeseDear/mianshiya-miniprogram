@@ -67,30 +67,42 @@ tabBar 四项：首页 / 题库 / 题单 / 我的。
 ## 体积优化（主包 2MB 限制）
 
 示例工程（hello-uniapp）遗留的 164 个演示页已从 `pages.json` **注销**，页面文件仍保留在磁盘上（可随时恢复），
-因此它们依赖的 46 个 `uni_modules` 组件、`wxcomponents`（vant）和演示静态资源不再参与编译。
+因此它们依赖的 46 个 `uni_modules` 组件和演示静态资源不再参与编译；`wxcomponents/`（vant 按钮示例）已整块移出项目，
+备份在 `backup/wxcomponents-vant-20261020`。
 
-当前主包内容：
+当前主包内容（7 页）：
 
 | 内容 | 说明 |
 | --- | --- |
-| `pages/interview/*` 7 页 | 4 个 tabBar 页 + 搜索 / 知识点 / 问答详解（仅这 7 页会出现在小程序端 `app.json`） |
+| `pages/interview/*` 7 页 | 4 个 tabBar 页 + 搜索 / 知识点 / 问答详解（仅这 7 页会出现在小程序端 `app.json` 的 `pages` 里） |
 | `common/bank/*` | 11 个分类 553 道问答数据，约 1.0 MB，是当前最大项 |
 | `common/knowledge.js`、`interview-store.js`、`interview-data.js` | 知识点、本地存储、查询层 |
 | `static/` 20 个文件 | 仅保留被引用的 tabBar 图标、金刚区图标、`customicons` 字体 |
+
+小游戏（五子棋 / 象棋 / 围棋 / 消消乐 / 俄罗斯方块）已整体放进分包：
+
+```json
+"subPackages": [
+  { "root": "pages/interview/game", "pages": ["game", "chess", "go", "match", "tetris"] }
+]
+```
 
 条件编译页（不进小程序包）：`pages/about/about` 仅 H5 / App，`pages/error/404` 仅 H5，
 升级弹窗仅 App；`platforms/app-plus/*` 6 页为 App 平台能力示例，已统一包在 `// #ifdef APP-PLUS` 内。
 
 要点与坑：
 
-- **`uni_modules` 组件会统一输出到主包**，即使只有分包页面在用。所以「示例页注销」是主包瘦身的关键一步，
-  比把它们挪进分包有效得多。
+- **分包只对「纯自绘页面」有效**：这几个小游戏全部用 `view` + CSS 实现，没有引用任何 `uni_modules` 组件，
+  所以挪进分包能实打实减掉主包体积。反过来说，**`uni_modules` 组件会统一输出到主包**，
+  即使只有分包页面在用——想让带 uni-ui 组件的页面进分包瘦身是无效的。
 - **条件编译的页面必须整段处理，不能拆**：`pages.json` 里 `// #ifdef` / `// #endif` 是按行配对的，
   页面和它外层的条件注释被分开后，小程序端预处理会把 `#ifdef` 到 `#endif` 之间的内容整段删掉（连 `subPackages` 一起）。
 - 主包页面不能落在分包 root 目录下，否则微信端会报「主包页面位于分包目录」。
 - 尾部条件块的写法：最后一个无条件页面不加逗号，其后的条件块一律写成 `// #ifdef X` + 以逗号开头的 `,{ ... }`，
   这样任意平台删掉条件块后 JSON 依然合法。
-- **上传用「发行 → 小程序-微信」**：开发构建不做压缩混淆，体积约为发行版的 1.5 倍，容易顶到限制。
+- 开发构建（运行到小程序）**不做压缩混淆**，微信统计的「source size」就是这些未压缩文件的总和，
+  约为发行版的 1.5 倍；正式上传建议走「发行 → 小程序-微信」，开发构建只在本地调试用。
+- `manifest.json` 的 `mp-weixin.uniStatistics.enable` 已关掉，少一份统计上报代码，也避免多余的运行时开销。
 - 恢复示例页：把 `backup/pages.json.with-demos.bak` 覆盖回 `pages.json`，并从 `backup/static-unused/` 把资源还原到 `static/`。
 
 ---
