@@ -56,6 +56,7 @@
 | 搜索 | `pages/interview/search/search` | 渐变头部内搜索框、热门关键词、按分类直达、同时检索问答与知识点 |
 | 五子棋 | `pages/interview/game/game` | 放松用小游戏：15×15 棋盘、人机对局（我执黑先行）、悔棋、重开、胜负高亮，胜/负/平有弹出式结算卡（缩放回弹动画 + 轻震动），入口在「我的 → 放松一下」 |
 | 象棋 | `pages/interview/game/chess` | 放松用小游戏：10×9 标准棋盘（楚河汉界、九宫斜线）、人机对局（我执红先行）、点选高亮可走点、吃将即胜 / 无棋可走判负、悔棋回退两步、被将军提示，结算卡与五子棋同款回弹动画，入口在「我的 → 放松一下」 |
+| 围棋 | `pages/interview/game/go` | 放松用小游戏：9 路棋盘（五个星位）、人机对局（我执黑先行）、实现气 / 提子 / 禁入点 / 单劫、停一手、悔棋、双方连续停一手即终局数子（中国规则，白贴 3.75 子），结算卡展示黑白子数，入口在「我的 → 放松一下」 |
 
 tabBar 四项：首页 / 题库 / 题单 / 我的。
 
@@ -102,6 +103,7 @@ common/
   interview.css         全局基础类（卡片、按钮、标签、空态）
   loading.js            统一的 loading 封装（计数、最短展示时长、成对关闭、页面切换 loading）
   xiangqi.js            象棋引擎（棋盘/走法生成/将军判定/局面评估/迭代加深搜索，纯逻辑无 UI）
+  go.js                 围棋引擎（9 路盘的气 / 提子 / 禁入点 / 单劫 / 数子 / 启发式选点，纯逻辑无 UI）
   bank/
     index.js            汇总 11 个分类的 qaQuestions
     qa/                 各分类问答数据（js / ts / css / html / vue / react / node / browser / build / algo）
@@ -119,6 +121,7 @@ pages/interview/
   qa/qa.vue             问答详解详情
   game/game.vue         五子棋（放松小游戏）
   game/chess.vue        象棋（放松小游戏）
+  game/go.vue           围棋（放松小游戏）
 static/tabbar/          tabBar 图标（未选中灰线性 / 选中绿实心，81×81）
 uni.scss                绿色主题变量
 ```

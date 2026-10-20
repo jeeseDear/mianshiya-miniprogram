@@ -63,6 +63,13 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "象棋"
 			}
+		},
+		{
+			"path": "pages/interview/game/go",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "围棋"
+			}
 		}
 		// #ifdef APP-PLUS
 		,{

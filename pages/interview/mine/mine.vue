@@ -119,6 +119,17 @@
 				</view>
 				<view class="duck-ic-arrow"></view>
 			</view>
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goGo">
+				<view class="menu-tile go-tile">
+					<view class="go-pc is-b"></view>
+					<view class="go-pc is-w"></view>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">围棋</text>
+					<text class="menu-desc">9 路小棋盘，围空多者胜</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
 		</view>
 
 		<!-- 更多 -->
@@ -214,6 +225,9 @@
 			},
 			goChess() {
 				uni.navigateTo({ url: '/pages/interview/game/chess' })
+			},
+			goGo() {
+				uni.navigateTo({ url: '/pages/interview/game/go' })
 			},
 			about() {
 				uni.showModal({
@@ -502,6 +516,34 @@
 		font-weight: 700;
 		line-height: 1;
 		color: #c62828;
+	}
+
+	.go-tile {
+		position: relative;
+		background: linear-gradient(135deg, #f0e6d6, #ccb896);
+	}
+
+	.go-pc {
+		position: absolute;
+		width: 32rpx;
+		height: 32rpx;
+		border-radius: 50%;
+		box-sizing: border-box;
+	}
+
+	.go-pc.is-b {
+		left: 11rpx;
+		top: 11rpx;
+		background: radial-gradient(circle at 34% 28%, #6a7175, #1c1f21 78%);
+		box-shadow: 0 2rpx 4rpx rgba(30, 20, 10, 0.3);
+	}
+
+	.go-pc.is-w {
+		right: 11rpx;
+		bottom: 11rpx;
+		background: radial-gradient(circle at 34% 28%, #ffffff, #e6e0d3 80%);
+		border: 2rpx solid #d3cab8;
+		box-shadow: 0 2rpx 4rpx rgba(30, 20, 10, 0.18);
 	}
 
 	.menu-main {
