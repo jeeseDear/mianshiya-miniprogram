@@ -49,6 +49,20 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "问答详解"
 			}
+		},
+		{
+			"path": "pages/interview/game/game",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "五子棋"
+			}
+		},
+		{
+			"path": "pages/interview/game/chess",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "象棋"
+			}
 		}
 		// #ifdef APP-PLUS
 		,{

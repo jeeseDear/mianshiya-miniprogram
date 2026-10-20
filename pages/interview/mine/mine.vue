@@ -90,6 +90,37 @@
 			</view>
 		</view>
 
+		<!-- 放松一下 -->
+		<view class="duck-sec-head">
+			<text class="duck-sec-title">放松一下</text>
+			<text class="sec-more-txt">刷题累了，来一局</text>
+		</view>
+
+		<view class="duck-panel menu-panel">
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goGame">
+				<view class="menu-tile game-tile">
+					<image class="game-icon" src="/static/icons/ic-game.png" mode="aspectFit" />
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">五子棋</text>
+					<text class="menu-desc">和电脑对局，五子连珠即胜</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goChess">
+				<view class="menu-tile chess-tile">
+					<view class="chess-pc">
+						<text class="chess-pc-txt">象</text>
+					</view>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">中国象棋</text>
+					<text class="menu-desc">楚河汉界，执红人机对弈</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
+		</view>
+
 		<!-- 更多 -->
 		<view class="duck-sec-head">
 			<text class="duck-sec-title">更多设置</text>
@@ -177,6 +208,12 @@
 			goCollect(tab) {
 				uni.setStorageSync('duck:collect-tab', tab)
 				uni.switchTab({ url: '/pages/interview/collect/collect' })
+			},
+			goGame() {
+				uni.navigateTo({ url: '/pages/interview/game/game' })
+			},
+			goChess() {
+				uni.navigateTo({ url: '/pages/interview/game/chess' })
 			},
 			about() {
 				uni.showModal({
@@ -433,6 +470,38 @@
 	.menu-tile-txt {
 		font-size: 26rpx;
 		font-weight: 600;
+	}
+
+	.game-tile {
+		background: linear-gradient(135deg, #56cf9b, #00b578);
+	}
+
+	.game-icon {
+		width: 44rpx;
+		height: 44rpx;
+	}
+
+	.chess-tile {
+		background: linear-gradient(135deg, #f7e2bb, #e2b97e);
+	}
+
+	.chess-pc {
+		width: 54rpx;
+		height: 54rpx;
+		border-radius: 50%;
+		box-sizing: border-box;
+		background: radial-gradient(circle at 34% 28%, #fffdf4, #f0e2c4 78%);
+		border: 2rpx solid #c09a6b;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.chess-pc-txt {
+		font-size: 32rpx;
+		font-weight: 700;
+		line-height: 1;
+		color: #c62828;
 	}
 
 	.menu-main {
