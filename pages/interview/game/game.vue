@@ -4,7 +4,7 @@
 		<view class="duck-head game-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
 
-			<view class="nav-row">
+			<view class="nav-row" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
 				<view class="nav-back" hover-class="nav-back-hover" @tap="goBack">
 					<view class="duck-ic-back"></view>
 				</view>
@@ -78,6 +78,8 @@
 </template>
 
 <script>
+	import { menuSafeRight, navBack } from '@/common/nav.js'
+
 	const SIZE = 15
 	const TOTAL = SIZE * SIZE
 	// 四个方向：横、竖、正斜、反斜
@@ -87,6 +89,7 @@
 		data() {
 			return {
 				statusBar: 0,
+				menuRight: 0,
 				board: new Array(TOTAL).fill(0),
 				turn: 1, // 1 我方（黑） / 2 电脑（白）
 				status: 'playing', // playing / win / lose / draw
@@ -137,15 +140,12 @@
 			} catch (e) {
 				this.statusBar = 0
 			}
+			this.menuRight = menuSafeRight()
 			this.reset()
 		},
 		methods: {
 			goBack() {
-				uni.navigateBack({
-					fail: () => {
-						uni.switchTab({ url: '/pages/interview/mine/mine' })
-					}
-				})
+				navBack('/pages/interview/mine/mine')
 			},
 			starStyle(s) {
 				return {

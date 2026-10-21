@@ -4,7 +4,7 @@
 		<view class="duck-head chess-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
 
-			<view class="nav-row">
+			<view class="nav-row" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
 				<view class="nav-back" hover-class="nav-back-hover" @tap="goBack">
 					<view class="duck-ic-back"></view>
 				</view>
@@ -105,10 +105,13 @@
 		findKing
 	} from '@/common/xiangqi.js'
 
+	import { menuSafeRight, navBack } from '@/common/nav.js'
+
 	export default {
 		data() {
 			return {
 				statusBar: 0,
+				menuRight: 0,
 				board: initBoard(),
 				turn: RED,
 				status: 'playing', // playing / win / lose
@@ -175,15 +178,12 @@
 			} catch (e) {
 				this.statusBar = 0
 			}
+			this.menuRight = menuSafeRight()
 			this.reset()
 		},
 		methods: {
 			goBack() {
-				uni.navigateBack({
-					fail: () => {
-						uni.switchTab({ url: '/pages/interview/mine/mine' })
-					}
-				})
+				navBack('/pages/interview/mine/mine')
 			},
 			pieceStyle(p) {
 				return {

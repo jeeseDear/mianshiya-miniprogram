@@ -4,7 +4,7 @@
 		<view class="duck-head know-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
 
-			<view class="nav-row">
+			<view class="nav-row" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
 				<view class="nav-back" hover-class="nav-back-hover" @tap="goBack">
 					<view class="duck-ic-back"></view>
 				</view>
@@ -94,11 +94,13 @@
 <script>
 	import { categories, randomQa } from '@/common/interview-data.js'
 	import { findKnowledge, knowledgeOfCat } from '@/common/knowledge.js'
+	import { menuSafeRight, navBack } from '@/common/nav.js'
 
 	export default {
 		data() {
 			return {
 				statusBar: 0,
+				menuRight: 0,
 				id: '',
 				catId: '',
 				item: null
@@ -125,13 +127,14 @@
 			} catch (e) {
 				this.statusBar = 0
 			}
+			this.menuRight = menuSafeRight()
 			this.id = (options && options.id) || ''
 			this.item = findKnowledge(this.id)
 			this.catId = (options && options.cat) || (this.item && this.item.cat) || ''
 		},
 		methods: {
 			goBack() {
-				uni.navigateBack()
+				navBack('/pages/interview/index/index')
 			},
 			goNext() {
 				const n = this.next

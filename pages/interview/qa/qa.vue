@@ -4,7 +4,7 @@
 		<view class="duck-head qa-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
 
-			<view class="nav-row">
+			<view class="nav-row" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
 				<view class="nav-back" hover-class="nav-back-hover" @tap="goBack">
 					<view class="duck-ic-back"></view>
 				</view>
@@ -127,11 +127,13 @@
 <script>
 	import { categories, levelText, findQa, qaOfCat, randomQa } from '@/common/interview-data.js'
 	import { isFavorite, toggleFavorite, recordAnswer } from '@/common/interview-store.js'
+	import { menuSafeRight, navBack } from '@/common/nav.js'
 
 	export default {
 		data() {
 			return {
 				statusBar: 0,
+				menuRight: 0,
 				id: '',
 				catId: 'js',
 				item: null,
@@ -176,6 +178,7 @@
 			} catch (e) {
 				this.statusBar = 0
 			}
+			this.menuRight = menuSafeRight()
 			this.id = (options && options.id) || ''
 			this.item = findQa(this.id)
 			this.catId = (options && options.cat) || (this.item && this.item.cat) || 'js'
@@ -187,7 +190,7 @@
 		},
 		methods: {
 			goBack() {
-				uni.navigateBack()
+				navBack('/pages/interview/index/index')
 			},
 			toggleFav() {
 				if (!this.item) return

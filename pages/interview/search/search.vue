@@ -3,7 +3,10 @@
 		<!-- 搜索头部 -->
 		<view class="duck-head search-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
-			<view class="bar">
+			<view class="bar" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
+				<view class="nav-back" hover-class="nav-back-hover" @tap="back">
+					<view class="duck-ic-back"></view>
+				</view>
 				<view class="field">
 					<view class="duck-ic-search"></view>
 					<input
@@ -20,7 +23,6 @@
 						<view class="duck-ic-close"></view>
 					</view>
 				</view>
-				<text class="cancel" @tap="back">取消</text>
 			</view>
 		</view>
 
@@ -136,11 +138,13 @@
 	import { categories, levelText, searchQa, qaOfCat } from '@/common/interview-data.js'
 	import { searchKnowledge, knowledgeOfCat } from '@/common/knowledge.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
+	import { menuSafeRight, navBack } from '@/common/nav.js'
 
 	export default {
 		data() {
 			return {
 				statusBar: 0,
+				menuRight: 0,
 				keyword: '',
 				searched: false,
 				knowResults: [],
@@ -159,6 +163,7 @@
 			} catch (e) {
 				this.statusBar = 0
 			}
+			this.menuRight = menuSafeRight()
 			this.autoFocus = true
 		},
 		onReady() {
@@ -215,7 +220,7 @@
 				this.qaResults = []
 			},
 			back() {
-				uni.navigateBack({ delta: 1 })
+				navBack('/pages/interview/index/index')
 			}
 		}
 	}
@@ -246,6 +251,7 @@
 		align-items: center;
 		height: 76rpx;
 		padding: 0 22rpx;
+		margin-left: 8rpx;
 		border-radius: 999rpx;
 		background-color: #ffffff;
 		box-sizing: border-box;
@@ -279,10 +285,17 @@
 		transform: scale(0.75);
 	}
 
-	.cancel {
-		margin-left: 20rpx;
-		font-size: 27rpx;
-		color: #ffffff;
+	.nav-back {
+		width: 56rpx;
+		height: 56rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.nav-back-hover {
+		opacity: 0.55;
 	}
 
 	/* ---------- 内容 ---------- */

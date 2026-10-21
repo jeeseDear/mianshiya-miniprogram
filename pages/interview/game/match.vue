@@ -4,7 +4,7 @@
 		<view class="duck-head match-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
 
-			<view class="nav-row">
+			<view class="nav-row" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
 				<view class="nav-back" hover-class="nav-back-hover" @tap="goBack">
 					<view class="duck-ic-back"></view>
 				</view>
@@ -80,6 +80,7 @@
 </template>
 
 <script>
+	import { menuSafeRight, navBack } from '@/common/nav.js'
 	import {
 		SIZE,
 		COLORS,
@@ -100,6 +101,7 @@
 		data() {
 			return {
 				statusBar: 0,
+				menuRight: 0,
 				totalMoves: MOVES,
 				board: createBoard(SIZE, COLORS),
 				score: 0,
@@ -139,15 +141,12 @@
 			} catch (e) {
 				this.statusBar = 0
 			}
+			this.menuRight = menuSafeRight()
 			this.reset()
 		},
 		methods: {
 			goBack() {
-				uni.navigateBack({
-					fail: () => {
-						uni.switchTab({ url: '/pages/interview/mine/mine' })
-					}
-				})
+				navBack('/pages/interview/mine/mine')
 			},
 			tileClass(t, i) {
 				const out = ['c' + t]
