@@ -451,6 +451,7 @@
 
 	.avatar {
 		position: relative;
+		overflow: hidden;
 		width: 124rpx;
 		height: 124rpx;
 		border-radius: 50%;
@@ -484,7 +485,7 @@
 
 	.avatar-badge {
 		position: absolute;
-		right: -2rpx;
+		right: 2rpx;
 		bottom: 2rpx;
 		width: 34rpx;
 		height: 34rpx;
