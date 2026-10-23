@@ -10,18 +10,24 @@
  *   3. 网络错误自动重试（指数退避），业务错误（4xx）不重试
  */
 
-const KEY_BASE = 'duck:api-base'
+// 带版本号：换过默认后缀就不用担心 storage 里残留旧的本地地址
+const KEY_BASE = 'duck:api-base:v2'
 const KEY_TOKEN = 'duck:token'
 const KEY_USER = 'duck:user'
 
 /**
  * 后端地址。
- * - H5 本地开发：127.0.0.1:8100
- * - 小程序开发者工具：同上，但要在「详情 → 本地设置」勾选「不校验合法域名」
- * - 真机预览：改成电脑的局域网 IP，如 http://192.168.1.10:8100
- * 也可以运行时用 setBaseUrl('http://192.168.1.10:8100') 覆盖
+ *
+ * 默认走线上服务器（腾讯云 175.27.137.170，Nginx :80 → uvicorn :8100）。
+ * 需要连自己电脑上的后端时，把 USE_LOCAL 改成 true 即可，不用改别的地方。
+ *
+ * 注意：线上是 http + IP，微信要求「正式版」接口必须是 https + 已备案域名，
+ *      所以现在只能在开发者工具 / 真机预览里勾「不校验合法域名」时用。
  */
-const DEFAULT_BASE = 'http://127.0.0.1:8100'
+const PROD_BASE = 'http://175.27.137.170'
+const DEV_BASE = 'http://127.0.0.1:8100'
+const USE_LOCAL = false
+const DEFAULT_BASE = USE_LOCAL ? DEV_BASE : PROD_BASE
 
 function safeGet(key, def) {
 	try {

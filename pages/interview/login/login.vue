@@ -269,13 +269,13 @@
 			handleFail(e) {
 				const status = e && e.status
 				if (status === 0) {
-					// 本地开发最常见的原因就是后端没启动，直接把地址和命令给出来
+					// 连不上时把地址亮出来，省得猜是网络问题还是服务挂了
 					uni.showModal({
 						title: '连不上服务器',
 						content:
 							'当前接口地址：' +
 							getBaseUrl() +
-							'\n\n请先启动后端服务（server 目录下）：\n.venv/Scripts/python.exe run.py',
+							'\n\n请检查：\n1. 网络是否正常\n2. 开发者工具是否勾选「不校验合法域名」\n3. 服务器上的 duck-api 是否在运行',
 						showCancel: false,
 						confirmText: '知道了'
 					})
