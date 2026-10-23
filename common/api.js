@@ -71,7 +71,7 @@ export function setUser(user) {
 	safeSet(KEY_USER, user || null)
 }
 
-/** 当前是否游客（没登录微信，或用户主动以游客身份体验） */
+/** 当前是否游客（没登录正式账号，或用户主动以游客身份体验） */
 export function isGuest() {
 	const u = getUser()
 	return !u || u.is_guest !== false
@@ -237,6 +237,9 @@ function saveAuth(res) {
 		id: res.user_id,
 		nickname: res.nickname,
 		avatar: res.avatar || '',
+		// 后端返回的是打码后的号码（138****8888），完整号码不下发
+		phone: res.phone || '',
+		account: res.account || '',
 		// 后端没返回时按游客处理，避免把游客显示成「已登录」
 		is_guest: res.is_guest !== false
 	}
@@ -287,6 +290,23 @@ export async function loginWechat(profile) {
 	return saveAuth(res)
 }
 
+/**
+ * 账号密码登录（账号不存在时后端按这个密码直接注册）。
+ *
+ * 请求头会带上当前 token：如果当前是游客账号，后端会把游客的收藏、
+ * 错题、阅读记录和打卡并到这个正式账号上，刷过的题不会丢。
+ */
+export async function loginPassword({ account, password, nickname }) {
+	const res = await request({
+		url: '/api/auth/login',
+		method: 'POST',
+		data: { account, password, nickname: nickname || '' },
+		auth: 'optional',
+		retry: 0
+	})
+	return saveAuth(res)
+}
+
 /** 拉取当前登录用户，校准本地缓存的昵称 / 头像 / 游客标记 */
 export async function fetchMe() {
 	const res = await request({ url: '/api/auth/me', auth: true })
@@ -294,6 +314,8 @@ export async function fetchMe() {
 		id: res.id,
 		nickname: res.nickname,
 		avatar: res.avatar || '',
+		phone: res.phone || '',
+		account: res.account || '',
 		is_guest: !!res.is_guest
 	}
 	setUser(user)
@@ -313,6 +335,8 @@ export async function updateProfile(profile) {
 		id: res.id,
 		nickname: res.nickname,
 		avatar: res.avatar || '',
+		phone: res.phone || '',
+		account: res.account || '',
 		is_guest: !!res.is_guest
 	}
 	setUser(user)
@@ -321,7 +345,7 @@ export async function updateProfile(profile) {
 
 /**
  * 退出登录：清掉本地身份，再换一个游客身份。
- * 服务端数据不删，下次用同一个微信登录还能找回来。
+ * 服务端数据不删，下次用同一个账号登录还能找回来。
  */
 export async function logout() {
 	clearAuth()

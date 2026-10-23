@@ -34,6 +34,18 @@ class Settings(BaseSettings):
     wx_appid: str = ""
     wx_secret: str = ""
 
+    # ---------------- 手机号验证码登录 ----------------
+    # 验证码有效期（秒）与同一号码的最小重发间隔（秒）
+    sms_code_ttl: int = 300
+    sms_resend_interval: int = 60
+    # 单个验证码最多允许输错几次，超过作废，防止暴力撞码
+    sms_max_attempts: int = 5
+    # 调试模式：不真发短信，只在响应体和日志里带出验证码。
+    # 接真实短信服务（阿里云 SMS / 腾讯云 SMS）后设为 false。
+    sms_debug: bool = True
+    # 短信服务商，接真实通道时把 sms_debug 关掉并在这里选一个
+    sms_provider: str = "debug"
+
     # 种子数据目录
     seed_dir: Path = BASE_DIR / "seed"
 

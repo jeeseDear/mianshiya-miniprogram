@@ -1,119 +1,111 @@
 <template>
-	<view class="login-page">
-		<!-- 渐变头部：品牌区 -->
-		<view class="duck-head login-head">
-			<view :style="{ height: statusBar + 'px' }"></view>
+	<view class="page">
+		<view :style="{ height: statusBar + 'px' }"></view>
 
-			<view class="head-bar" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
-				<view class="back" hover-class="back-hover" @tap="goBack">
-					<view class="duck-ic-back"></view>
-				</view>
-				<text class="head-title">登录</text>
-			</view>
-
-			<view class="brand">
-				<view class="brand-logo">
-					<text class="brand-logo-txt">鸭</text>
-				</view>
-				<text class="brand-name">前端面试鸭</text>
-				<text class="brand-sub">登录后进度云端同步，换设备接着刷</text>
+		<view class="bar" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
+			<view class="back" hover-class="back-hover" @tap="goBack">
+				<view class="duck-ic-back"></view>
 			</view>
 		</view>
 
-		<!-- 登录卡 -->
-		<view class="login-body">
-			<view class="duck-panel login-card">
-				<view class="field">
-					<text class="field-label">昵称</text>
+		<view class="main">
+			<view class="logo">
+				<text class="logo-txt">鸭</text>
+			</view>
+
+			<text class="title">登录</text>
+			<text class="sub">账号不存在时会自动注册</text>
+
+			<view class="form">
+				<!-- 账号 -->
+				<view class="row" :class="{ 'is-focus': active === 'account' }">
 					<input
-						class="field-input"
-						v-model="nickname"
-						type="nickname"
-						:maxlength="16"
-						placeholder="给自己起个名字"
-						placeholder-class="field-ph"
-						confirm-type="done"
+						class="input"
+						v-model="account"
+						:maxlength="20"
+						placeholder="账号"
+						placeholder-class="ph"
+						confirm-type="next"
+						@focus="active = 'account'"
+						@blur="active = ''"
 					/>
-				</view>
-				<text class="field-tip">不填的话默认叫「面试鸭用户」，登录后也能改</text>
-
-				<!-- #ifdef MP-WEIXIN -->
-				<view
-					class="duck-btn login-btn"
-					:class="canLogin ? 'duck-btn-primary' : 'is-disabled'"
-					:hover-class="canLogin ? 'duck-btn-hover' : 'none'"
-					@tap="doLogin"
-				>
-					<text>{{ loading ? '登录中…' : '微信一键登录' }}</text>
-				</view>
-				<!-- #endif -->
-
-				<!-- #ifndef MP-WEIXIN -->
-				<view class="duck-btn duck-btn-primary login-btn" hover-class="duck-btn-hover" @tap="doGuestLogin">
-					<text>游客身份进入</text>
-				</view>
-				<text class="env-tip">当前环境不支持微信登录，可用游客身份体验</text>
-				<!-- #endif -->
-
-				<!-- #ifdef MP-WEIXIN -->
-				<view class="guest-btn" hover-class="duck-btn-hover" @tap="asGuest">
-					<text>先随便看看（游客）</text>
-				</view>
-				<!-- #endif -->
-
-				<view class="agree" @tap="toggleAgree">
-					<view class="checkbox" :class="{ 'is-on': agreed }">
-						<view class="tick"></view>
+					<view v-if="account" class="clear" @tap="account = ''">
+						<view class="duck-ic-close"></view>
 					</view>
-					<view class="agree-txt">
-						<text>我已阅读并同意</text>
-						<text class="agree-link" @tap.stop="showAgreement">《用户协议》</text>
-						<text>与</text>
-						<text class="agree-link" @tap.stop="showAgreement">《隐私政策》</text>
+				</view>
+
+				<!-- 密码 -->
+				<view class="row" :class="{ 'is-focus': active === 'pwd' }">
+					<input
+						class="input"
+						v-model="password"
+						:password="!showPwd"
+						:maxlength="32"
+						placeholder="密码（至少 6 位）"
+						placeholder-class="ph"
+						confirm-type="done"
+						@focus="active = 'pwd'"
+						@blur="active = ''"
+						@confirm="doLogin"
+					/>
+					<view class="eye" :class="{ 'is-off': !showPwd }" @tap="showPwd = !showPwd">
+						<view class="eye-slash"></view>
 					</view>
 				</view>
 			</view>
 
-			<!-- 登录能带来什么 -->
-			<view class="benefits">
-				<view class="benefit">
-					<view class="benefit-dot is-green"></view>
-					<text class="benefit-txt">收藏、错题、阅读记录跟着账号走</text>
+			<view class="submit" :class="canLogin ? 'is-on' : 'is-off'" @tap="doLogin">
+				<text>{{ loading ? '处理中…' : '登录' }}</text>
+			</view>
+
+			<view class="agree" @tap="agreed = !agreed">
+				<view class="checkbox" :class="{ 'is-on': agreed }">
+					<view class="tick"></view>
 				</view>
-				<view class="benefit">
-					<view class="benefit-dot is-blue"></view>
-					<text class="benefit-txt">换手机不用从头刷</text>
-				</view>
-				<view class="benefit">
-					<view class="benefit-dot is-gold"></view>
-					<text class="benefit-txt">游客期间的刷题记录登录后自动合并</text>
+				<view class="agree-txt">
+					<text>已阅读并同意</text>
+					<text class="agree-link" @tap.stop="showAgreement">《用户协议》</text>
+					<text>与</text>
+					<text class="agree-link" @tap.stop="showAgreement">《隐私政策》</text>
 				</view>
 			</view>
+		</view>
+
+		<view class="foot">
+			<text class="guest" @tap="asGuest">先随便看看</text>
 		</view>
 	</view>
 </template>
 
 <script>
-	import { loginWechat, loginGuest, getUser, getToken } from '@/common/api.js'
+	import { loginPassword, loginGuest, getUser, getToken } from '@/common/api.js'
 	import { syncUserData } from '@/common/user-store.js'
 	import { menuSafeRight } from '@/common/nav.js'
 	import { showLoading, hideLoading, hidePageLoading } from '@/common/loading.js'
+
+	const ACCOUNT_RE = /^[A-Za-z0-9_]{3,20}$/
 
 	export default {
 		data() {
 			return {
 				statusBar: 0,
 				menuRight: 0,
-				nickname: '',
+				account: '',
+				password: '',
+				showPwd: false,
 				agreed: false,
 				loading: false,
-				/** 进页面时缓存的用户，用来判断「已经是正式账号」还是游客 */
+				active: '',
+				/** 进页面时缓存的用户，用来判断「已经是登录状态」还是游客 */
 				current: null
 			}
 		},
 		computed: {
+			accountOk() {
+				return ACCOUNT_RE.test(this.account)
+			},
 			canLogin() {
-				return this.agreed && !this.loading
+				return this.agreed && this.accountOk && this.password.length >= 6 && !this.loading
 			}
 		},
 		onLoad() {
@@ -124,11 +116,7 @@
 				this.statusBar = 0
 			}
 			this.menuRight = menuSafeRight()
-
-			const user = getUser()
-			this.current = user
-			// 已登录的老用户进来改昵称：预填当前昵称
-			if (user && user.is_guest === false && user.nickname) this.nickname = user.nickname
+			this.current = getUser()
 		},
 		onReady() {
 			// 关掉路由拦截器开的那层页面 loading
@@ -143,14 +131,12 @@
 					}
 				})
 			},
-			toggleAgree() {
-				this.agreed = !this.agreed
-			},
 			showAgreement() {
 				uni.showModal({
 					title: '用户协议与隐私政策',
 					content:
-						'面试鸭仅收集你的昵称、头像与刷题记录，用于展示学习进度和跨设备同步。' +
+						'面试鸭仅收集你的账号、昵称与刷题记录，用于登录、展示学习进度和跨设备同步。' +
+						'密码经加盐哈希后存储，服务端不保存明文。' +
 						'不收集通讯录、位置等无关信息，也不会把数据提供给第三方。' +
 						'你可以在「我的 → 清空学习数据」随时删除全部记录，或退出登录停止同步。',
 					showCancel: false,
@@ -159,22 +145,26 @@
 				})
 			},
 
-			/** 微信一键登录：code 交后端换 openid，游客数据会被合并过去 */
+			/* ---------- 登录 / 注册 ---------- */
 			async doLogin() {
 				if (this.loading) return
-				if (!this.agreed) {
-					uni.showToast({ title: '请先勾选同意协议', icon: 'none' })
+				if (!this.accountOk) {
+					uni.showToast({ title: '账号需 3-20 位字母、数字或下划线', icon: 'none' })
 					return
 				}
-				if (this.current && this.current.is_guest === false) {
-					uni.showToast({ title: '你已经是登录状态', icon: 'none' })
+				if (this.password.length < 6) {
+					uni.showToast({ title: '密码至少 6 位', icon: 'none' })
+					return
+				}
+				if (!this.agreed) {
+					uni.showToast({ title: '请先勾选同意协议', icon: 'none' })
 					return
 				}
 
 				this.loading = true
 				showLoading('登录中')
 				try {
-					await loginWechat({ nickname: this.nickname.trim() || '面试鸭用户' })
+					await loginPassword({ account: this.account, password: this.password })
 					// 换账号后重新拉一遍服务端数据，页面上立刻是新账号的进度
 					await syncUserData({ silent: true })
 					hideLoading()
@@ -189,7 +179,12 @@
 			},
 
 			/** 游客进入：bootstrap 通常已经建好游客身份，这里只兜底 */
-			async doGuestLogin() {
+			async asGuest() {
+				if (this.current && this.current.is_guest === false) {
+					uni.showToast({ title: '当前已登录', icon: 'none' })
+					this.leave()
+					return
+				}
 				if (!this.agreed) {
 					uni.showToast({ title: '请先勾选同意协议', icon: 'none' })
 					return
@@ -205,37 +200,8 @@
 				}
 			},
 
-			asGuest() {
-				// 已经登录了正式账号，不要因为点「游客」把账号挤掉
-				if (this.current && this.current.is_guest === false) {
-					uni.showToast({ title: '当前已登录', icon: 'none' })
-					this.leave()
-					return
-				}
-				if (!this.agreed) {
-					uni.showToast({ title: '请先勾选同意协议', icon: 'none' })
-					return
-				}
-				this.doGuestLogin()
-			},
-
 			handleFail(e) {
 				const status = e && e.status
-				if (status === 501) {
-					uni.showModal({
-						title: '暂时无法微信登录',
-						content:
-							'服务端还没有配置 WX_APPID / WX_SECRET。你可以先用游客身份体验，' +
-							'数据会存在本机对应的游客账号里。',
-						confirmText: '游客进入',
-						cancelText: '再等等',
-						confirmColor: '#00B578',
-						success: (res) => {
-							if (res.confirm) this.doGuestLogin()
-						}
-					})
-					return
-				}
 				if (status === 0) {
 					uni.showToast({ title: '连不上服务器，请稍后再试', icon: 'none' })
 					return
@@ -259,21 +225,19 @@
 </script>
 
 <style lang="scss" scoped>
-	.login-page {
+	.page {
+		display: flex;
+		flex-direction: column;
 		min-height: 100vh;
-		background-color: $duck-bg;
+		background-color: #ffffff;
 	}
 
-	/* ---------- 头部 ---------- */
-	.login-head {
-		padding-bottom: 96rpx;
-	}
-
-	.head-bar {
+	/* ---------- 顶栏 ---------- */
+	.bar {
 		display: flex;
 		align-items: center;
 		height: 88rpx;
-		padding-left: 16rpx;
+		padding-left: 20rpx;
 	}
 
 	.back {
@@ -286,143 +250,176 @@
 	}
 
 	.back-hover {
-		background-color: rgba(255, 255, 255, 0.16);
+		background-color: #f2f4f3;
 	}
 
-	.head-title {
-		margin-left: 8rpx;
-		font-size: 32rpx;
-		font-weight: 600;
-		color: #ffffff;
-	}
-
-	.brand {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 24rpx 48rpx 0;
-	}
-
-	.brand-logo {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 132rpx;
-		height: 132rpx;
-		border-radius: 40rpx;
-		background-color: #ffffff;
-		box-shadow: 0 12rpx 32rpx rgba(0, 107, 72, 0.22);
-	}
-
-	.brand-logo-txt {
-		font-size: 60rpx;
-		font-weight: 700;
-		color: $duck-primary;
-		line-height: 1;
-	}
-
-	.brand-name {
-		margin-top: 24rpx;
-		font-size: 42rpx;
-		font-weight: 700;
-		color: #ffffff;
-		letter-spacing: 1rpx;
-	}
-
-	.brand-sub {
-		margin-top: 10rpx;
-		font-size: 24rpx;
-		color: rgba(255, 255, 255, 0.86);
-		text-align: center;
+	/* 公共返回箭头是白色的，浅色底上换成深灰 */
+	.back .duck-ic-back::after {
+		border-left-color: #23282b;
+		border-bottom-color: #23282b;
 	}
 
 	/* ---------- 主体 ---------- */
-	.login-body {
-		padding: 0 32rpx 60rpx;
-	}
-
-	.login-card {
-		margin-top: -72rpx;
-		padding: 40rpx 36rpx 32rpx;
-		background-color: #ffffff;
-		border-radius: 28rpx;
-		box-shadow: 0 12rpx 36rpx rgba(15, 42, 31, 0.08);
-	}
-
-	.field {
-		display: flex;
-		align-items: center;
-		height: 96rpx;
-		padding: 0 26rpx;
-		background-color: #f5f8f6;
-		border-radius: 20rpx;
-	}
-
-	.field-label {
-		flex-shrink: 0;
-		width: 88rpx;
-		font-size: 27rpx;
-		color: $duck-text-muted;
-	}
-
-	.field-input {
+	.main {
 		flex: 1;
-		height: 96rpx;
-		font-size: 29rpx;
-		color: $duck-text;
+		padding: 40rpx 56rpx 0;
 	}
 
-	.field-ph {
-		color: #b6c2bc;
-		font-size: 27rpx;
-	}
-
-	.field-tip {
-		display: block;
-		margin: 14rpx 4rpx 0;
-		font-size: 21rpx;
-		color: #a3b0a9;
-	}
-
-	.login-btn {
-		margin-top: 40rpx;
-	}
-
-	.guest-btn {
+	.logo {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 84rpx;
-		margin-top: 16rpx;
-		border-radius: 999rpx;
-		font-size: 27rpx;
-		color: #5c6b64;
+		width: 88rpx;
+		height: 88rpx;
+		border-radius: 26rpx;
+		background-color: $duck-primary;
 	}
 
-	.env-tip {
+	.logo-txt {
+		font-size: 44rpx;
+		font-weight: 700;
+		line-height: 1;
+		color: #ffffff;
+	}
+
+	.title {
 		display: block;
-		margin-top: 18rpx;
-		font-size: 21rpx;
-		color: #a3b0a9;
-		text-align: center;
+		margin-top: 40rpx;
+		font-size: 50rpx;
+		font-weight: 700;
+		color: $duck-text;
+		letter-spacing: -1rpx;
+	}
+
+	.sub {
+		display: block;
+		margin-top: 16rpx;
+		font-size: 26rpx;
+		color: #9aa4a0;
+	}
+
+	/* ---------- 表单 ---------- */
+	.form {
+		margin-top: 76rpx;
+	}
+
+	.row {
+		display: flex;
+		align-items: center;
+		height: 112rpx;
+		border-bottom: 2rpx solid #edeff0;
+		transition: border-color 0.18s ease;
+	}
+
+	.row.is-focus {
+		border-bottom-color: $duck-primary;
+	}
+
+	.input {
+		flex: 1;
+		height: 112rpx;
+		font-size: 32rpx;
+		color: $duck-text;
+	}
+
+	.ph {
+		font-size: 30rpx;
+		color: #bcc4c1;
+	}
+
+	.clear {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 52rpx;
+		height: 52rpx;
+	}
+
+	/* ---------- 眼睛（纯 CSS，不占图片资源） ---------- */
+	.eye {
+		position: relative;
+		flex-shrink: 0;
+		width: 52rpx;
+		height: 52rpx;
+	}
+
+	.eye::before {
+		content: '';
+		position: absolute;
+		left: 8rpx;
+		top: 13rpx;
+		width: 36rpx;
+		height: 24rpx;
+		border: 3rpx solid #b6bfbb;
+		border-radius: 50%;
+		box-sizing: border-box;
+	}
+
+	.eye::after {
+		content: '';
+		position: absolute;
+		left: 21rpx;
+		top: 18rpx;
+		width: 10rpx;
+		height: 10rpx;
+		border-radius: 50%;
+		background-color: #b6bfbb;
+	}
+
+	.eye-slash {
+		position: absolute;
+		left: 6rpx;
+		top: 24rpx;
+		width: 40rpx;
+		height: 3rpx;
+		border-radius: 3rpx;
+		background-color: #b6bfbb;
+		transform: rotate(45deg) scaleX(0);
+		transition: transform 0.16s ease;
+	}
+
+	.eye.is-off .eye-slash {
+		transform: rotate(45deg) scaleX(1);
+	}
+
+	/* ---------- 按钮 ---------- */
+	.submit {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100rpx;
+		margin-top: 64rpx;
+		border-radius: 50rpx;
+		font-size: 32rpx;
+		font-weight: 600;
+		transition: opacity 0.18s ease;
+	}
+
+	.submit.is-on {
+		background-color: $duck-primary;
+		color: #ffffff;
+	}
+
+	.submit.is-off {
+		background-color: #f0f2f1;
+		color: #b9c1be;
 	}
 
 	/* ---------- 协议 ---------- */
 	.agree {
 		display: flex;
 		align-items: flex-start;
-		margin-top: 28rpx;
-		padding: 0 4rpx;
+		margin-top: 36rpx;
 	}
 
 	.checkbox {
 		position: relative;
 		flex-shrink: 0;
-		width: 32rpx;
-		height: 32rpx;
-		margin-top: 2rpx;
+		width: 30rpx;
+		height: 30rpx;
+		margin-top: 3rpx;
 		border-radius: 50%;
-		border: 2rpx solid #ccd6d0;
+		border: 2rpx solid #d2d8d5;
 		box-sizing: border-box;
 		transition: all 0.16s ease;
 	}
@@ -435,9 +432,9 @@
 	.tick {
 		position: absolute;
 		left: 9rpx;
-		top: 7rpx;
-		width: 10rpx;
-		height: 6rpx;
+		top: 6rpx;
+		width: 9rpx;
+		height: 5rpx;
 		border-left: 2rpx solid #ffffff;
 		border-bottom: 2rpx solid #ffffff;
 		transform: rotate(-45deg) scale(0);
@@ -452,48 +449,28 @@
 	.agree-txt {
 		flex: 1;
 		margin-left: 12rpx;
-		font-size: 21rpx;
-		line-height: 1.5;
-		color: #98a6a0;
+		font-size: 22rpx;
+		line-height: 1.6;
+		color: #9aa4a0;
 	}
 
 	.agree-link {
 		color: $duck-primary;
 	}
 
-	/* ---------- 说明 ---------- */
-	.benefits {
-		margin-top: 44rpx;
-		padding: 0 12rpx;
-	}
-
-	.benefit {
+	/* ---------- 底部 ---------- */
+	.foot {
 		display: flex;
 		align-items: center;
-		margin-bottom: 20rpx;
+		justify-content: center;
+		padding: 40rpx 0;
+		padding-bottom: calc(48rpx + constant(safe-area-inset-bottom));
+		padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 	}
 
-	.benefit-dot {
-		width: 10rpx;
-		height: 10rpx;
-		margin-right: 16rpx;
-		border-radius: 50%;
-	}
-
-	.benefit-dot.is-green {
-		background-color: $duck-primary;
-	}
-
-	.benefit-dot.is-blue {
-		background-color: #3b8ff0;
-	}
-
-	.benefit-dot.is-gold {
-		background-color: #f0a020;
-	}
-
-	.benefit-txt {
-		font-size: 23rpx;
-		color: #8b9a93;
+	.guest {
+		padding: 16rpx 32rpx;
+		font-size: 26rpx;
+		color: #9aa4a0;
 	}
 </style>

@@ -30,10 +30,12 @@ server/
 │   ├── models.py        8 张表（内容 3 张 + 用户 5 张）
 │   ├── schemas.py       请求响应模型（Pydantic）
 │   ├── deps.py          token → 用户
+│   ├── password.py      密码哈希（PBKDF2-HMAC-SHA256 + 随机盐，仅标准库）
+│   ├── sms.py           手机验证码（落库 / 频控 / 一次性 / 错误次数上限）
 │   ├── services.py      业务规则（统计口径、错题联动、打卡）
 │   ├── seed.py          题库导入（幂等）
 │   └── routers/
-│       ├── auth.py      游客 / 微信登录
+│       ├── auth.py      游客 / 账号密码 / 手机验证码 / 微信登录
 │       ├── catalog.py   题库内容（只读）
 │       └── practice.py  学习数据（需登录）
 ├── scripts/export-seed.mjs   从 common/ 导出题库 JSON
@@ -59,8 +61,11 @@ node --experimental-default-type=module scripts/export-seed.mjs
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/api/auth/guest` | 游客登录，返回 token（联调首选） |
+| POST | `/api/auth/login` | **账号密码登录 / 注册**，body `{account, password, nickname?}`；账号不存在即注册，密码错返回 400；请求头带游客 token 时会把游客数据合并过来 |
+| POST | `/api/auth/phone/code` | 发送手机验证码，body `{phone}`；调试模式下响应里带 `debug_code` |
+| POST | `/api/auth/phone` | 手机验证码登录，body `{phone, code, nickname?}` |
 | POST | `/api/auth/wechat` | 微信登录，body `{code, nickname?, avatar?}`；请求头带游客 token 时会把游客数据合并过来 |
-| GET | `/api/auth/me` | 当前用户（需 token），含 `is_guest` |
+| GET | `/api/auth/me` | 当前用户（需 token），含 `is_guest` / `account` |
 | PATCH | `/api/auth/me` | 修改昵称 / 头像，body `{nickname?, avatar?}` |
 
 ### 题库（公开，带 token 时返回个性化字段）
@@ -100,7 +105,7 @@ node --experimental-default-type=module scripts/export-seed.mjs
 2. **只有首次作答才累加「今日进度」** —— 重复刷同一题不会灌水
 3. **连续天数不落库，按日期现算** —— 避免前端存 `{last, days}` 漏更新算错
 4. **收藏/错题唯一约束** —— 重复收藏返回 201 幂等，不会产生脏数据
-5. **游客登录合并到微信账号** —— 收藏/错题取并集、记录按游客覆盖、打卡同日相加，合并后删除游客账号
+5. **游客数据合并** —— 登录成功后把游客的收藏/错题取并集、记录按游客覆盖、打卡同日相加，合并完删除游客账号
 
 ## 前端接入（已完成）
 

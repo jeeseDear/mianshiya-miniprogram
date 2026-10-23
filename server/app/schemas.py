@@ -123,6 +123,44 @@ class GuestLoginOut(BaseModel):
     nickname: str
     avatar: str = ""
     is_guest: bool = True
+    phone: str = ""
+    account: str = ""
+
+
+class PasswordLoginIn(BaseModel):
+    """账号密码登录。账号不存在时按这个密码直接注册。
+
+    账号只允许字母 / 数字 / 下划线，避免出现空格、表情等难以输入的字符；
+    统一转小写后再入库，防止 Alice 与 alice 变成两个账号。
+    """
+
+    account: str = Field(
+        min_length=3,
+        max_length=20,
+        pattern=r"^[A-Za-z0-9_]+$",
+        description="3-20 位字母、数字或下划线（可以用手机号）",
+    )
+    password: str = Field(min_length=6, max_length=32, description="6-32 位密码")
+    nickname: str = ""
+
+
+class PhoneCodeIn(BaseModel):
+    """发送验证码。手机号在前端已限制输入，这里再做一次服务端校验。"""
+
+    phone: str = Field(pattern=r"^1[3-9]\d{9}$", description="11 位中国大陆手机号")
+
+
+class PhoneCodeOut(BaseModel):
+    ok: bool = True
+    # 调试模式下把验证码直接返回，方便没有短信通道时联调
+    debug_code: str | None = Field(default=None, description="仅 sms_debug=true 时返回")
+    retry_after: int = Field(default=60, description="多少秒后可以重发")
+
+
+class PhoneLoginIn(BaseModel):
+    phone: str = Field(pattern=r"^1[3-9]\d{9}$")
+    code: str = Field(min_length=4, max_length=8, description="短信验证码")
+    nickname: str = ""
 
 
 class WechatLoginIn(BaseModel):
@@ -142,6 +180,8 @@ class MeOut(BaseModel):
     id: int
     nickname: str
     avatar: str = ""
+    phone: str = ""
+    account: str = ""
     is_guest: bool = True
     created_at: datetime | None = None
 

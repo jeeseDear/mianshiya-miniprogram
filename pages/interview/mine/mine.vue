@@ -238,7 +238,7 @@
 			}
 		},
 		computed: {
-			/** 只有微信登录才算「已登录」，游客也显示入口 */
+			/** 只有手机号登录才算「已登录」，游客也显示入口 */
 			loggedIn() {
 				return !!(this.user && this.user.is_guest === false)
 			},
@@ -248,6 +248,9 @@
 			},
 			profileSub() {
 				if (!this.loggedIn) return '游客模式 · 已读 ' + this.stats.done + ' 题'
+				// 已登录显示账号，让用户知道当前是哪个号
+				const acct = this.user && (this.user.account || this.user.phone)
+				if (acct) return acct + ' · 已读 ' + this.stats.done + ' 题'
 				return this.level.name + ' · 已读 ' + this.stats.done + ' 题'
 			},
 			level() {
@@ -312,7 +315,7 @@
 			},
 			editNickname() {
 				// #ifndef MP-WEIXIN
-				uni.showToast({ title: '请在微信小程序里修改昵称', icon: 'none' })
+				uni.showToast({ title: '当前环境不支持修改昵称，请在微信小程序里操作', icon: 'none' })
 				return
 				// #endif
 				uni.showModal({

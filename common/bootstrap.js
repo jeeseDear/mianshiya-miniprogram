@@ -84,7 +84,7 @@ export function bootstrap(options) {
 				// token 失效（比如后端换了数据库）时重登一次
 				if (!ok) {
 					const cached = getUser()
-					// 微信账号的 token 失效：不静默降级成游客。
+					// 正式账号的 token 失效：不静默降级成游客。
 					// 游客登录会换成一个空账号，用户会看到「进度全没了」，
 					// 这里只清本地身份，由「我的」页引导重新登录。
 					if (cached && cached.is_guest === false) {

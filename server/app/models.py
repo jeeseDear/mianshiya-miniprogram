@@ -73,12 +73,22 @@ class Knowledge(Base):
 
 
 class User(Base):
-    """游客与微信用户共用一张表；openid 为空即游客。"""
+    """游客 / 账号密码 / 手机号 / 微信用户共用一张表。
+
+    账号类型的判定只看一个条件：``openid``、``phone``、``account``
+    三个都为空即游客。这样多种入口（游客、账号密码、手机号、微信）
+    互不冲突，同一个人先游客后登录也能把数据并过去。
+    """
 
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     openid: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, index=True)
+    # 账号密码登录：account 存账号（统一小写），password_hash 存
+    # `pbkdf2_sha256$迭代次数$salt$hash`，明文密码不落库
+    account: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, index=True)
+    password_hash: Mapped[str | None] = mapped_column(String(160), nullable=True)
     nickname: Mapped[str] = mapped_column(String(64), default="面试鸭用户")
     avatar: Mapped[str] = mapped_column(String(255), default="")
     token: Mapped[str] = mapped_column(String(64), unique=True, index=True)
@@ -140,3 +150,25 @@ class DailyStat(Base):
     count: Mapped[int] = mapped_column(Integer, default=0)
 
     __table_args__ = (UniqueConstraint("user_id", "day", name="uq_daily_user_day"),)
+
+
+class SmsCode(Base):
+    """手机号验证码。
+
+    落库而不是放内存，原因有两个：进程重启后用户不用重发；同一手机号的
+    发送频率限制可以直接查表，不需要额外的 Redis。单个手机号只保留最新
+    一条，重发时覆盖旧的，避免多码都能用的安全问题。
+
+    时间戳用 int（秒级 epoch）：验证码只关心「过期没」，存本地时间字符串
+    还要处理时区，得不偿失。
+    """
+
+    __tablename__ = "sms_codes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    phone: Mapped[str] = mapped_column(String(20), unique=True, index=True)
+    code: Mapped[str] = mapped_column(String(8))
+    expired_at: Mapped[int] = mapped_column(Integer)
+    sent_at: Mapped[int] = mapped_column(Integer)
+    # 已验证次数，防止同一验证码被撞库反复试探
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
