@@ -32,8 +32,19 @@
 					</view>
 				</view>
 
+				<!-- 解析加载中：标题已渲染，这里只占位说明 -->
+				<view class="sec" v-if="detailLoading">
+					<view class="sec-head">
+						<text class="sec-title">回答重点</text>
+						<text class="sec-tag">加载中…</text>
+					</view>
+					<view class="pt">
+						<text class="pt-txt">正在从服务器获取解析内容</text>
+					</view>
+				</view>
+
 				<!-- 回答重点 -->
-				<view class="sec">
+				<view class="sec" v-else>
 					<view class="sec-head">
 						<text class="sec-title">回答重点</text>
 						<text class="sec-tag">{{ item.points.length }} 条</text>
@@ -47,7 +58,7 @@
 				</view>
 
 				<!-- 详细答案 -->
-				<view class="sec">
+				<view class="sec" v-if="!detailLoading">
 					<view class="sec-head">
 						<text class="sec-title">详细答案</text>
 					</view>
@@ -125,8 +136,8 @@
 </template>
 
 <script>
-	import { categories, levelText, findQa, qaOfCat, randomQa } from '@/common/interview-data.js'
-	import { isFavorite, toggleFavorite, recordAnswer } from '@/common/interview-store.js'
+	import { getCategories, levelText, findQa, qaOfCat, randomQa, fetchQaDetail, getCachedDetail } from '@/common/question-source.js'
+	import { isFavorite, toggleFavorite, recordAnswer } from '@/common/user-store.js'
 	import { menuSafeRight, navBack } from '@/common/nav.js'
 
 	export default {
@@ -138,12 +149,13 @@
 				catId: 'js',
 				item: null,
 				fav: false,
+				detailLoading: false,
 				levelText: levelText
 			}
 		},
 		computed: {
 			catName() {
-				const c = categories.find((x) => x.id === this.catId)
+				const c = getCategories().find((x) => x.id === this.catId)
 				return c ? c.name : ''
 			},
 			list() {
@@ -180,27 +192,79 @@
 			}
 			this.menuRight = menuSafeRight()
 			this.id = (options && options.id) || ''
-			this.item = findQa(this.id)
-			this.catId = (options && options.cat) || (this.item && this.item.cat) || 'js'
-			if (this.item) {
-				// 打开即记为已读：用于阅读进度、今日打卡与「已读记录」
-				recordAnswer(this.item.id, true)
-				this.fav = isFavorite(this.item.id)
+
+			// 1. 先用镜像里的摘要渲染标题，避免白屏
+			const brief = findQa(this.id)
+			this.catId = (options && options.cat) || (brief && brief.cat) || 'js'
+			if (brief) {
+				this.item = {
+					id: brief.id,
+					cat: brief.cat,
+					level: brief.level,
+					hot: brief.hot,
+					title: brief.title,
+					short: brief.short,
+					points: [],
+					detail: [],
+					extend: []
+				}
+				this.fav = isFavorite(brief.id)
 			}
+
+			// 2. 再拉完整解析（命中内存缓存则同步返回）
+			this.loadDetail()
 		},
 		methods: {
+			async loadDetail() {
+				if (!this.id) {
+					this.detailLoading = false
+					return
+				}
+				// 命中内存缓存（上一题/下一题来回切）就直接用，不闪加载态
+				const cachedDetail = getCachedDetail(this.id)
+				if (cachedDetail) {
+					this.item = cachedDetail
+					this.catId = cachedDetail.cat || this.catId
+					this.fav = isFavorite(cachedDetail.id)
+					this.detailLoading = false
+					await recordAnswer(cachedDetail.id, true)
+					return
+				}
+				this.detailLoading = true
+				try {
+					const detail = await fetchQaDetail(this.id)
+					this.item = detail
+					this.catId = detail.cat || this.catId
+					this.fav = isFavorite(detail.id)
+					// 打开即记为已读：用于阅读进度、今日打卡与「已读记录」
+					await recordAnswer(detail.id, true)
+				} catch (e) {
+					if (!this.item) {
+						uni.showToast({ title: '题目加载失败', icon: 'none' })
+					} else {
+						uni.showToast({ title: '解析加载失败，请检查网络', icon: 'none' })
+					}
+				} finally {
+					this.detailLoading = false
+				}
+			},
 			goBack() {
 				navBack('/pages/interview/index/index')
 			},
-			toggleFav() {
+			async toggleFav() {
 				if (!this.item) return
-				this.fav = toggleFavorite(this.item.id)
-				uni.showToast({ title: this.fav ? '已收藏' : '已取消收藏', icon: 'none' })
+				try {
+					this.fav = await toggleFavorite(this.item.id)
+					uni.showToast({ title: this.fav ? '已收藏' : '已取消收藏', icon: 'none' })
+				} catch (e) {
+					uni.showToast({ title: '操作失败，请重试', icon: 'none' })
+				}
 			},
 			open(target) {
 				if (!target) return
+				// target 可能来自镜像（带 cat）或详情接口的 prev/next（只有 id），统一兜底
 				uni.redirectTo({
-					url: '/pages/interview/qa/qa?id=' + target.id + '&cat=' + target.cat
+					url: '/pages/interview/qa/qa?id=' + target.id + '&cat=' + (target.cat || this.catId)
 				})
 			},
 			goPrev() {

@@ -134,7 +134,7 @@
 		</view>
 		<view class="duck-empty" v-else>
 			<text class="duck-empty-title">题库还是空的</text>
-			<text class="duck-empty-desc">在 common/interview-data.js 中补充分类后展示</text>
+			<text class="duck-empty-desc">题库正在从服务器同步，稍后自动展示</text>
 		</view>
 		<!-- 高频榜 -->
 		<view class="duck-sec-head">
@@ -178,8 +178,9 @@
 </template>
 
 <script>
-	import { categories, qaQuestions, levelText, dailyQa, hotQa, qaOfCat, randomQa } from '@/common/interview-data.js'
-	import { getStats } from '@/common/interview-store.js'
+	import { getCategories, allQuestions, levelText, dailyQa, hotQa, qaOfCat, randomQa } from '@/common/question-source.js'
+	import { getStats, syncUserData } from '@/common/user-store.js'
+	import { ensureReady } from '@/common/bootstrap.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
 
 	const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
@@ -190,7 +191,7 @@
 				statusBar: 0,
 				greeting: '你好',
 				dateLabel: '',
-				categories: categories,
+				categories: getCategories(),
 				levelText: levelText,
 				dailyGoal: 5,
 				stats: { done: 0, right: 0, wrong: 0, favorite: 0, rate: 0, progress: 0, streak: 0, today: 0 },
@@ -240,8 +241,20 @@
 			this.daily = dailyQa()
 			this.updateHead()
 			hidePageLoading()
+			this.syncFromCloud()
 		},
 		methods: {
+			// 先用缓存渲染出首屏，云端数据回来后再刷一次视图
+			async syncFromCloud() {
+				const ok = await ensureReady()
+				if (!ok && !getCategories().length) {
+					uni.showToast({ title: '网络不给力，先看缓存', icon: 'none' })
+				}
+				await syncUserData({ silent: true })
+				this.categories = getCategories()
+				this.daily = dailyQa()
+				this.refresh()
+			},
 			updateHead() {
 				const d = new Date()
 				const h = d.getHours()
@@ -252,7 +265,7 @@
 				this.dateLabel = d.getMonth() + 1 + ' 月 ' + d.getDate() + ' 日 · ' + WEEK[d.getDay()]
 			},
 			refresh() {
-				this.stats = getStats(qaQuestions.length)
+				this.stats = getStats(allQuestions().length)
 			},
 			countOf(cat) {
 				return qaOfCat(cat).length

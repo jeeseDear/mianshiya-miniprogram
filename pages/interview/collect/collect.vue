@@ -71,9 +71,10 @@
 </template>
 
 <script>
-	import { categories, findQa, levelText } from '@/common/interview-data.js'
+	import { getCategories, findQa, levelText } from '@/common/question-source.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
-	import { getFavorites, getRecords, toggleFavorite } from '@/common/interview-store.js'
+	import { getFavorites, getRecords, toggleFavorite, syncUserData } from '@/common/user-store.js'
+	import { ensureReady } from '@/common/bootstrap.js'
 
 	export default {
 		data() {
@@ -83,7 +84,7 @@
 				tab: 'fav',
 				favIds: [],
 				readIds: [],
-				categories: categories
+				categories: getCategories()
 			}
 		},
 		computed: {
@@ -115,12 +116,21 @@
 			}
 			this.refresh()
 			hidePageLoading()
+			this.syncFromCloud()
 		},
 		methods: {
+			// 收藏与已读都在服务端，进页面时先展示缓存再校准
+			async syncFromCloud() {
+				await ensureReady()
+				await syncUserData({ silent: true })
+				const cats = getCategories()
+				if (cats.length) this.categories = cats
+				this.refresh()
+			},
 			refresh() {
 				this.favIds = getFavorites()
-				// 阅读记录按最近一次打开的顺序展示
-				this.readIds = Object.keys(getRecords()).reverse()
+				// 服务端按 updated_at 倒序返回，最近打开的排在最前，无需再 reverse
+				this.readIds = Object.keys(getRecords())
 			},
 			switchTab(tab) {
 				this.tab = tab
@@ -138,10 +148,14 @@
 					url: '/pages/interview/qa/qa?id=' + q.id + '&cat=' + q.cat
 				})
 			},
-			remove(q) {
-				toggleFavorite(q.id)
-				uni.showToast({ title: '已取消收藏', icon: 'none' })
-				this.refresh()
+			async remove(q) {
+				try {
+					await toggleFavorite(q.id)
+					uni.showToast({ title: '已取消收藏', icon: 'none' })
+					this.refresh()
+				} catch (e) {
+					uni.showToast({ title: '操作失败，请重试', icon: 'none' })
+				}
 			},
 			startPractice() {
 				if (!this.list.length) return

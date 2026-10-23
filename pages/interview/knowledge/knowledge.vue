@@ -22,8 +22,8 @@
 					<text class="hero-summary">{{ item.summary }}</text>
 				</view>
 
-				<!-- 核心要点 -->
-				<view class="sec">
+				<!-- 核心要点（加载中显示占位，避免出现「0 条」空块） -->
+				<view class="sec" v-if="!detailLoading">
 					<view class="sec-head">
 						<text class="sec-title">核心要点</text>
 						<text class="sec-tag">{{ item.points.length }} 条</text>
@@ -33,6 +33,12 @@
 							<text class="pt-no-txt duck-num">{{ i + 1 }}</text>
 						</view>
 						<text class="pt-txt">{{ p }}</text>
+					</view>
+				</view>
+				<view class="sec" v-else>
+					<view class="sec-head">
+						<text class="sec-title">核心要点</text>
+						<text class="sec-tag">加载中…</text>
 					</view>
 				</view>
 
@@ -92,8 +98,7 @@
 </template>
 
 <script>
-	import { categories, randomQa } from '@/common/interview-data.js'
-	import { findKnowledge, knowledgeOfCat } from '@/common/knowledge.js'
+	import { getCategories, randomQa, findKnowledge, knowledgeOfCat, fetchKnowledgeDetail } from '@/common/question-source.js'
 	import { menuSafeRight, navBack } from '@/common/nav.js'
 
 	export default {
@@ -103,12 +108,13 @@
 				menuRight: 0,
 				id: '',
 				catId: '',
-				item: null
+				item: null,
+				detailLoading: false
 			}
 		},
 		computed: {
 			catName() {
-				const c = categories.find((x) => x.id === this.catId)
+				const c = getCategories().find((x) => x.id === this.catId)
 				return c ? c.name : ''
 			},
 			codeLang() {
@@ -129,10 +135,38 @@
 			}
 			this.menuRight = menuSafeRight()
 			this.id = (options && options.id) || ''
-			this.item = findKnowledge(this.id)
-			this.catId = (options && options.cat) || (this.item && this.item.cat) || ''
+
+			// 先用摘要占位，标题立即可见
+			const brief = findKnowledge(this.id)
+			this.catId = (options && options.cat) || (brief && brief.cat) || ''
+			if (brief) {
+				this.item = {
+					id: brief.id,
+					cat: brief.cat,
+					title: brief.title,
+					summary: brief.summary,
+					points: [],
+					code: '',
+					tips: []
+				}
+			}
+
+			this.loadDetail()
 		},
 		methods: {
+			async loadDetail() {
+				if (!this.id) return
+				this.detailLoading = true
+				try {
+					const detail = await fetchKnowledgeDetail(this.id)
+					this.item = detail
+					this.catId = detail.cat || this.catId
+				} catch (e) {
+					uni.showToast({ title: '知识点加载失败', icon: 'none' })
+				} finally {
+					this.detailLoading = false
+				}
+			},
 			goBack() {
 				navBack('/pages/interview/index/index')
 			},

@@ -4,16 +4,28 @@
 		<view class="duck-head mine-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
 
-			<view class="profile">
-				<view class="avatar">
-					<text class="avatar-txt">鸭</text>
+			<view class="profile" hover-class="profile-hover" @tap="tapProfile">
+				<view class="avatar" :class="{ 'is-login': loggedIn }">
+					<image
+						v-if="user && user.avatar"
+						class="avatar-img"
+						:src="user.avatar"
+						mode="aspectFill"
+					/>
+					<text v-else class="avatar-txt">鸭</text>
+					<view class="avatar-badge" v-if="loggedIn">
+						<view class="avatar-badge-tick"></view>
+					</view>
 				</view>
 				<view class="profile-info">
 					<view class="name-row">
-						<text class="name">前端刷题人</text>
+						<text class="name">{{ displayName }}</text>
 						<text class="lv">Lv.{{ level.lv }}</text>
 					</view>
-					<text class="lv-name">{{ level.name }} · 已读 {{ stats.done }} 题</text>
+					<text class="lv-name">{{ profileSub }}</text>
+				</view>
+				<view class="login-pill" v-if="!loggedIn">
+					<text class="login-pill-txt">登录</text>
 				</view>
 			</view>
 		</view>
@@ -184,6 +196,21 @@
 				</view>
 				<view class="duck-ic-arrow"></view>
 			</view>
+			<view
+				class="duck-row menu-row"
+				v-if="loggedIn"
+				hover-class="duck-row-hover"
+				@tap="confirmLogout"
+			>
+				<view class="menu-tile" style="background: #f2f4f6">
+					<text class="menu-tile-txt" style="color: #5c6b64">退</text>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">退出登录</text>
+					<text class="menu-desc">切换到游客身份，数据仍保留在账号里</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
 		</view>
 
 		<view class="version">
@@ -193,20 +220,36 @@
 </template>
 
 <script>
-	import { categories, qaQuestions } from '@/common/interview-data.js'
-	import { getStats, resetAll } from '@/common/interview-store.js'
-	import { showLoading, hideLoading, sleep, showPageLoading, hidePageLoading } from '@/common/loading.js'
+	import { getCategories, allQuestions } from '@/common/question-source.js'
+	import { getStats, resetAll, syncUserData, clearLocal } from '@/common/user-store.js'
+	import { getUser as getCachedUser, logout, updateProfile } from '@/common/api.js'
+	import { ensureReady } from '@/common/bootstrap.js'
+	import { showLoading, hideLoading, showPageLoading, hidePageLoading } from '@/common/loading.js'
 
 	export default {
 		data() {
 			return {
 				statusBar: 0,
-				catCount: categories.length,
-				total: qaQuestions.length,
+				catCount: getCategories().length,
+				total: allQuestions().length,
+				/** 当前用户（含 is_guest 标记），null 表示还没拿到 */
+				user: null,
 				stats: { done: 0, right: 0, wrong: 0, favorite: 0, rate: 0, progress: 0, streak: 0, today: 0 }
 			}
 		},
 		computed: {
+			/** 只有微信登录才算「已登录」，游客也显示入口 */
+			loggedIn() {
+				return !!(this.user && this.user.is_guest === false)
+			},
+			displayName() {
+				if (!this.user) return '未登录'
+				return this.user.nickname || (this.loggedIn ? '面试鸭用户' : '未登录')
+			},
+			profileSub() {
+				if (!this.loggedIn) return '游客模式 · 已读 ' + this.stats.done + ' 题'
+				return this.level.name + ' · 已读 ' + this.stats.done + ' 题'
+			},
 			level() {
 				const n = this.stats.done
 				if (n >= 200) return { lv: 5, name: '面霸鸭' }
@@ -235,10 +278,99 @@
 		},
 		onShow() {
 			showPageLoading()
-			this.stats = getStats(qaQuestions.length)
+			this.user = getCachedUser()
+			this.stats = getStats(allQuestions().length)
 			hidePageLoading()
+			this.syncFromCloud()
 		},
 		methods: {
+			// 学习数据以服务端为准，本地缓存先显示再校准
+			async syncFromCloud() {
+				await ensureReady()
+				await syncUserData({ silent: true })
+				this.user = getCachedUser()
+				this.catCount = getCategories().length
+				this.total = allQuestions().length
+				this.stats = getStats(this.total)
+			},
+			goLogin() {
+				uni.navigateTo({ url: '/pages/interview/login/login' })
+			},
+			/** 点头部：游客去登录，已登录给「改昵称 / 退出」两个操作 */
+			tapProfile() {
+				if (!this.loggedIn) {
+					this.goLogin()
+					return
+				}
+				uni.showActionSheet({
+					itemList: ['修改昵称', '退出登录'],
+					success: (res) => {
+						if (res.tapIndex === 0) this.editNickname()
+						else if (res.tapIndex === 1) this.confirmLogout()
+					}
+				})
+			},
+			editNickname() {
+				// #ifndef MP-WEIXIN
+				uni.showToast({ title: '请在微信小程序里修改昵称', icon: 'none' })
+				return
+				// #endif
+				uni.showModal({
+					title: '修改昵称',
+					editable: true,
+					placeholderText: '输入新昵称（最多 16 个字）',
+					content: (this.user && this.user.nickname) || '',
+					confirmText: '保存',
+					confirmColor: '#00B578',
+					success: async (res) => {
+						if (!res.confirm) return
+						const name = (res.content || '').trim()
+						if (!name) {
+							uni.showToast({ title: '昵称不能为空', icon: 'none' })
+							return
+						}
+						if (name.length > 16) {
+							uni.showToast({ title: '昵称最多 16 个字', icon: 'none' })
+							return
+						}
+						showLoading('保存中')
+						try {
+							await updateProfile({ nickname: name })
+							this.user = getCachedUser()
+							hideLoading()
+							uni.showToast({ title: '已保存', icon: 'none' })
+						} catch (e) {
+							hideLoading()
+							uni.showToast({ title: '保存失败，请检查网络', icon: 'none' })
+						}
+					}
+				})
+			},
+			confirmLogout() {
+				uni.showModal({
+					title: '退出登录',
+					content: '退出后会切换到游客身份，学习数据仍保留在账号里，重新登录即可找回。',
+					confirmText: '退出',
+					confirmColor: '#FF4D4F',
+					success: async (res) => {
+						if (!res.confirm) return
+						showLoading('退出中')
+						try {
+							await logout()
+							// 换号了，先清掉内存里的旧账号数据，再拉新游客的空数据
+							clearLocal()
+							await syncUserData({ silent: true })
+							this.user = getCachedUser()
+							this.stats = getStats(this.total)
+							hideLoading()
+							uni.showToast({ title: '已退出登录', icon: 'none' })
+						} catch (e) {
+							hideLoading()
+							uni.showToast({ title: '退出失败，请检查网络', icon: 'none' })
+						}
+					}
+				})
+			},
 			goBank() {
 				uni.switchTab({ url: '/pages/interview/bank/bank' })
 			},
@@ -264,7 +396,7 @@
 			about() {
 				uni.showModal({
 					title: '关于面试鸭',
-					content: '共 ' + this.total + ' 道问答，题目与解析参考自面试鸭（mianshiya.com）。所有学习数据保存在本地，换设备不会同步。',
+					content: '共 ' + this.total + ' 道问答，题目与解析参考自面试鸭（mianshiya.com）。学习数据已同步到云端，换设备登录同一账号可继续。',
 					showCancel: false,
 					confirmText: '知道了',
 					confirmColor: '#00B578'
@@ -273,20 +405,24 @@
 			clearData() {
 				uni.showModal({
 					title: '清空学习数据',
-					content: '收藏、阅读记录和打卡数据都会被清除，确定继续吗？',
+					content: '收藏、阅读记录和打卡数据都会被清除，且云端数据一并删除，确定继续吗？',
 					confirmText: '清空',
 					confirmColor: '#FF4D4F',
 					cancelText: '取消',
 					success: async (res) => {
 						if (!res.confirm) return
 						showLoading('处理中')
-						await sleep(300)
-						resetAll()
-						this.stats = getStats(qaQuestions.length)
-						hideLoading()
-						setTimeout(() => {
-							uni.showToast({ title: '已清空', icon: 'none' })
-						}, 60)
+						try {
+							await resetAll()
+							this.stats = getStats(allQuestions().length)
+							hideLoading()
+							setTimeout(() => {
+								uni.showToast({ title: '已清空', icon: 'none' })
+							}, 60)
+						} catch (e) {
+							hideLoading()
+							uni.showToast({ title: '清空失败，请检查网络', icon: 'none' })
+						}
 					}
 				})
 			}
@@ -314,6 +450,7 @@
 	}
 
 	.avatar {
+		position: relative;
 		width: 124rpx;
 		height: 124rpx;
 		border-radius: 50%;
@@ -333,6 +470,65 @@
 		letter-spacing: 1rpx;
 	}
 
+	/* 已登录：一圈金边 + 右下角对勾徽标 */
+	.avatar.is-login {
+		border-color: rgba(255, 209, 102, 0.9);
+	}
+
+	.avatar-img {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		display: block;
+	}
+
+	.avatar-badge {
+		position: absolute;
+		right: -2rpx;
+		bottom: 2rpx;
+		width: 34rpx;
+		height: 34rpx;
+		border-radius: 50%;
+		background-color: #ffb000;
+		border: 3rpx solid #ffffff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+	}
+
+	.avatar-badge-tick {
+		width: 12rpx;
+		height: 7rpx;
+		margin-top: -3rpx;
+		border-left: 3rpx solid #ffffff;
+		border-bottom: 3rpx solid #ffffff;
+		transform: rotate(-45deg);
+		box-sizing: border-box;
+	}
+
+	/* 登录入口胶囊 */
+	.login-pill {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 52rpx;
+		padding: 0 24rpx;
+		border-radius: 999rpx;
+		background-color: rgba(255, 255, 255, 0.94);
+	}
+
+	.login-pill-txt {
+		font-size: 23rpx;
+		font-weight: 600;
+		color: $duck-primary-dark;
+	}
+
+	.profile-hover {
+		opacity: 0.9;
+	}
+
 	.profile-info {
 		flex: 1;
 		min-width: 0;
@@ -344,6 +540,10 @@
 	}
 
 	.name {
+		max-width: 320rpx;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 		font-size: 42rpx;
 		font-weight: 700;
 		color: #ffffff;

@@ -1,0 +1,90 @@
+[
+	{
+		"id": "js",
+		"name": "JavaScript",
+		"short": "JS",
+		"icon": "🟨",
+		"bg": "#fff8e1",
+		"desc": "数据类型、作用域、原型链、this、事件循环与异步"
+	},
+	{
+		"id": "ts",
+		"name": "TypeScript",
+		"short": "TS",
+		"icon": "🔷",
+		"bg": "#e8f1fd",
+		"desc": "类型系统、泛型、类型体操与工程配置"
+	},
+	{
+		"id": "css",
+		"name": "CSS",
+		"short": "CSS",
+		"icon": "🎨",
+		"bg": "#fdeef0",
+		"desc": "盒模型、BFC、Flex/Grid、层叠上下文与响应式"
+	},
+	{
+		"id": "html",
+		"name": "HTML",
+		"short": "HTML",
+		"icon": "📄",
+		"bg": "#fff2e8",
+		"desc": "语义化、标签差异、资源加载、表单与可访问性"
+	},
+	{
+		"id": "vue",
+		"name": "Vue",
+		"short": "Vue",
+		"icon": "💚",
+		"bg": "#e8f8ef",
+		"desc": "响应式原理、组件通信、生命周期与 Vue3 组合式 API"
+	},
+	{
+		"id": "react",
+		"name": "React",
+		"short": "React",
+		"icon": "⚛️",
+		"bg": "#e6f4fb",
+		"desc": "Hooks、渲染机制、状态管理与并发特性"
+	},
+	{
+		"id": "node",
+		"name": "Node.js",
+		"short": "Node",
+		"icon": "🟩",
+		"bg": "#eaf7ea",
+		"desc": "事件循环、模块机制、Stream/Buffer 与进程模型"
+	},
+	{
+		"id": "browser",
+		"name": "浏览器与网络",
+		"short": "网络",
+		"icon": "🌐",
+		"bg": "#e9f3fd",
+		"desc": "渲染流程、HTTP 缓存、跨域与性能排查"
+	},
+	{
+		"id": "build",
+		"name": "工程化",
+		"short": "构建",
+		"icon": "🧱",
+		"bg": "#f2eefc",
+		"desc": "Webpack/Vite、构建优化、模块化与 CI"
+	},
+	{
+		"id": "algo",
+		"name": "算法与数据结构",
+		"short": "算法",
+		"icon": "🧠",
+		"bg": "#fdf0e6",
+		"desc": "大厂高频算法题与前端手写实现"
+	},
+	{
+		"id": "py",
+		"name": "Python",
+		"short": "PY",
+		"icon": "🐍",
+		"bg": "#e8f6ee",
+		"desc": "基础语法、面向对象、标准库、性能与并发"
+	}
+]

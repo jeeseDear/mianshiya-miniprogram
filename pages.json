@@ -49,6 +49,13 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "问答详解"
 			}
+		},
+		{
+			"path": "pages/interview/login/login",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "登录"
+			}
 		}
 		// #ifdef APP-PLUS
 		,{

@@ -8,6 +8,9 @@
 	import {
 		installNavLoading
 	} from '@/common/loading.js'
+	import {
+		bootstrap
+	} from '@/common/bootstrap.js'
 	// #ifdef APP
 	import checkUpdate from '@/uni_modules/uni-upgrade-center-app/utils/check-update';
 	// #endif
@@ -16,6 +19,13 @@
 		onLaunch: function() {
 			// 路由拦截：navigateTo / redirectTo / switchTab / reLaunch 时统一 showLoading
 			installNavLoading()
+
+			// 后端数据引导：登录 → 题库镜像 → 用户学习数据。
+			// 不 await：离线时也要能立刻进首页（读本地缓存），网络回来后再刷新视图。
+			// 页面里用 ensureReady() / onReady() 拿「数据已就绪」的回调。
+			bootstrap().then((ok) => {
+				console.log('[bootstrap]', ok ? 'ready' : 'offline mode')
+			})
 			// #ifdef H5
 			console.log(
 				`%c hello uniapp %c v${version} `,

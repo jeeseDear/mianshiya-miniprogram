@@ -140,7 +140,7 @@
 
 				<view class="duck-empty" v-else>
 					<text class="duck-empty-title">这个分类还没有知识点</text>
-					<text class="duck-empty-desc">在 common/knowledge.js 里补充后展示</text>
+					<text class="duck-empty-desc">题库正在从服务器同步，稍后自动展示</text>
 				</view>
 
 				<view class="list-tail" v-if="knowList.length">
@@ -154,9 +154,9 @@
 </template>
 
 <script>
-	import { categories, qaQuestions, levelText, qaOfCat, randomQa } from '@/common/interview-data.js'
-	import { knowledge, knowledgeOfCat, countKnowledge } from '@/common/knowledge.js'
-	import { getRecords } from '@/common/interview-store.js'
+	import { getCategories, allQuestions, levelText, qaOfCat, randomQa, knowledgeOfCat, countKnowledge, getKnowledgeList } from '@/common/question-source.js'
+	import { getRecords, syncUserData } from '@/common/user-store.js'
+	import { ensureReady } from '@/common/bootstrap.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
 
 	export default {
@@ -164,13 +164,13 @@
 			return {
 				statusBar: 0,
 				mode: 'qa', // qa 问答详解 / know 知识点
-				categories: categories,
+				categories: getCategories(),
 				levelText: levelText,
-				activeCat: categories.length ? categories[0].id : '',
+				activeCat: getCategories().length ? getCategories()[0].id : '',
 				scrollTop: 0,
 				records: {},
-				total: qaQuestions.length,
-				knowTotal: knowledge.length
+				total: allQuestions().length,
+				knowTotal: getKnowledgeList().length
 			}
 		},
 		computed: {
@@ -225,8 +225,24 @@
 			}
 			this.records = getRecords()
 			hidePageLoading()
+			this.syncFromCloud()
 		},
 		methods: {
+			// 题库与已读状态都从云端校准一遍，页面先展示缓存
+			async syncFromCloud() {
+				await ensureReady()
+				await syncUserData({ silent: true })
+				const cats = getCategories()
+				if (cats.length) {
+					this.categories = cats
+					if (!this.categories.some((c) => c.id === this.activeCat)) {
+						this.activeCat = this.categories[0].id
+					}
+				}
+				this.total = allQuestions().length
+				this.knowTotal = getKnowledgeList().length
+				this.records = getRecords()
+			},
 			pad(n) {
 				return n < 10 ? '0' + n : '' + n
 			},

@@ -26,3 +26,10 @@ desktop.ini
 
 # ---------- 本地工具目录 ----------
 .workbuddy/
+
+# ---------- 后端（server/） ----------
+server/.venv/
+server/data/
+server/.env
+server/**/__pycache__/
+server/.pytest_cache/

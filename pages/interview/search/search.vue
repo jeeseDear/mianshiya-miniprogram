@@ -135,10 +135,14 @@
 </template>
 
 <script>
-	import { categories, levelText, searchQa, qaOfCat } from '@/common/interview-data.js'
-	import { searchKnowledge, knowledgeOfCat } from '@/common/knowledge.js'
+	import { getCategories, levelText, searchQaLocal, qaOfCat, knowledgeOfCat, searchKnowledgeLocal } from '@/common/question-source.js'
+	import { api } from '@/common/api.js'
+	import { ensureReady } from '@/common/bootstrap.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
 	import { menuSafeRight, navBack } from '@/common/nav.js'
+
+	// 输入防抖句柄，放在组件外避免被 Vue 做成响应式
+	let searchTimer = null
 
 	export default {
 		data() {
@@ -147,10 +151,12 @@
 				menuRight: 0,
 				keyword: '',
 				searched: false,
+				searching: false,
+				searchSeq: 0, // 请求序号，用来丢弃过期结果
 				knowResults: [],
 				qaResults: [],
 				levelText: levelText,
-				categories: categories,
+				categories: getCategories(),
 				autoFocus: true,
 				hotWords: ['闭包', 'Promise', '原型', 'HTTP', 'Vue', 'React', '事件循环', 'Tree Shaking']
 			}
@@ -165,33 +171,74 @@
 			}
 			this.menuRight = menuSafeRight()
 			this.autoFocus = true
+			this.loadCategories()
 		},
 		onReady() {
 			hidePageLoading()
 		},
+		onUnload() {
+			if (searchTimer) clearTimeout(searchTimer)
+		},
 		methods: {
+			// 分类芯片依赖题库镜像，单独在加载完后刷新
+			async loadCategories() {
+				await ensureReady()
+				const cats = getCategories()
+				if (cats.length) this.categories = cats
+			},
 			catName(cat) {
-				const c = categories.find((x) => x.id === cat)
+				const c = this.categories.find((x) => x.id === cat)
 				return c ? c.short : ''
 			},
 			onInput() {
 				if (!this.keyword.trim()) {
+					if (searchTimer) clearTimeout(searchTimer)
 					this.searched = false
+					this.searching = false
 					this.knowResults = []
 					this.qaResults = []
 					return
 				}
-				this.doSearch()
+				// 输入过程中防抖，避免每个字符打一次接口
+				if (searchTimer) clearTimeout(searchTimer)
+				searchTimer = setTimeout(() => {
+					searchTimer = null
+					this.doSearch()
+				}, 260)
 			},
-			doSearch() {
+			/**
+			 * 搜索：本地镜像先出结果（离线可用、无延迟），
+			 * 再用后端全文搜索覆盖（能搜到 points/detail 里的内容）。
+			 */
+			async doSearch() {
 				const kw = this.keyword.trim()
 				if (!kw) {
 					uni.showToast({ title: '输入点内容吧', icon: 'none' })
 					return
 				}
 				this.searched = true
-				this.knowResults = searchKnowledge(kw)
-				this.qaResults = searchQa(kw)
+
+				// 1. 本地：题干 + 一句话回答
+				this.qaResults = searchQaLocal(kw, 30)
+				this.knowResults = searchKnowledgeLocal(kw, 30)
+
+				// 2. 云端：全文检索，命中更多
+				const seq = ++this.searchSeq
+				this.searching = true
+				try {
+					const res = await api.search(kw, '', 30)
+					// 输入已变化，丢弃这次过期结果
+					if (seq !== this.searchSeq) return
+					this.qaResults = res.qa || []
+					this.knowResults = res.knowledge || []
+				} catch (e) {
+					// 网络失败就保留本地结果，不打扰用户
+					if (seq === this.searchSeq) {
+						uni.showToast({ title: '已显示本地结果', icon: 'none' })
+					}
+				} finally {
+					if (seq === this.searchSeq) this.searching = false
+				}
 			},
 			pickWord(w) {
 				this.keyword = w
