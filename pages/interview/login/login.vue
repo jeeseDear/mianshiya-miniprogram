@@ -78,7 +78,7 @@
 </template>
 
 <script>
-	import { loginPassword, loginGuest, getUser, getToken } from '@/common/api.js'
+	import { loginPassword, loginGuest, getUser, getToken, getBaseUrl } from '@/common/api.js'
 	import { syncUserData } from '@/common/user-store.js'
 	import { menuSafeRight } from '@/common/nav.js'
 	import { showLoading, hideLoading, hidePageLoading } from '@/common/loading.js'
@@ -203,7 +203,16 @@
 			handleFail(e) {
 				const status = e && e.status
 				if (status === 0) {
-					uni.showToast({ title: '连不上服务器，请稍后再试', icon: 'none' })
+					// 本地开发最常见的原因就是后端没启动，直接把地址和命令给出来
+					uni.showModal({
+						title: '连不上服务器',
+						content:
+							'当前接口地址：' +
+							getBaseUrl() +
+							'\n\n请先启动后端服务（server 目录下）：\n.venv/Scripts/python.exe run.py',
+						showCancel: false,
+						confirmText: '知道了'
+					})
 					return
 				}
 				uni.showToast({ title: (e && e.message) || '登录失败', icon: 'none' })

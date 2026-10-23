@@ -105,8 +105,11 @@
 				</view>
 
 				<view class="duck-empty" v-else>
-					<text class="duck-empty-title">{{ categories.length ? '这个分类还没有问答' : '题库还没有数据' }}</text>
-					<text class="duck-empty-desc">在 common/bank/qa 里补充题目后展示</text>
+					<text class="duck-empty-title">{{ emptyTitle }}</text>
+					<text class="duck-empty-desc">{{ syncError || emptyDesc }}</text>
+					<view class="duck-empty-btn" hover-class="duck-empty-btn-hover" @tap="retrySync">
+						{{ retrying ? '加载中…' : '重新加载' }}
+					</view>
 				</view>
 
 				<view class="list-tail" v-if="qaList.length">
@@ -154,9 +157,9 @@
 </template>
 
 <script>
-	import { getCategories, allQuestions, levelText, qaOfCat, randomQa, knowledgeOfCat, countKnowledge, getKnowledgeList } from '@/common/question-source.js'
+	import { getCategories, allQuestions, levelText, qaOfCat, randomQa, knowledgeOfCat, countKnowledge, getKnowledgeList, getCatalogError } from '@/common/question-source.js'
 	import { getRecords, syncUserData } from '@/common/user-store.js'
-	import { ensureReady } from '@/common/bootstrap.js'
+	import { ensureReady, refreshAll } from '@/common/bootstrap.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
 
 	export default {
@@ -170,7 +173,9 @@
 				scrollTop: 0,
 				records: {},
 				total: allQuestions().length,
-				knowTotal: getKnowledgeList().length
+				knowTotal: getKnowledgeList().length,
+				syncError: getCatalogError(),
+				retrying: false
 			}
 		},
 		computed: {
@@ -191,6 +196,15 @@
 				const t = this.qaList.length
 				if (!t) return 0
 				return Math.round((this.doneOf(this.activeCat) / t) * 100)
+			},
+			/** 空状态标题：同步失败和「分类真的没题」要区分开 */
+			emptyTitle() {
+				if (this.syncError) return '题库加载失败'
+				return this.categories.length ? '这个分类还没有问答' : '题库还没有数据'
+			},
+			emptyDesc() {
+				if (this.syncError) return ''
+				return this.categories.length ? '换个分类看看' : '题库正在从服务器同步，稍后自动展示'
 			}
 		},
 		onLoad(options) {
@@ -231,6 +245,7 @@
 			// 题库与已读状态都从云端校准一遍，页面先展示缓存
 			async syncFromCloud() {
 				await ensureReady()
+				this.syncError = getCatalogError()
 				await syncUserData({ silent: true })
 				const cats = getCategories()
 				if (cats.length) {
@@ -242,6 +257,29 @@
 				this.total = allQuestions().length
 				this.knowTotal = getKnowledgeList().length
 				this.records = getRecords()
+			},
+			/** 空状态里的「重新加载」 */
+			async retrySync() {
+				if (this.retrying) return
+				this.retrying = true
+				showPageLoading()
+				try {
+					await refreshAll()
+					this.syncError = getCatalogError()
+					const cats = getCategories()
+					if (cats.length) {
+						this.categories = cats
+						if (!this.categories.some((c) => c.id === this.activeCat)) {
+							this.activeCat = this.categories[0].id
+						}
+					}
+					this.total = allQuestions().length
+					this.knowTotal = getKnowledgeList().length
+					this.records = getRecords()
+				} finally {
+					hidePageLoading()
+					this.retrying = false
+				}
 			},
 			pad(n) {
 				return n < 10 ? '0' + n : '' + n

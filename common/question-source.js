@@ -45,7 +45,26 @@ const state = {
 	knowByCat: {},
 	/** 详情缓存，只放内存：553 题的详情有几 MB，写 storage 会爆 */
 	detailCache: {},
-	knowDetailCache: {}
+	knowDetailCache: {},
+	/** 上次同步失败的原因，页面据此显示可读的排查提示 */
+	error: ''
+}
+
+/**
+ * 记录同步失败原因（由 bootstrap 在 catch 里调用）。
+ * 题库为空时页面要把这句话直接展示出来，否则用户只看到一片空白。
+ */
+export function markCatalogError(reason) {
+	state.error = String(reason || '') || '题库同步失败'
+}
+
+export function clearCatalogError() {
+	state.error = ''
+}
+
+/** 上次同步失败的原因；成功过则为空串 */
+export function getCatalogError() {
+	return state.error
 }
 
 function rebuildIndex() {
@@ -134,13 +153,13 @@ export async function refreshCatalog(force) {
 
 	const sameVersion = data.version && data.version === state.version
 	const hasData = state.questions.length > 0
-	if (!force && sameVersion && hasData) {
-		return false
+	if (!sameVersion || !hasData) {
+		applyCatalog(data)
+		persist()
 	}
-
-	applyCatalog(data)
-	persist()
-	return true
+	// 只要接口通就清掉错误，哪怕版本没变
+	state.error = ''
+	return !(!force && sameVersion && hasData)
 }
 
 /* ---------------- 分类 ---------------- */

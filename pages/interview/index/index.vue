@@ -133,8 +133,11 @@
 			</view>
 		</view>
 		<view class="duck-empty" v-else>
-			<text class="duck-empty-title">题库还是空的</text>
-			<text class="duck-empty-desc">题库正在从服务器同步，稍后自动展示</text>
+			<text class="duck-empty-title">{{ syncError ? '题库加载失败' : '题库还是空的' }}</text>
+			<text class="duck-empty-desc">{{ syncError || '题库正在从服务器同步，稍后自动展示' }}</text>
+			<view class="duck-empty-btn" hover-class="duck-empty-btn-hover" @tap="retrySync">
+				{{ retrying ? '加载中…' : '重新加载' }}
+			</view>
 		</view>
 		<!-- 高频榜 -->
 		<view class="duck-sec-head">
@@ -178,9 +181,9 @@
 </template>
 
 <script>
-	import { getCategories, allQuestions, levelText, dailyQa, hotQa, qaOfCat, randomQa } from '@/common/question-source.js'
+	import { getCategories, allQuestions, levelText, dailyQa, hotQa, qaOfCat, randomQa, getCatalogError } from '@/common/question-source.js'
 	import { getStats, syncUserData } from '@/common/user-store.js'
-	import { ensureReady } from '@/common/bootstrap.js'
+	import { ensureReady, refreshAll } from '@/common/bootstrap.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
 
 	const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
@@ -193,6 +196,9 @@
 				dateLabel: '',
 				categories: getCategories(),
 				levelText: levelText,
+				/** 题库同步失败原因，空串表示正常 */
+				syncError: getCatalogError(),
+				retrying: false,
 				dailyGoal: 5,
 				stats: { done: 0, right: 0, wrong: 0, favorite: 0, rate: 0, progress: 0, streak: 0, today: 0 },
 				daily: dailyQa(),
@@ -247,13 +253,30 @@
 			// 先用缓存渲染出首屏，云端数据回来后再刷一次视图
 			async syncFromCloud() {
 				const ok = await ensureReady()
-				if (!ok && !getCategories().length) {
-					uni.showToast({ title: '网络不给力，先看缓存', icon: 'none' })
-				}
+				this.syncError = ok ? '' : getCatalogError()
 				await syncUserData({ silent: true })
 				this.categories = getCategories()
 				this.daily = dailyQa()
 				this.refresh()
+			},
+			/** 空状态里的「重新加载」：强制重拉题库，成功后原地刷新 */
+			async retrySync() {
+				if (this.retrying) return
+				this.retrying = true
+				showPageLoading()
+				try {
+					await refreshAll()
+					this.syncError = getCatalogError()
+					this.categories = getCategories()
+					this.daily = dailyQa()
+					this.refresh()
+					if (!this.syncError) {
+						uni.showToast({ title: '题库已更新', icon: 'none' })
+					}
+				} finally {
+					hidePageLoading()
+					this.retrying = false
+				}
 			},
 			updateHead() {
 				const d = new Date()

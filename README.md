@@ -151,13 +151,55 @@ uni.scss                绿色主题变量
 
 ## 运行
 
-### HBuilderX（推荐）
+> **必须先启动后端，否则题库和登录都是空的。**
+> 页面上的分类、题目、收藏、登录全部走 `http://127.0.0.1:8100`，
+> 后端没起来时首页会显示「题库加载失败 + 重新加载」，登录会提示「连不上服务器」。
+
+### 第一步：启动后端
+
+Windows 下直接双击 `server/start.bat`（自动切目录、检查虚拟环境、没有 `.env` 时从模板复制一份）。
+
+命令行方式：
+
+```bash
+cd server
+.venv/Scripts/python.exe run.py
+```
+
+首次使用（虚拟环境还没建）时：
+
+```bash
+cd server
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install -r requirements.txt
+.venv/Scripts/python.exe run.py
+```
+
+启动成功后：
+
+| 地址 | 用途 |
+| --- | --- |
+| `http://127.0.0.1:8100/api/catalog/mirror` | 题库镜像，能看到 JSON 就说明通了 |
+| `http://127.0.0.1:8100/docs` | Swagger 接口文档，可以直接点着测 |
+
+服务是前台进程，**关掉窗口就停了**；下次打开项目要重新启动。
+
+### 第二步：HBuilderX（推荐）
 
 1. 用 HBuilderX 打开本项目目录
 2. 运行 → 运行到小程序模拟器 → 微信开发者工具
 3. 首次运行需在微信开发者工具中填写自己的 AppID（或使用测试号）
 
 运行到浏览器：运行 → 运行到浏览器 → Chrome，可直接预览 H5 版本。
+
+### 接口地址怎么改
+
+前端默认连 `http://127.0.0.1:8100`（`common/api.js` 的 `DEFAULT_BASE`）。
+
+- **小程序开发者工具**：需在「详情 → 本地设置」勾选「不校验合法域名」，否则 127.0.0.1 会被拦
+- **手机真机预览**：`127.0.0.1` 指向手机自己，必须改成电脑的局域网 IP
+  （`http://192.168.x.x:8100`），后端启动时也要监听 `0.0.0.0`：`HOST=0.0.0.0 PORT=8100 python run.py`
+- **H5 部署到别的域名**：改 `DEFAULT_BASE`，或在启动时调用 `setBaseUrl('https://你的域名')`（会写进 storage，下次仍生效）
 
 ### 微信小程序注意事项
 

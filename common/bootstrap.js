@@ -10,8 +10,8 @@
  * 只是收藏和进度暂存本地队列，联网后自动补发。
  */
 
-import { loginGuest, getToken, clearAuth, getUser } from './api.js'
-import { refreshCatalog, isCatalogLoaded } from './question-source.js'
+import { loginGuest, getToken, clearAuth, getUser, getBaseUrl } from './api.js'
+import { refreshCatalog, isCatalogLoaded, markCatalogError } from './question-source.js'
 import { syncUserData } from './user-store.js'
 
 /** 同一个启动流程只跑一次，多次调用复用同一个 Promise */
@@ -52,6 +52,17 @@ function emitReady() {
 }
 
 /**
+ * 把网络异常翻译成「用户照着做就能解决」的一句话。
+ * 直接显示「网络不给力」没有意义——本地开发最常见的原因是后端没启动。
+ */
+function offlineReason(e) {
+	if (e && e.status === 0) {
+		return '连不上 ' + getBaseUrl() + '，请确认后端服务已启动'
+	}
+	return (e && e.message) || '题库同步失败'
+}
+
+/**
  * 完整启动流程。
  * @param {object} [options]
  * @param {boolean} [options.force] 强制重新拉题库（下拉刷新时用）
@@ -68,6 +79,7 @@ export function bootstrap(options) {
 				await loginGuest()
 			} catch (e) {
 				console.warn('[bootstrap] 登录失败，进入离线模式', e && e.message)
+				markCatalogError(offlineReason(e))
 				return false
 			}
 		}
@@ -78,6 +90,7 @@ export function bootstrap(options) {
 				.then(() => true)
 				.catch((e) => {
 					console.warn('[bootstrap] 题库同步失败，使用本地缓存', e && e.message)
+					markCatalogError(offlineReason(e))
 					return isCatalogLoaded()
 				}),
 			syncUserData({ silent: true }).then((ok) => {
