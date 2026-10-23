@@ -96,7 +96,7 @@
 							<text class="k-summary duck-ellipsis-2">{{ q.short }}</text>
 							<view class="k-foot">
 								<text class="k-dot"></text>
-								<text class="k-count">{{ q.points.length }} 条重点 · {{ levelText[q.level] }}</text>
+								<text class="k-count">{{ q.point_count || 0 }} 条重点 · {{ levelText[q.level] }}</text>
 								<text class="k-read" v-if="isRead(q.id)">已读</text>
 							</view>
 						</view>
@@ -134,7 +134,7 @@
 							<text class="k-summary duck-ellipsis-2">{{ k.summary }}</text>
 							<view class="k-foot">
 								<text class="k-dot"></text>
-								<text class="k-count">{{ k.points.length }} 条要点</text>
+								<text class="k-count">{{ k.point_count || 0 }} 条要点</text>
 							</view>
 						</view>
 						<view class="duck-ic-arrow"></view>
@@ -142,8 +142,11 @@
 				</view>
 
 				<view class="duck-empty" v-else>
-					<text class="duck-empty-title">这个分类还没有知识点</text>
-					<text class="duck-empty-desc">题库正在从服务器同步，稍后自动展示</text>
+					<text class="duck-empty-title">{{ syncError ? '题库加载失败' : '这个分类还没有知识点' }}</text>
+					<text class="duck-empty-desc">{{ syncError || '换个分类看看，或稍后下拉重试' }}</text>
+					<view class="duck-empty-btn" hover-class="duck-empty-btn-hover" @tap="retrySync">
+						{{ retrying ? '加载中…' : '重新加载' }}
+					</view>
 				</view>
 
 				<view class="list-tail" v-if="knowList.length">

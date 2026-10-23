@@ -34,7 +34,32 @@ router = APIRouter(prefix="/api", tags=["题库"])
 
 
 def _brief(q: Question) -> QuestionBrief:
-    return QuestionBrief.model_validate(q)
+    """题目摘要。
+
+    不直接用 ``model_validate``：``point_count`` 在数据库里没有对应列，
+    需要从 ``points`` 数组算出来，否则前端列表拿不到这个字段。
+    """
+    return QuestionBrief(
+        id=q.id,
+        cat=q.cat,
+        level=q.level,
+        hot=q.hot or 0,
+        title=q.title,
+        short=q.short or "",
+        source=q.source or "",
+        point_count=len(q.points or []),
+    )
+
+
+def _k_brief(k: Knowledge) -> KnowledgeBrief:
+    """知识点摘要（同理，要点数量从 JSON 列算）"""
+    return KnowledgeBrief(
+        id=k.id,
+        cat=k.cat,
+        title=k.title,
+        summary=k.summary or "",
+        point_count=len(k.points or []),
+    )
 
 
 def _category_counts(db: Session) -> dict[str, int]:
@@ -275,7 +300,7 @@ def search(
     return {
         "keyword": q,
         "qa": [_brief(x) for x in qa],
-        "knowledge": [KnowledgeBrief.model_validate(x) for x in kb],
+        "knowledge": [_k_brief(x) for x in kb],
         "total": len(qa) + len(kb),
     }
 
@@ -295,7 +320,7 @@ def list_knowledge(
     items = db.scalars(stmt.order_by(Knowledge.id)).all()
     if with_points:
         return [KnowledgeDetail.model_validate(k) for k in items]
-    return [KnowledgeBrief.model_validate(k) for k in items]
+    return [_k_brief(k) for k in items]
 
 
 @router.get("/knowledge/{kid}", response_model=KnowledgeDetail, summary="知识点详情")
@@ -326,9 +351,11 @@ def catalog_mirror(
     cats = _categories_out(db, user)
 
     return {
-        # 题目/知识点只增不减，用三者数量做版本号即可判断缓存是否过期
-        "version": f"{len(q_rows)}-{len(k_rows)}-{len(cats)}",
+        # 题目/知识点只增不减，用三者数量做版本号即可判断缓存是否过期。
+        # 末尾的 -2 是「镜像结构版本」：加了 point_count 之后旧缓存缺少该字段，
+        # 必须让版本号变化才能把客户端的老缓存换掉，否则列表会一直显示 0 条。
+        "version": f"{len(q_rows)}-{len(k_rows)}-{len(cats)}-2",
         "categories": cats,
-        "questions": [QuestionBrief.model_validate(q) for q in q_rows],
-        "knowledge": [KnowledgeBrief.model_validate(k) for k in k_rows],
+        "questions": [_brief(q) for q in q_rows],
+        "knowledge": [_k_brief(k) for k in k_rows],
     }

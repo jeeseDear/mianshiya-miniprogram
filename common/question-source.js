@@ -152,7 +152,10 @@ export async function refreshCatalog(force) {
 	const data = await api.mirror()
 
 	const sameVersion = data.version && data.version === state.version
-	const hasData = state.questions.length > 0
+	// 三类数据都要有才算完整：历史上出现过「只存到题目、知识点没写进去」的缓存，
+	// 只看 questions 会导致版本号相同就永远不刷新，知识点一直是空的。
+	const hasData =
+		state.questions.length > 0 && state.knowledge.length > 0 && state.categories.length > 0
 	if (!sameVersion || !hasData) {
 		applyCatalog(data)
 		persist()

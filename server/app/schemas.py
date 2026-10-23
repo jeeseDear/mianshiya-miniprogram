@@ -32,6 +32,9 @@ class QuestionBrief(BaseModel):
     title: str
     short: str = ""
     source: str = ""
+    # 列表页要显示「N 条重点」，但详情（points/detail/extend）不进镜像，
+    # 这里只给数量，避免前端拿不到字段直接崩（曾导致知识点列表白屏）
+    point_count: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -66,6 +69,8 @@ class KnowledgeBrief(BaseModel):
     cat: str
     title: str
     summary: str = ""
+    # 同 QuestionBrief，只给要点数量，不给正文
+    point_count: int = 0
 
     model_config = {"from_attributes": True}
 
