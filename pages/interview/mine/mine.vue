@@ -5,17 +5,14 @@
 			<view :style="{ height: statusBar + 'px' }"></view>
 
 			<view class="profile" hover-class="profile-hover" @tap="tapProfile">
-				<view class="avatar" :class="{ 'is-login': loggedIn }">
+				<view class="avatar">
 					<image
 						v-if="user && user.avatar"
 						class="avatar-img"
 						:src="user.avatar"
 						mode="aspectFill"
 					/>
-					<text v-else class="avatar-txt">鸭</text>
-					<view class="avatar-badge" v-if="loggedIn">
-						<view class="avatar-badge-tick"></view>
-					</view>
+					<text v-else class="avatar-txt">{{ avatarText }}</text>
 				</view>
 				<view class="profile-info">
 					<view class="name-row">
@@ -246,6 +243,13 @@
 				if (!this.user) return '未登录'
 				return this.user.nickname || (this.loggedIn ? '面试鸭用户' : '未登录')
 			},
+			/** 没上传头像时用昵称首字。比一个固定的「鸭」更像自己的头像，
+			   字母头像也是主流做法（Notion / Linear 那种） */
+			avatarText() {
+				const name = (this.user && this.user.nickname) || ''
+				const ch = String(name).trim().charAt(0)
+				return ch ? ch.toUpperCase() : '鸭'
+			},
 			profileSub() {
 				if (!this.loggedIn) return '游客模式 · 已读 ' + this.stats.done + ' 题'
 				// 已登录显示账号，让用户知道当前是哪个号
@@ -459,24 +463,20 @@
 		height: 124rpx;
 		border-radius: 50%;
 		background-color: #ffffff;
+		/* 一圈半透明白环代替实心描边：头像像浮在渐变上，不会切出一道硬边 */
+		box-shadow: 0 0 0 6rpx rgba(255, 255, 255, 0.22);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		margin-right: 24rpx;
 		flex-shrink: 0;
-		border: 4rpx solid rgba(255, 255, 255, 0.6);
 	}
 
 	.avatar-txt {
-		font-size: 52rpx;
-		font-weight: 700;
+		font-size: 50rpx;
+		font-weight: 500;
+		line-height: 1;
 		color: $duck-primary;
-		letter-spacing: 1rpx;
-	}
-
-	/* 已登录：一圈金边 + 右下角对勾徽标 */
-	.avatar.is-login {
-		border-color: rgba(255, 209, 102, 0.9);
 	}
 
 	.avatar-img {
@@ -484,31 +484,6 @@
 		height: 100%;
 		border-radius: 50%;
 		display: block;
-	}
-
-	.avatar-badge {
-		position: absolute;
-		right: 2rpx;
-		bottom: 2rpx;
-		width: 34rpx;
-		height: 34rpx;
-		border-radius: 50%;
-		background-color: #ffb000;
-		border: 3rpx solid #ffffff;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-sizing: border-box;
-	}
-
-	.avatar-badge-tick {
-		width: 12rpx;
-		height: 7rpx;
-		margin-top: -3rpx;
-		border-left: 3rpx solid #ffffff;
-		border-bottom: 3rpx solid #ffffff;
-		transform: rotate(-45deg);
-		box-sizing: border-box;
 	}
 
 	/* 登录入口胶囊 */

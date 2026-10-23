@@ -52,9 +52,31 @@
 						<view class="eye-slash"></view>
 					</view>
 				</view>
+
+				<!-- 图形验证码 -->
+				<view class="row" :class="{ 'is-focus': active === 'cap' }">
+					<input
+						class="input"
+						v-model="captchaCode"
+						:maxlength="4"
+						placeholder="图形验证码"
+						placeholder-class="ph"
+						confirm-type="done"
+						@focus="active = 'cap'"
+						@blur="active = ''"
+						@confirm="doLogin"
+					/>
+					<!-- 点图换一张：一是一次性，二是不给脚本读答案的机会 -->
+					<view class="cap" hover-class="cap-hover" @tap="refreshCaptcha">
+						<image v-if="captchaImage" class="cap-img" :src="captchaImage" mode="scaleToFill" />
+						<view v-else class="cap-empty">
+							<text class="cap-empty-txt">{{ captchaLoading ? '加载中' : '点击重试' }}</text>
+						</view>
+					</view>
+				</view>
 			</view>
 
-			<view class="submit" :class="canLogin ? 'is-on' : 'is-off'" @tap="doLogin">
+			<view class="submit" :class="canLogin ? 'is-on' : 'is-off'" hover-class="submit-hover" @tap="doLogin">
 				<text>{{ loading ? '处理中…' : '登录' }}</text>
 			</view>
 
@@ -78,7 +100,7 @@
 </template>
 
 <script>
-	import { loginPassword, loginGuest, getUser, getToken, getBaseUrl } from '@/common/api.js'
+	import { loginPassword, loginGuest, getUser, getToken, getBaseUrl, fetchCaptcha } from '@/common/api.js'
 	import { syncUserData } from '@/common/user-store.js'
 	import { menuSafeRight } from '@/common/nav.js'
 	import { showLoading, hideLoading, hidePageLoading } from '@/common/loading.js'
@@ -96,6 +118,11 @@
 				agreed: false,
 				loading: false,
 				active: '',
+				/** 图形验证码：id + 图片（base64），答案只在服务端 */
+				captchaId: '',
+				captchaImage: '',
+				captchaCode: '',
+				captchaLoading: false,
 				/** 进页面时缓存的用户，用来判断「已经是登录状态」还是游客 */
 				current: null
 			}
@@ -105,7 +132,13 @@
 				return ACCOUNT_RE.test(this.account)
 			},
 			canLogin() {
-				return this.agreed && this.accountOk && this.password.length >= 6 && !this.loading
+				return (
+					this.agreed &&
+					this.accountOk &&
+					this.password.length >= 6 &&
+					this.captchaCode.length === 4 &&
+					!this.loading
+				)
 			}
 		},
 		onLoad() {
@@ -117,6 +150,7 @@
 			}
 			this.menuRight = menuSafeRight()
 			this.current = getUser()
+			this.refreshCaptcha()
 		},
 		onReady() {
 			// 关掉路由拦截器开的那层页面 loading
@@ -145,6 +179,26 @@
 				})
 			},
 
+			/* ---------- 图形验证码 ---------- */
+			/** 换一张验证码。点图 / 登录失败时都会调 */
+			async refreshCaptcha() {
+				if (this.captchaLoading) return
+				this.captchaLoading = true
+				this.captchaCode = ''
+				try {
+					const res = await fetchCaptcha()
+					this.captchaId = res.captcha_id || ''
+					this.captchaImage = res.image || ''
+				} catch (e) {
+					// 图加载不出来通常就是后端没启动，这里不弹窗打断，
+					// 占位文字提示「点击重试」，真去登录时 doLogin 会给出详细原因
+					this.captchaId = ''
+					this.captchaImage = ''
+				} finally {
+					this.captchaLoading = false
+				}
+			},
+
 			/* ---------- 登录 / 注册 ---------- */
 			async doLogin() {
 				if (this.loading) return
@@ -156,6 +210,10 @@
 					uni.showToast({ title: '密码至少 6 位', icon: 'none' })
 					return
 				}
+				if (this.captchaCode.length !== 4) {
+					uni.showToast({ title: '请输入图形验证码', icon: 'none' })
+					return
+				}
 				if (!this.agreed) {
 					uni.showToast({ title: '请先勾选同意协议', icon: 'none' })
 					return
@@ -164,7 +222,12 @@
 				this.loading = true
 				showLoading('登录中')
 				try {
-					await loginPassword({ account: this.account, password: this.password })
+					await loginPassword({
+						account: this.account,
+						password: this.password,
+						captchaId: this.captchaId,
+						captchaCode: this.captchaCode
+					})
 					// 换账号后重新拉一遍服务端数据，页面上立刻是新账号的进度
 					await syncUserData({ silent: true })
 					hideLoading()
@@ -172,6 +235,9 @@
 					this.leave()
 				} catch (e) {
 					hideLoading()
+					// 验证码是一次性的：不管哪一步失败，服务端都已经把它作废了，
+					// 所以必须换一张，否则用户再点登录一定还是同样的报错
+					this.refreshCaptcha()
 					this.handleFail(e)
 				} finally {
 					this.loading = false
@@ -238,7 +304,16 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-		background-color: #ffffff;
+		/* 支付宝那种「上半屏一层柔和色晕，往下沉成中性浅灰」。
+		   表单块做成白色浮卡，所以在浅灰底上才有层次；一片纯白反而糊成一团 */
+		background-color: #f4f8f6;
+		background-image: linear-gradient(
+			180deg,
+			#d6f2e4 0rpx,
+			#e8f8f0 240rpx,
+			#f4faf7 620rpx,
+			#f4f8f6 100%
+		);
 	}
 
 	/* ---------- 顶栏 ---------- */
@@ -304,29 +379,41 @@
 		display: block;
 		margin-top: 16rpx;
 		font-size: 26rpx;
-		color: #9aa4a0;
+		color: #7f8d87;
 	}
 
 	/* ---------- 表单 ---------- */
 	.form {
-		margin-top: 76rpx;
+		margin-top: 64rpx;
 	}
 
+	/* 支付宝式输入框：白色圆角浮卡，聚焦时描主色边 + 一点主色光晕。
+	   不用下划线，去掉那一圈灰线页面会干净很多 */
 	.row {
 		display: flex;
 		align-items: center;
-		height: 112rpx;
-		border-bottom: 2rpx solid #edeff0;
-		transition: border-color 0.18s ease;
+		height: 104rpx;
+		padding: 0 28rpx;
+		border: 2rpx solid transparent;
+		border-radius: 22rpx;
+		background-color: #ffffff;
+		box-shadow: 0 4rpx 18rpx rgba(18, 72, 52, 0.05);
+		box-sizing: border-box;
+		transition: border-color 0.18s ease, box-shadow 0.18s ease;
+	}
+
+	.row + .row {
+		margin-top: 24rpx;
 	}
 
 	.row.is-focus {
-		border-bottom-color: $duck-primary;
+		border-color: $duck-primary;
+		box-shadow: 0 6rpx 24rpx rgba(0, 181, 120, 0.14);
 	}
 
 	.input {
 		flex: 1;
-		height: 112rpx;
+		height: 100rpx;
 		font-size: 32rpx;
 		color: $duck-text;
 	}
@@ -391,27 +478,67 @@
 		transform: rotate(45deg) scaleX(1);
 	}
 
+	/* ---------- 图形验证码 ---------- */
+	/* 图片是 110×40 px 的透明底 PNG，按 2.75 的宽高比换成 rpx，避免拉伸变形；
+	   透明底是为了让它直接坐在输入框的浅灰底上，不出现一块突兀的灰方块 */
+	.cap {
+		flex-shrink: 0;
+		width: 220rpx;
+		height: 80rpx;
+		margin-left: 16rpx;
+	}
+
+	.cap-hover {
+		opacity: 0.6;
+	}
+
+	.cap-img {
+		display: block;
+		width: 220rpx;
+		height: 80rpx;
+	}
+
+	.cap-empty {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		border-radius: 8rpx;
+		background-color: #eff2f0;
+	}
+
+	.cap-empty-txt {
+		font-size: 22rpx;
+		color: #8c9591;
+	}
+
 	/* ---------- 按钮 ---------- */
 	.submit {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		height: 100rpx;
-		margin-top: 64rpx;
+		margin-top: 56rpx;
 		border-radius: 50rpx;
 		font-size: 32rpx;
 		font-weight: 600;
 		transition: opacity 0.18s ease;
 	}
 
+	.submit-hover {
+		opacity: 0.88;
+	}
+
 	.submit.is-on {
 		background-color: $duck-primary;
 		color: #ffffff;
+		box-shadow: 0 10rpx 26rpx rgba(0, 181, 120, 0.22);
 	}
 
 	.submit.is-off {
-		background-color: #f0f2f1;
-		color: #b9c1be;
+		background-color: #e7ecea;
+		color: #a9b3ae;
 	}
 
 	/* ---------- 协议 ---------- */
@@ -460,7 +587,7 @@
 		margin-left: 12rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: #9aa4a0;
+		color: #7f8d87;
 	}
 
 	.agree-link {
@@ -480,6 +607,6 @@
 	.guest {
 		padding: 16rpx 32rpx;
 		font-size: 26rpx;
-		color: #9aa4a0;
+		color: #7f8d87;
 	}
 </style>

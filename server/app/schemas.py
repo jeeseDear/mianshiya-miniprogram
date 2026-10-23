@@ -147,6 +147,18 @@ class PasswordLoginIn(BaseModel):
     )
     password: str = Field(min_length=6, max_length=32, description="6-32 位密码")
     nickname: str = ""
+    # 图形验证码：id 来自 GET /api/auth/captcha，code 是用户看图输入的值。
+    # 留默认空串是为了 OpenAPI 文档好看，实际服务端会强制校验。
+    captcha_id: str = Field(default="", description="验证码 id（GET /api/auth/captcha 返回）")
+    captcha_code: str = Field(default="", max_length=8, description="用户输入的验证码，不区分大小写")
+
+
+class CaptchaOut(BaseModel):
+    """图形验证码。答案不下发，前端只拿到图片。"""
+
+    captcha_id: str
+    image: str = Field(description="data:image/png;base64,... 直接塞给 image 组件")
+    ttl: int = Field(description="有效期（秒），过期需要点图换一张")
 
 
 class PhoneCodeIn(BaseModel):

@@ -295,16 +295,34 @@ export async function loginWechat(profile) {
  *
  * 请求头会带上当前 token：如果当前是游客账号，后端会把游客的收藏、
  * 错题、阅读记录和打卡并到这个正式账号上，刷过的题不会丢。
+ *
+ * captchaId / captchaCode 来自 fetchCaptcha()：验证码一次性，
+ * 登录失败后必须重新取一张，不能拿旧的 id 重试。
  */
-export async function loginPassword({ account, password, nickname }) {
+export async function loginPassword({ account, password, nickname, captchaId, captchaCode }) {
 	const res = await request({
 		url: '/api/auth/login',
 		method: 'POST',
-		data: { account, password, nickname: nickname || '' },
+		data: {
+			account,
+			password,
+			nickname: nickname || '',
+			captcha_id: captchaId || '',
+			captcha_code: captchaCode || ''
+		},
 		auth: 'optional',
 		retry: 0
 	})
 	return saveAuth(res)
+}
+
+/**
+ * 取一张图形验证码。
+ * 返回 { captcha_id, image, ttl }，image 是 data:image/png;base64 直接给 image 组件用。
+ * 答案在服务端，前端拿不到字符，只能靠人眼看图输入。
+ */
+export async function fetchCaptcha() {
+	return request({ url: '/api/auth/captcha', retry: 1, timeout: 8000 })
 }
 
 /** 拉取当前登录用户，校准本地缓存的昵称 / 头像 / 游客标记 */

@@ -17,12 +17,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .. import captcha
 from ..config import get_settings
 from ..db import get_db
 from ..deps import get_current_user, get_optional_user
 from ..models import User
 from ..password import hash_password, verify_password
 from ..schemas import (
+    CaptchaOut,
     GuestLoginOut,
     MeOut,
     PasswordLoginIn,
@@ -76,6 +78,16 @@ def guest_login(db: Session = Depends(get_db)) -> GuestLoginOut:
     return _login_out(user)
 
 
+@router.get("/captcha", response_model=CaptchaOut, summary="获取图形验证码")
+def get_captcha() -> CaptchaOut:
+    """返回一张 4 位图形验证码（PNG base64），登录时回传 captcha_id + captcha_code。
+
+    答案只存在服务端内存里，接口不返回字符本身；校验一次即作废。
+    """
+    captcha_id, image = captcha.issue()
+    return CaptchaOut(captcha_id=captcha_id, image=image, ttl=captcha.TTL)
+
+
 @router.post("/login", response_model=GuestLoginOut, summary="账号密码登录 / 注册")
 def password_login(
     payload: PasswordLoginIn,
@@ -90,7 +102,13 @@ def password_login(
 
     账号统一转小写入库，避免 Alice 和 alice 变成两个账号；
     密码用 PBKDF2-HMAC-SHA256 加盐哈希，明文不落库。
+
+    调用前必须先拿图形验证码：密码校验在验证码之后，且验证码一次性，
+    这样脚本既绕不过人眼识别，也没法拿一张图反复撞密码。
     """
+    if not captcha.verify(payload.captcha_id, payload.captcha_code):
+        raise HTTPException(status_code=400, detail="验证码不正确或已过期，请刷新后重试")
+
     account = payload.account.strip().lower()
     user = db.scalar(select(User).where(User.account == account))
 
