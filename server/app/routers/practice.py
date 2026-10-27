@@ -12,8 +12,15 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user
-from ..models import DailyStat, Favorite, Question, Record, User, Wrong
-from ..schemas import QuestionBrief, RecordIn, RecordItem, RecordOut, StatsOut
+from ..models import AiHistory, DailyStat, Favorite, Question, Record, User, Wrong, now
+from ..schemas import (
+    AiHistoryItem,
+    QuestionBrief,
+    RecordIn,
+    RecordItem,
+    RecordOut,
+    StatsOut,
+)
 from ..services import get_stats, record_answer
 
 router = APIRouter(prefix="/api/me", tags=["我的"])
@@ -144,6 +151,92 @@ def delete_wrong(
     return {"question_id": question_id, "wrong": False}
 
 
+# ---------------- AI 解析历史 ----------------
+
+
+@router.post("/ai-history/{question_id}", summary="记录一次 AI 解析浏览")
+def record_ai_history(
+    question_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """同一道题看多次只占一行：刷新时间 + 次数累加，列表按时间倒序。
+
+    没有做频率限制，因为前端只在「解析真正拿到内容」时调用一次，
+    连点打开也不会重复触发。
+    """
+    _ensure_question(db, question_id)
+    row = db.scalar(
+        select(AiHistory).where(
+            AiHistory.user_id == user.id, AiHistory.question_id == question_id
+        )
+    )
+    if row is None:
+        db.add(AiHistory(user_id=user.id, question_id=question_id, view_count=1))
+    else:
+        row.view_count += 1
+        row.viewed_at = now()
+    db.commit()
+    return {"question_id": question_id, "viewed": True}
+
+
+@router.get("/ai-history", response_model=list[AiHistoryItem], summary="AI 解析历史")
+def list_ai_history(
+    page: int = Query(1, ge=1),
+    size: int = Query(30, ge=1, le=100),
+    cat: str | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[AiHistoryItem]:
+    """最近看过的排最前，可按分类过滤。"""
+    stmt = (
+        select(Question, AiHistory.viewed_at, AiHistory.view_count)
+        .join(AiHistory, AiHistory.question_id == Question.id)
+        .where(AiHistory.user_id == user.id)
+    )
+    if cat:
+        stmt = stmt.where(Question.cat == cat)
+    rows = db.execute(
+        stmt.order_by(AiHistory.viewed_at.desc()).offset((page - 1) * size).limit(size)
+    ).all()
+    return [
+        AiHistoryItem(
+            id=q.id,
+            cat=q.cat,
+            level=q.level,
+            title=q.title,
+            source=q.source or "",
+            viewed_at=viewed_at,
+            view_count=count,
+        )
+        for q, viewed_at, count in rows
+    ]
+
+
+@router.delete("/ai-history/{question_id}", summary="删除一条 AI 解析历史")
+def delete_ai_history(
+    question_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    db.execute(
+        delete(AiHistory).where(
+            AiHistory.user_id == user.id, AiHistory.question_id == question_id
+        )
+    )
+    db.commit()
+    return {"question_id": question_id, "removed": True}
+
+
+@router.delete("/ai-history", summary="清空 AI 解析历史")
+def clear_ai_history(
+    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> dict:
+    db.execute(delete(AiHistory).where(AiHistory.user_id == user.id))
+    db.commit()
+    return {"cleared": True}
+
+
 # ---------------- 统计 ----------------
 
 
@@ -156,7 +249,7 @@ def stats(db: Session = Depends(get_db), user: User = Depends(get_current_user))
 def reset_progress(
     db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> dict:
-    for model in (Record, Favorite, Wrong, DailyStat):
+    for model in (Record, Favorite, Wrong, DailyStat, AiHistory):
         db.execute(delete(model).where(model.user_id == user.id))
     db.commit()
     return {"reset": True, "user_id": user.id}

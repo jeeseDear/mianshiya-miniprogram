@@ -152,7 +152,7 @@
 
 		<!-- ============ AI 解析弹窗 ============ -->
 		<view class="ai-mask" v-if="aiVisible" @tap="closeAi">
-			<view class="ai-sheet" @tap.stop>
+			<view class="ai-sheet" :class="{ 'is-auto': !aiHasContent }" @tap.stop>
 				<view class="ai-sheet-bar"></view>
 
 				<view class="ai-sheet-head">
@@ -172,7 +172,11 @@
 					</view>
 				</view>
 
-				<scroll-view class="ai-sheet-body" scroll-y :show-scrollbar="false">
+				<!-- 外层普通 view 承接 flex 高度，scroll-view 再用 100% 取到确定高度。
+				     直接把 flex 写在 scroll-view 上不行：H5 端它内部还有一层滚动容器，
+				     靠父级 height:100% 取值，flex 撑出来的高度传不进去，会退化成内容高度。 -->
+				<view class="ai-sheet-body">
+				<scroll-view class="ai-sheet-scroll" scroll-y :show-scrollbar="false">
 					<!-- 首包还没到：等模型开口 -->
 					<view class="ai-loading" v-if="aiLoading && !aiHasContent">
 						<view class="ai-dots">
@@ -266,6 +270,7 @@
 
 					<view class="ai-bottom-space"></view>
 				</scroll-view>
+				</view>
 			</view>
 		</view>
 	</view>
@@ -275,7 +280,7 @@
 	import { getCategories, levelText, findQa, qaOfCat, randomQa, fetchQaDetail, getCachedDetail } from '@/common/question-source.js'
 	import { isFavorite, toggleFavorite, recordAnswer } from '@/common/user-store.js'
 	import { menuSafeRight, navBack } from '@/common/nav.js'
-	import { aiExplainStream } from '@/common/api.js'
+	import { aiExplainStream, api } from '@/common/api.js'
 
 	export default {
 		data() {
@@ -478,6 +483,8 @@
 						if (stale()) return
 						this.flushAiRender()
 						this.aiLoading = false
+						// 真正拿到内容才记历史，点开又立刻关掉不会留下记录
+						this.markAiHistory(qid)
 					},
 					onError: (msg) => {
 						if (stale()) return
@@ -486,6 +493,15 @@
 						this.aiError = msg || '生成失败，请重试'
 					}
 				})
+			},
+			// 历史记录是附属功能：失败就静默跳过，不能影响阅读，也不弹 toast
+			markAiHistory(qid) {
+				try {
+					const p = api.saveAiHistory(qid)
+					if (p && typeof p.catch === 'function') p.catch(() => {})
+				} catch (e) {
+					/* ignore */
+				}
 			},
 			stopAi() {
 				if (this.aiTimer) {
@@ -1067,13 +1083,23 @@
 
 	.ai-sheet {
 		width: 100%;
-		max-height: 84vh;
+		/* 有内容时给「确定高度」，而不是 max-height：
+		   小程序的 scroll-view 是原生组件，父级拿不到明确高度就一直按内容撑开，永远滚不动。
+		   固定 80vh 后，下面那层 flex 分配出来的就是具体数值，scroll-view 才认。 */
+		height: 80vh;
 		display: flex;
 		flex-direction: column;
+		box-sizing: border-box;
 		background-color: #ffffff;
 		border-radius: 32rpx 32rpx 0 0;
 		padding-bottom: env(safe-area-inset-bottom);
 		animation: aiSheetUp 0.24s ease-out;
+	}
+
+	/* 还没有内容（加载中 / 出错）：让弹窗贴合内容，不要一上来就占满 80vh */
+	.ai-sheet.is-auto {
+		height: auto;
+		max-height: 80vh;
 	}
 
 	@keyframes aiSheetUp {
@@ -1164,10 +1190,18 @@
 	}
 
 	.ai-sheet-body {
-		flex: 1;
-		height: 0;
+		/* 承接剩余高度：父级 .ai-sheet 是 flex column + height: 80vh，
+		   这里靠 flex:1 + min-height:0 拿到确定高度，再交给 scroll-view 的 100%。
+		   min-height:0 是关键，默认 auto 会让它不肯收缩，进而撑破弹窗。 */
+		flex: 1 1 auto;
+		min-height: 0;
 		padding: 0 30rpx;
 		box-sizing: border-box;
+		overflow: hidden;
+	}
+
+	.ai-sheet-scroll {
+		height: 100%;
 	}
 
 	.ai-loading {

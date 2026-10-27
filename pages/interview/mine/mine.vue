@@ -99,6 +99,20 @@
 			</view>
 		</view>
 
+		<!-- AI 解析历史：一行入口，比塞进四列宫格更显眼 -->
+		<view class="duck-panel menu-panel ai-hist-panel">
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goAiHistory">
+				<view class="menu-tile" style="background: #e6f7f0">
+					<text class="menu-tile-txt" style="color: #00a86b">AI</text>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">AI 解析历史</text>
+					<text class="menu-desc">看过的题目解析，按时间倒序随时回看</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
+		</view>
+
 		<!-- 放松一下 -->
 		<view class="duck-sec-head">
 			<text class="duck-sec-title">放松一下</text>
@@ -384,6 +398,9 @@
 			goCollect(tab) {
 				uni.setStorageSync('duck:collect-tab', tab)
 				uni.switchTab({ url: '/pages/interview/collect/collect' })
+			},
+			goAiHistory() {
+				uni.navigateTo({ url: '/pages/interview/ai-history/ai-history' })
 			},
 			goGame() {
 				uni.navigateTo({ url: '/pages/interview/game/game' })
@@ -675,6 +692,11 @@
 	/* ---------- 菜单 ---------- */
 	.menu-panel {
 		margin: 0 24rpx;
+	}
+
+	/* 紧跟在四列宫格下面，需要一点间距 */
+	.ai-hist-panel {
+		margin: 24rpx 24rpx 0;
 	}
 
 	.menu-row {

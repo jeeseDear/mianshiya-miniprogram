@@ -39,6 +39,22 @@ class QuestionBrief(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AiHistoryItem(BaseModel):
+    """AI 解析历史的一条：题目摘要 + 最近查看时间 + 查看次数。
+
+    不复用 QuestionBrief，是因为历史列表要按 viewed_at 排序、还要显示
+    「看过几次」，这些字段在 questions 表里不存在。
+    """
+
+    id: str
+    cat: str
+    level: int
+    title: str
+    source: str = ""
+    viewed_at: datetime
+    view_count: int = 1
+
+
 class NavItem(BaseModel):
     id: str
     title: str

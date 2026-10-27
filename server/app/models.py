@@ -192,3 +192,28 @@ class AiExplanation(Base):
     # 结构化内容：core / answer / bonus / trap / followup
     content: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class AiHistory(Base):
+    """AI 解析浏览历史：一人一题一行，重复查看只刷新时间与次数。
+
+    为什么不直接查 ``ai_explanations``：那是「题 → 解析内容」的全局缓存，
+    没有用户维度，谁生成的就只有一份；而「我看过哪些题的解析」必须按
+    user_id 隔离，所以单独一张表。
+
+    ``(user_id, question_id)`` 唯一：同一道题看十次也只占一行，列表按
+    ``viewed_at`` 倒序就是「最近看过什么」，不会刷屏。
+    """
+
+    __tablename__ = "ai_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    question_id: Mapped[str] = mapped_column(ForeignKey("questions.id"), index=True)
+    viewed_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+    # 看过几次，前端可以用来标记「反复看的重点题」
+    view_count: Mapped[int] = mapped_column(Integer, default=1)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "question_id", name="uq_ai_history_user_question"),
+    )

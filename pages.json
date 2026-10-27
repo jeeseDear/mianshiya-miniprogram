@@ -23,6 +23,13 @@
 			}
 		},
 		{
+			"path": "pages/interview/ai-history/ai-history",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "AI 解析历史"
+			}
+		},
+		{
 			"path": "pages/interview/mine/mine",
 			"style": {
 				"navigationStyle": "custom",

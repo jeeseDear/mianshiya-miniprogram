@@ -11,22 +11,25 @@
  */
 
 // 带版本号：换过默认后缀就不用担心 storage 里残留旧的本地地址
-const KEY_BASE = 'duck:api-base:v2'
+// v3：域名 443 被 SNI 阻断，切到 IP 直连，必须升版本清掉客户端缓存的旧地址
+const KEY_BASE = 'duck:api-base:v3'
 const KEY_TOKEN = 'duck:token'
 const KEY_USER = 'duck:user'
 
 /**
  * 后端地址。
  *
- * 线上：https://zttzmy.top（腾讯云 175.27.137.170，Nginx :443 → uvicorn :8100）
- *   - 证书由 Let's Encrypt 签发，含 zttzmy.top / www.zttzmy.top 两个域名
- *   - 80 端口对域名一律 301 跳 HTTPS，IP 直连仍可用（方便排查）
- * 本地调试：把 USE_LOCAL 改成 true，走自己电脑上的 server/。
+ * 当前：http://175.27.137.170（腾讯云服务器 IP 直连，Nginx :80 → uvicorn :8100）
+ *   原因：zttzmy.top 未备案，443 的 TLS 握手在公网路径上按 SNI 被重置，
+ *        域名 HTTPS 全线不可用；IP 直连不发 SNI，反而能通。
+ *   代价：① 只能走明文 HTTP，安卓需要在包里放开 cleartext；
+ *        ② 微信小程序正式版不认 IP + HTTP，只能开发者工具勾「不校验合法域名」。
+ *   域名备案下来后，把这一行改回 https://zttzmy.top 即可，其余不用动。
  *
- * 注意：微信正式版要求接口必须是 https + 已备案域名，这个配置已经满足；
- *      还需要在「微信公众平台 → 开发管理 → 服务器域名」把它加进 request 合法域名。
+ * 备用：https://zttzmy.top（证书有效，含 zttzmy.top / www.zttzmy.top，但当前被阻断）
+ * 本地调试：把 USE_LOCAL 改成 true，走自己电脑上的 server/。
  */
-const PROD_BASE = 'https://zttzmy.top'
+const PROD_BASE = 'http://175.27.137.170'
 const DEV_BASE = 'http://127.0.0.1:8100'
 const USE_LOCAL = false
 const DEFAULT_BASE = USE_LOCAL ? DEV_BASE : PROD_BASE
@@ -627,6 +630,15 @@ export const api = {
 		request({ url: '/api/me/wrongs', params: { page: page || 1, size: size || 100 }, auth: true }),
 	removeWrong: (id) =>
 		request({ url: '/api/me/wrongs/' + id, method: 'DELETE', auth: true, retry: 0 }),
+	// AI 解析历史：同一道题重复看只刷新时间，不会出现多条
+	aiHistory: (page, size) =>
+		request({ url: '/api/me/ai-history', params: { page: page || 1, size: size || 50 }, auth: true }),
+	saveAiHistory: (id) =>
+		request({ url: '/api/me/ai-history/' + id, method: 'POST', auth: true, retry: 0 }),
+	removeAiHistory: (id) =>
+		request({ url: '/api/me/ai-history/' + id, method: 'DELETE', auth: true, retry: 0 }),
+	clearAiHistory: () =>
+		request({ url: '/api/me/ai-history', method: 'DELETE', auth: true, retry: 0 }),
 	resetProgress: () =>
 		request({ url: '/api/me/progress', method: 'DELETE', auth: true, retry: 0 })
 }
