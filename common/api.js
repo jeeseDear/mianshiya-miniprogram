@@ -18,13 +18,15 @@ const KEY_USER = 'duck:user'
 /**
  * 后端地址。
  *
- * 默认走线上服务器（腾讯云 175.27.137.170，Nginx :80 → uvicorn :8100）。
- * 需要连自己电脑上的后端时，把 USE_LOCAL 改成 true 即可，不用改别的地方。
+ * 线上：https://zttzmy.top（腾讯云 175.27.137.170，Nginx :443 → uvicorn :8100）
+ *   - 证书由 Let's Encrypt 签发，含 zttzmy.top / www.zttzmy.top 两个域名
+ *   - 80 端口对域名一律 301 跳 HTTPS，IP 直连仍可用（方便排查）
+ * 本地调试：把 USE_LOCAL 改成 true，走自己电脑上的 server/。
  *
- * 注意：线上是 http + IP，微信要求「正式版」接口必须是 https + 已备案域名，
- *      所以现在只能在开发者工具 / 真机预览里勾「不校验合法域名」时用。
+ * 注意：微信正式版要求接口必须是 https + 已备案域名，这个配置已经满足；
+ *      还需要在「微信公众平台 → 开发管理 → 服务器域名」把它加进 request 合法域名。
  */
-const PROD_BASE = 'http://175.27.137.170'
+const PROD_BASE = 'https://zttzmy.top'
 const DEV_BASE = 'http://127.0.0.1:8100'
 const USE_LOCAL = false
 const DEFAULT_BASE = USE_LOCAL ? DEV_BASE : PROD_BASE
