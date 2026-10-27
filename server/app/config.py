@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     wx_appid: str = ""
     wx_secret: str = ""
 
+    # ---------------- JWT ----------------
+    # 留空则自动生成并写入 server/.jwt_secret（权限 600）；
+    # 多台机器共用一套 token 时才需要显式配置成同一个值。
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    # token 有效期（天）。小程序里过期后需要重新登录，7 天算比较宽松。
+    jwt_expire_days: int = 7
+
     # ---------------- 手机号验证码登录 ----------------
     # 验证码有效期（秒）与同一号码的最小重发间隔（秒）
     sms_code_ttl: int = 300

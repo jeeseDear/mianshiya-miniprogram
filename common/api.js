@@ -218,9 +218,18 @@ export async function request(options) {
 
 		if (status >= 200 && status < 300) return res.data
 
-		// token 失效：清掉后重登一次再重放，只做一次，避免死循环
+		// token 失效：游客可以静默重建，正式账号必须让用户重新登录
 		if (status === 401 && auth === true && !options.__retriedAuth) {
+			const prev = getUser()
+			const wasGuest = !prev || prev.is_guest !== false
 			clearAuth()
+
+			// 正式账号的 JWT 过期（默认 7 天）：绝不能悄悄换成游客身份，
+			// 否则用户会以为收藏和进度全丢了。交给页面提示重新登录。
+			if (!wasGuest) {
+				throw new ApiError('登录已过期，请重新登录', 401, res.data)
+			}
+
 			try {
 				await loginGuest()
 			} catch (e) {
@@ -299,7 +308,7 @@ export async function loginWechat(profile) {
 }
 
 /**
- * 账号密码登录（账号不存在时后端按这个密码直接注册）。
+ * 账号密码登录。账号不存在**不会**自动注册，注册走 register()。
  *
  * 请求头会带上当前 token：如果当前是游客账号，后端会把游客的收藏、
  * 错题、阅读记录和打卡并到这个正式账号上，刷过的题不会丢。
@@ -307,9 +316,31 @@ export async function loginWechat(profile) {
  * captchaId / captchaCode 来自 fetchCaptcha()：验证码一次性，
  * 登录失败后必须重新取一张，不能拿旧的 id 重试。
  */
-export async function loginPassword({ account, password, nickname, captchaId, captchaCode }) {
+export async function loginPassword({ account, password, captchaId, captchaCode }) {
 	const res = await request({
 		url: '/api/auth/login',
+		method: 'POST',
+		data: {
+			account,
+			password,
+			captcha_id: captchaId || '',
+			captcha_code: captchaCode || ''
+		},
+		auth: 'optional',
+		retry: 0
+	})
+	return saveAuth(res)
+}
+
+/**
+ * 注册新账号，成功后直接就是登录态（后端返回 JWT），不用再登一次。
+ *
+ * 账号已存在时后端返回 409，前端提示「该账号已被注册」并切到登录页签。
+ * 同样会带上当前游客 token，把游客期间的数据并过来。
+ */
+export async function register({ account, password, nickname, captchaId, captchaCode }) {
+	const res = await request({
+		url: '/api/auth/register',
 		method: 'POST',
 		data: {
 			account,

@@ -15,6 +15,7 @@ import secrets
 import requests
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import captcha
@@ -32,8 +33,10 @@ from ..schemas import (
     PhoneCodeOut,
     PhoneLoginIn,
     ProfileIn,
+    RegisterIn,
     WechatLoginIn,
 )
+from ..security import create_access_token
 from ..services import merge_user_data
 from ..sms import issue_code, verify_code
 
@@ -54,15 +57,27 @@ def _mask_phone(phone: str | None) -> str:
 
 
 def _login_out(user: User) -> GuestLoginOut:
+    """统一的登录返回：token 是 JWT，``expires_in`` 给前端做提前提示。
+
+    ``users.token`` 仍然保留（老版本存在这里的固定串），但新签发的
+    凭证不再写库，改为自包含的 JWT，服务端无需查表即可校验。
+    """
+    settings = get_settings()
     return GuestLoginOut(
-        token=user.token,
+        token=create_access_token(user.id),
         user_id=user.id,
         nickname=user.nickname,
         avatar=user.avatar,
         is_guest=_is_guest(user),
         phone=_mask_phone(user.phone),
         account=user.account or "",
+        expires_in=settings.jwt_expire_days * 86400,
     )
+
+
+def _check_captcha(payload) -> None:
+    if not captcha.verify(payload.captcha_id, payload.captcha_code):
+        raise HTTPException(status_code=400, detail="验证码不正确或已过期，请刷新后重试")
 
 
 @router.post("/guest", response_model=GuestLoginOut, summary="游客登录")
@@ -88,53 +103,83 @@ def get_captcha() -> CaptchaOut:
     return CaptchaOut(captcha_id=captcha_id, image=image, ttl=captcha.TTL)
 
 
-@router.post("/login", response_model=GuestLoginOut, summary="账号密码登录 / 注册")
+@router.post(
+    "/register",
+    response_model=GuestLoginOut,
+    status_code=201,
+    summary="注册账号",
+)
+def register(
+    payload: RegisterIn,
+    db: Session = Depends(get_db),
+    current: User | None = Depends(get_optional_user),
+) -> GuestLoginOut:
+    """用账号密码注册新号，成功后直接返回 JWT，前端不需要再调一次登录。
+
+    - 账号已存在 → 409，提示去登录（**不会**覆盖原密码）
+    - 账号统一转小写入库，避免 Alice 和 alice 变成两个账号
+    - 密码 PBKDF2-HMAC-SHA256 加盐，明文不落库
+    - 当前若带着游客 token，会把游客的收藏 / 错题 / 记录 / 打卡并过来
+    """
+    _check_captcha(payload)
+
+    account = payload.account.strip().lower()
+    if db.scalar(select(User).where(User.account == account)) is not None:
+        raise HTTPException(status_code=409, detail="该账号已被注册，请直接登录")
+
+    user = User(
+        account=account,
+        # 这一列是历史遗留的固定 token，为了满足 NOT NULL + 唯一约束占位
+        token=secrets.token_urlsafe(24),
+        # 没填昵称就用账号名，比「面试鸭用户」更好认
+        nickname=payload.nickname.strip() or account,
+        password_hash=hash_password(payload.password),
+    )
+    db.add(user)
+    try:
+        db.commit()
+    except IntegrityError:
+        # 并发注册同一个账号时唯一索引会先挡住，转成同样的 409
+        db.rollback()
+        raise HTTPException(status_code=409, detail="该账号已被注册，请直接登录") from None
+    db.refresh(user)
+
+    if current is not None and current.id != user.id and _is_guest(current):
+        merge_user_data(db, current, user)
+
+    return _login_out(user)
+
+
+@router.post("/login", response_model=GuestLoginOut, summary="账号密码登录")
 def password_login(
     payload: PasswordLoginIn,
     db: Session = Depends(get_db),
     current: User | None = Depends(get_optional_user),
 ) -> GuestLoginOut:
-    """一个接口同时承担登录与注册。
+    """校验账号密码并签发 JWT。
 
-    - 账号不存在 → 用这次提交的密码直接注册，省掉「先注册再登录」两步
-    - 账号已存在 → 校验密码，密码错就拒绝，**不会**覆盖原密码
-    - 两种情况都会把当前游客账号的学习数据并过来
+    账号不存在和密码错误返回同一句「账号或密码不正确」，避免被拿来
+    枚举哪些账号存在。调用前必须先通过图形验证码，且验证码一次性，
+    脚本既绕不过人眼识别，也没法拿一张图反复撞密码。
 
-    账号统一转小写入库，避免 Alice 和 alice 变成两个账号；
-    密码用 PBKDF2-HMAC-SHA256 加盐哈希，明文不落库。
-
-    调用前必须先拿图形验证码：密码校验在验证码之后，且验证码一次性，
-    这样脚本既绕不过人眼识别，也没法拿一张图反复撞密码。
+    登录成功后若请求头还带着游客 token，会把游客期间的数据并过来。
     """
-    if not captcha.verify(payload.captcha_id, payload.captcha_code):
-        raise HTTPException(status_code=400, detail="验证码不正确或已过期，请刷新后重试")
+    _check_captcha(payload)
 
     account = payload.account.strip().lower()
     user = db.scalar(select(User).where(User.account == account))
 
-    if user is None:
-        user = User(
-            account=account,
-            token=secrets.token_urlsafe(24),
-            # 注册时没填昵称就用账号名，比「面试鸭用户」更好认
-            nickname=payload.nickname.strip() or account,
-            password_hash=hash_password(payload.password),
+    if (
+        user is None
+        or not user.password_hash
+        or not verify_password(payload.password, user.password_hash)
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="账号或密码不正确",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        db.add(user)
-        db.flush()
-    else:
-        if not user.password_hash:
-            raise HTTPException(
-                status_code=400,
-                detail="该账号是用其他方式注册的，请换一个账号名",
-            )
-        if not verify_password(payload.password, user.password_hash):
-            raise HTTPException(status_code=400, detail="账号或密码不正确")
 
-    db.commit()
-    db.refresh(user)
-
-    # 游客转正式账号：把游客期间刷的题并过来
     if current is not None and current.id != user.id and _is_guest(current):
         merge_user_data(db, current, user)
 

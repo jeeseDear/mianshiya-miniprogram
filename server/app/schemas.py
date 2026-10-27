@@ -123,6 +123,8 @@ class StatsOut(BaseModel):
 
 
 class GuestLoginOut(BaseModel):
+    """各类登录 / 注册的返回体。token 是 JWT，前端按普通 Bearer token 用。"""
+
     token: str
     user_id: int
     nickname: str
@@ -130,10 +132,12 @@ class GuestLoginOut(BaseModel):
     is_guest: bool = True
     phone: str = ""
     account: str = ""
+    # token 多久后过期（秒），前端可据此提前提示重新登录
+    expires_in: int = 0
 
 
-class PasswordLoginIn(BaseModel):
-    """账号密码登录。账号不存在时按这个密码直接注册。
+class _AccountPasswordBase(BaseModel):
+    """账号密码类接口的公共字段，注册和登录都继承它。
 
     账号只允许字母 / 数字 / 下划线，避免出现空格、表情等难以输入的字符；
     统一转小写后再入库，防止 Alice 与 alice 变成两个账号。
@@ -146,11 +150,20 @@ class PasswordLoginIn(BaseModel):
         description="3-20 位字母、数字或下划线（可以用手机号）",
     )
     password: str = Field(min_length=6, max_length=32, description="6-32 位密码")
-    nickname: str = ""
     # 图形验证码：id 来自 GET /api/auth/captcha，code 是用户看图输入的值。
     # 留默认空串是为了 OpenAPI 文档好看，实际服务端会强制校验。
     captcha_id: str = Field(default="", description="验证码 id（GET /api/auth/captcha 返回）")
     captcha_code: str = Field(default="", max_length=8, description="用户输入的验证码，不区分大小写")
+
+
+class PasswordLoginIn(_AccountPasswordBase):
+    """账号密码登录。账号不存在时直接 401，不会隐式注册。"""
+
+
+class RegisterIn(_AccountPasswordBase):
+    """注册新账号。账号已存在时返回 409。"""
+
+    nickname: str = Field(default="", max_length=20, description="昵称，留空则用账号名")
 
 
 class CaptchaOut(BaseModel):

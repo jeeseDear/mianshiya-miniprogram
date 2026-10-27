@@ -13,8 +13,17 @@
 				<text class="logo-txt">鸭</text>
 			</view>
 
-			<text class="title">登录</text>
-			<text class="sub">账号不存在时会自动注册</text>
+			<!-- 登录 / 注册切换：只靠字重、颜色和下划线区分，不加底色块 -->
+			<view class="tabs">
+				<view class="tab" :class="{ 'is-on': mode === 'login' }" @tap="switchMode('login')">
+					<text class="tab-txt">登录</text>
+				</view>
+				<view class="tab" :class="{ 'is-on': mode === 'register' }" @tap="switchMode('register')">
+					<text class="tab-txt">注册</text>
+				</view>
+			</view>
+
+			<text class="sub">{{ mode === 'login' ? '账号密码登录，进度跨设备同步' : '注册后自动登录，游客记录会合并过来' }}</text>
 
 			<view class="form">
 				<!-- 账号 -->
@@ -34,6 +43,20 @@
 					</view>
 				</view>
 
+				<!-- 昵称：只有注册时出现，留空就用账号名 -->
+				<view v-if="mode === 'register'" class="row" :class="{ 'is-focus': active === 'nick' }">
+					<input
+						class="input"
+						v-model="nickname"
+						:maxlength="20"
+						placeholder="昵称（可选）"
+						placeholder-class="ph"
+						confirm-type="next"
+						@focus="active = 'nick'"
+						@blur="active = ''"
+					/>
+				</view>
+
 				<!-- 密码 -->
 				<view class="row" :class="{ 'is-focus': active === 'pwd' }">
 					<input
@@ -46,7 +69,7 @@
 						confirm-type="done"
 						@focus="active = 'pwd'"
 						@blur="active = ''"
-						@confirm="doLogin"
+						@confirm="submit"
 					/>
 					<view class="eye" :class="{ 'is-off': !showPwd }" @tap="showPwd = !showPwd">
 						<view class="eye-slash"></view>
@@ -64,7 +87,7 @@
 						confirm-type="done"
 						@focus="active = 'cap'"
 						@blur="active = ''"
-						@confirm="doLogin"
+						@confirm="submit"
 					/>
 					<!-- 点图换一张：一是一次性，二是不给脚本读答案的机会 -->
 					<view class="cap" hover-class="cap-hover" @tap="refreshCaptcha">
@@ -76,8 +99,8 @@
 				</view>
 			</view>
 
-			<view class="submit" :class="canLogin ? 'is-on' : 'is-off'" hover-class="submit-hover" @tap="doLogin">
-				<text>{{ loading ? '处理中…' : '登录' }}</text>
+			<view class="submit" :class="canSubmit ? 'is-on' : 'is-off'" hover-class="submit-hover" @tap="submit">
+				<text>{{ loading ? '处理中…' : mode === 'login' ? '登录' : '注册' }}</text>
 			</view>
 
 			<view class="agree" @tap="agreed = !agreed">
@@ -100,7 +123,7 @@
 </template>
 
 <script>
-	import { loginPassword, loginGuest, getUser, getToken, getBaseUrl, fetchCaptcha } from '@/common/api.js'
+	import { loginPassword, register, loginGuest, getUser, getToken, getBaseUrl, fetchCaptcha } from '@/common/api.js'
 	import { syncUserData } from '@/common/user-store.js'
 	import { menuSafeRight } from '@/common/nav.js'
 	import { showLoading, hideLoading, hidePageLoading } from '@/common/loading.js'
@@ -112,7 +135,10 @@
 			return {
 				statusBar: 0,
 				menuRight: 0,
+				/** login / register：两种模式共用一套表单，只是提交的接口不同 */
+				mode: 'login',
 				account: '',
+				nickname: '',
 				password: '',
 				showPwd: false,
 				agreed: false,
@@ -131,7 +157,7 @@
 			accountOk() {
 				return ACCOUNT_RE.test(this.account)
 			},
-			canLogin() {
+			canSubmit() {
 				return (
 					this.agreed &&
 					this.accountOk &&
@@ -191,7 +217,7 @@
 					this.captchaImage = res.image || ''
 				} catch (e) {
 					// 图加载不出来通常就是后端没启动，这里不弹窗打断，
-					// 占位文字提示「点击重试」，真去登录时 doLogin 会给出详细原因
+					// 占位文字提示「点击重试」，真去提交时 submit 会给出详细原因
 					this.captchaId = ''
 					this.captchaImage = ''
 				} finally {
@@ -200,7 +226,17 @@
 			},
 
 			/* ---------- 登录 / 注册 ---------- */
-			async doLogin() {
+			/** 切换模式。密码和验证码都清掉：验证码是一次性的，换模式必须换图 */
+			switchMode(next) {
+				if (this.mode === next || this.loading) return
+				this.mode = next
+				this.password = ''
+				this.captchaCode = ''
+				this.active = ''
+				this.refreshCaptcha()
+			},
+
+			async submit() {
 				if (this.loading) return
 				if (!this.accountOk) {
 					uni.showToast({ title: '账号需 3-20 位字母、数字或下划线', icon: 'none' })
@@ -219,25 +255,38 @@
 					return
 				}
 
+				const isRegister = this.mode === 'register'
 				this.loading = true
-				showLoading('登录中')
+				showLoading(isRegister ? '注册中' : '登录中')
 				try {
-					await loginPassword({
+					const payload = {
 						account: this.account,
 						password: this.password,
 						captchaId: this.captchaId,
 						captchaCode: this.captchaCode
-					})
+					}
+					if (isRegister) {
+						payload.nickname = this.nickname
+						await register(payload)
+					} else {
+						await loginPassword(payload)
+					}
 					// 换账号后重新拉一遍服务端数据，页面上立刻是新账号的进度
 					await syncUserData({ silent: true })
 					hideLoading()
-					uni.showToast({ title: '登录成功', icon: 'success' })
+					uni.showToast({ title: isRegister ? '注册成功' : '登录成功', icon: 'success' })
 					this.leave()
 				} catch (e) {
 					hideLoading()
 					// 验证码是一次性的：不管哪一步失败，服务端都已经把它作废了，
-					// 所以必须换一张，否则用户再点登录一定还是同样的报错
+					// 所以必须换一张，否则用户再点提交一定还是同样的报错
 					this.refreshCaptcha()
+					// 注册时账号被占用，直接把人引到登录，省得自己再切一次
+					if (isRegister && e && e.status === 409) {
+						this.mode = 'login'
+						uni.showToast({ title: '该账号已注册，请直接登录', icon: 'none' })
+						return
+					}
 					this.handleFail(e)
 				} finally {
 					this.loading = false
@@ -366,13 +415,41 @@
 		color: #ffffff;
 	}
 
-	.title {
-		display: block;
+	/* 登录 / 注册切换：只靠字重、颜色和一小段主色下划线区分，不放色块 */
+	.tabs {
+		display: flex;
+		align-items: baseline;
 		margin-top: 40rpx;
-		font-size: 50rpx;
+	}
+
+	.tab {
+		position: relative;
+		margin-right: 48rpx;
+		padding-bottom: 14rpx;
+	}
+
+	.tab-txt {
+		font-size: 46rpx;
+		font-weight: 500;
+		line-height: 1.2;
+		color: #9faaa5;
+		transition: color 0.18s ease;
+	}
+
+	.tab.is-on .tab-txt {
 		font-weight: 700;
 		color: $duck-text;
-		letter-spacing: -1rpx;
+	}
+
+	.tab.is-on::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		width: 40rpx;
+		height: 6rpx;
+		border-radius: 3rpx;
+		background-color: $duck-primary;
 	}
 
 	.sub {
