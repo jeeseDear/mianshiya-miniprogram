@@ -27,6 +27,13 @@ desktop.ini
 # ---------- 本地工具目录 ----------
 .workbuddy/
 
+# ---------- App 签名证书（含私钥，绝不能提交） ----------
+certs/*.keystore
+certs/*.jks
+certs/*.key
+certs/*.p12
+certs/pack.json
+
 # ---------- 后端（server/） ----------
 server/.venv/
 server/data/
