@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import logging
 import secrets
 
 import requests
@@ -23,6 +24,7 @@ from ..config import get_settings
 from ..db import get_db
 from ..deps import get_current_user, get_optional_user
 from ..models import User
+from ..obs import log_event
 from ..password import hash_password, verify_password
 from ..schemas import (
     CaptchaOut,
@@ -75,8 +77,10 @@ def _login_out(user: User) -> GuestLoginOut:
     )
 
 
-def _check_captcha(payload) -> None:
+def _check_captcha(payload, scene: str) -> None:
     if not captcha.verify(payload.captcha_id, payload.captcha_code):
+        # 验证码失败是最常见的登录卡点，单独记一条，便于区分「码过期」和「密码错」
+        log_event("captcha_failed", level=logging.WARNING, scene=scene)
         raise HTTPException(status_code=400, detail="验证码不正确或已过期，请刷新后重试")
 
 
@@ -90,6 +94,7 @@ def guest_login(db: Session = Depends(get_db)) -> GuestLoginOut:
     db.add(user)
     db.commit()
     db.refresh(user)
+    log_event("guest_login", uid=user.id)
     return _login_out(user)
 
 
@@ -121,10 +126,11 @@ def register(
     - 密码 PBKDF2-HMAC-SHA256 加盐，明文不落库
     - 当前若带着游客 token，会把游客的收藏 / 错题 / 记录 / 打卡并过来
     """
-    _check_captcha(payload)
+    _check_captcha(payload, "register")
 
     account = payload.account.strip().lower()
     if db.scalar(select(User).where(User.account == account)) is not None:
+        log_event("register_conflict", level=logging.WARNING, account=account)
         raise HTTPException(status_code=409, detail="该账号已被注册，请直接登录")
 
     user = User(
@@ -147,6 +153,7 @@ def register(
     if current is not None and current.id != user.id and _is_guest(current):
         merge_user_data(db, current, user)
 
+    log_event("register_ok", uid=user.id, account=account)
     return _login_out(user)
 
 
@@ -164,7 +171,7 @@ def password_login(
 
     登录成功后若请求头还带着游客 token，会把游客期间的数据并过来。
     """
-    _check_captcha(payload)
+    _check_captcha(payload, "login")
 
     account = payload.account.strip().lower()
     user = db.scalar(select(User).where(User.account == account))
@@ -174,6 +181,9 @@ def password_login(
         or not user.password_hash
         or not verify_password(payload.password, user.password_hash)
     ):
+        # 不区分「账号不存在」和「密码错」返回给前端，但日志里要能区分，否则没法排查
+        reason = "no_such_account" if user is None else ("no_password" if not user.password_hash else "bad_password")
+        log_event("login_failed", level=logging.WARNING, account=account, reason=reason)
         raise HTTPException(
             status_code=401,
             detail="账号或密码不正确",
@@ -183,6 +193,7 @@ def password_login(
     if current is not None and current.id != user.id and _is_guest(current):
         merge_user_data(db, current, user)
 
+    log_event("login_ok", uid=user.id, account=account)
     return _login_out(user)
 
 
@@ -240,6 +251,7 @@ def phone_login(
     if current is not None and current.id != user.id and _is_guest(current):
         merge_user_data(db, current, user)
 
+    log_event("phone_login_ok", uid=user.id, phone=_mask_phone(user.phone))
     return _login_out(user)
 
 
@@ -269,10 +281,12 @@ def wechat_login(
         )
         data = resp.json()
     except (requests.RequestException, ValueError) as exc:
+        log_event("wechat_failed", level=logging.ERROR, reason="code2session", error=str(exc))
         raise HTTPException(status_code=502, detail=f"无法连接微信服务器：{exc}") from exc
 
     openid = data.get("openid")
     if not openid:
+        log_event("wechat_failed", level=logging.WARNING, reason="no_openid", resp=data)
         raise HTTPException(status_code=400, detail=f"微信登录失败：{data}")
 
     user = db.scalar(select(User).where(User.openid == openid))

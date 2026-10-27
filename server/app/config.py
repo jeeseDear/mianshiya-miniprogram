@@ -22,7 +22,14 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "面试鸭 API"
+    app_version: str = "1.0.0"
     api_prefix: str = "/api"
+
+    # ---------------- 可观测性 ----------------
+    # 日志级别：DEBUG / INFO / WARNING / ERROR
+    log_level: str = "INFO"
+    # 超过这个耗时就打 WARNING 并标记 slow=true，用来发现慢接口
+    slow_request_ms: int = 500
 
     # SQLite 默认落在 server/data/app.db，换 PostgreSQL 只改这一行
     database_url: str = f"sqlite:///{(BASE_DIR / 'data' / 'app.db').as_posix()}"

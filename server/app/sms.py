@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import logging
 import secrets
 import time
 
@@ -24,6 +25,7 @@ from sqlalchemy.orm import Session
 
 from .config import Settings
 from .models import SmsCode
+from .obs import log_event
 
 
 def _now_ts() -> int:
@@ -38,7 +40,7 @@ def _deliver(phone: str, code: str, settings: Settings) -> None:
         if settings.sms_provider == "aliyun": ...
     """
     if settings.sms_provider == "debug" or settings.sms_debug:
-        print(f"[sms] 发送验证码 -> {phone}：{code}（调试模式，未真实发送）")
+        log_event("sms_debug_send", phone=phone, code=code)
         return
     raise HTTPException(
         status_code=501,
@@ -85,22 +87,26 @@ def verify_code(db: Session, phone: str, code: str, settings: Settings) -> None:
     """校验验证码，失败抛 HTTPException，成功则消费掉这条记录。"""
     row = db.scalar(select(SmsCode).where(SmsCode.phone == phone))
     if row is None:
+        log_event("sms_verify_failed", level=logging.WARNING, phone=phone, reason="no_code")
         raise HTTPException(status_code=400, detail="请先获取验证码")
 
     if _now_ts() > row.expired_at:
         db.delete(row)
         db.commit()
+        log_event("sms_verify_failed", level=logging.WARNING, phone=phone, reason="expired")
         raise HTTPException(status_code=400, detail="验证码已过期，请重新获取")
 
     if row.attempts >= settings.sms_max_attempts:
         db.delete(row)
         db.commit()
+        log_event("sms_verify_failed", level=logging.WARNING, phone=phone, reason="too_many_attempts")
         raise HTTPException(status_code=400, detail="错误次数过多，请重新获取验证码")
 
     if not secrets.compare_digest(row.code, code):
         row.attempts += 1
         left = settings.sms_max_attempts - row.attempts
         db.commit()
+        log_event("sms_verify_failed", level=logging.WARNING, phone=phone, reason="mismatch", attempts=row.attempts)
         raise HTTPException(status_code=400, detail=f"验证码不正确，还可尝试 {max(left, 0)} 次")
 
     # 一次性：验过即焚，避免同一个码被重复使用

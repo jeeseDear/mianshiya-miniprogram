@@ -24,8 +24,9 @@ cd D:\code\front-mianshi\前端面试鸭\server
 ```
 server/
 ├── app/
-│   ├── main.py          create_app / lifespan / 异常处理
+│   ├── main.py          create_app / lifespan / 异常处理 / 健康检查
 │   ├── config.py        环境变量配置（pydantic-settings）
+│   ├── obs.py           可观测性：结构化日志 / trace id / 指标
 │   ├── db.py            engine / Session / get_db
 │   ├── models.py        8 张表（内容 3 张 + 用户 5 张）
 │   ├── schemas.py       请求响应模型（Pydantic）
@@ -178,6 +179,95 @@ common/
 - `CORS_ORIGINS` 写具体域名，别用 `*`
 - 小程序要求 HTTPS 域名并在微信后台配置 `request 合法域名`
 - SQLite 换 PostgreSQL：`DATABASE_URL=postgresql+psycopg://...`
+
+## 可观测性
+
+三件事都落在 `app/obs.py`，没有引入第三方依赖。
+
+### 1. 结构化日志
+
+每条日志一行 JSON，字段固定为 `ts / level / logger / msg`，加上本条事件的业务字段；
+在请求里产生日志时自动带 `trace`。uvicorn 自己的日志也被收编成同样的格式。
+
+```json
+{"ts":"2026-10-27T11:08:52.782+08:00","level":"INFO","logger":"duck","msg":"http","trace":"rid-422-test","method":"POST","path":"/api/auth/login","status":422,"ms":1.8,"ip":"127.0.0.1","uid":null}
+```
+
+业务代码里埋点：
+
+```python
+from .obs import log_event
+
+log_event("login_ok", uid=user.id, account=account)          # INFO
+log_event("login_failed", level=logging.WARNING, account=account, reason="bad_password")
+```
+
+已经埋好的事件：`startup` / `shutdown` / `http` / `unhandled` / `bad_request` / `value_error`、
+登录相关 `captcha_failed`、`login_ok`、`login_failed`、`register_ok`、`register_conflict`、
+`guest_login`、`phone_login_ok`、`wechat_failed`，短信 `sms_debug_send`、`sms_verify_failed`，
+迁移 `migrate_add_column`、`migrate_index_failed`。
+
+日志级别由 `LOG_LEVEL` 控制（默认 INFO）。`/health`、`/metrics` 正常时只记 DEBUG，
+被监控频繁探测也不会淹没业务日志；超过 `SLOW_REQUEST_MS`（默认 500）的请求升为 WARNING 并标 `slow=true`。
+
+### 2. 请求追踪
+
+```
+客户端（可带 X-Request-ID）→ nginx（没带就用内置 $request_id 生成）→ FastAPI
+                                                                   ↓
+                                        响应头 X-Request-ID / X-Response-Time 原样返回
+```
+
+遇到 500/422 时响应体里会带 `trace_id`，用户截图发过来就能反查：
+
+```bash
+journalctl -u duck-api -o cat | grep '"trace": "rid-422-test"'
+grep 'rid=rid-422-test' /var/log/nginx/duck-api.log
+```
+
+nginx 访问日志字段：`status / body_bytes_sent / rt（总耗时）/ urt（上游耗时）/ rid / urid / ua`。
+`rt` 与 `urt` 差得大，说明时间花在 nginx 而不是应用；`urid` 为空说明请求没到应用。
+
+### 3. 运行指标与健康检查
+
+| 接口 | 用途 |
+|---|---|
+| `GET /health` | 深度检查：数据库连通性 + 延迟 + 题目数；库不通返回 503 `status=degraded` |
+| `GET /health/live` | 存活检查，不查库，适合 systemd / 容器探针 |
+| `GET /metrics` | Prometheus 文本格式 |
+
+```
+duck_http_requests_total{method="GET",path="/api/auth/captcha",status="200"} 12
+duck_http_request_duration_seconds_sum{...} 0.031
+duck_http_requests_in_flight 1
+duck_uptime_seconds 3600
+```
+
+指标里的 `path` 用的是路由模板（`/api/questions/{qid}`），未匹配路由统一归到 `__unmatched__`，
+不会因为扫描器随机路径把标签撑爆。
+
+### 常用排查命令
+
+```bash
+# 最近 50 条，去掉 journald 前缀直接看 JSON
+journalctl -u duck-api -o cat -n 50
+
+# 只看错误
+journalctl -u duck-api -o cat -p err -n 20
+
+# 实时跟
+journalctl -u duck-api -o cat -f
+
+# 慢请求
+journalctl -u duck-api -o cat | grep '"slow": true'
+
+# 健康与指标
+curl -s https://zttzmy.top/health | jq
+curl -s http://127.0.0.1:8100/metrics
+
+# nginx 侧：按 trace 找请求
+grep 'rid=<trace>' /var/log/nginx/duck-api.log
+```
 
 ## 下一步可做
 

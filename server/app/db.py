@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from .config import get_settings
+from .obs import log_event
 
 settings = get_settings()
 
@@ -83,7 +84,7 @@ def _ensure_columns() -> None:
             for name, ddl in columns.items():
                 if name not in existing:
                     conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
-                    print(f"[migrate] {table}.{name} 已补齐")
+                    log_event("migrate_add_column", table=table, column=name, ddl=ddl)
 
         for idx_name, table, columns in _UNIQUE_INDEXES:
             try:
@@ -91,4 +92,4 @@ def _ensure_columns() -> None:
                     text(f"CREATE UNIQUE INDEX IF NOT EXISTS {idx_name} ON {table}({columns})")
                 )
             except Exception as exc:  # 已有重复数据时建索引会失败，不影响启动
-                print(f"[migrate] 唯一索引 {idx_name} 创建失败：{exc}")
+                log_event("migrate_index_failed", level=40, index=idx_name, error=str(exc))
