@@ -8,9 +8,11 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
 
+from .. import ai
 from ..db import get_db
 from ..deps import get_optional_user
 from ..models import Category, Knowledge, Question, Record, User
@@ -260,6 +262,55 @@ def question_detail(
         prev=prev_item,
         next=next_item,
     )
+
+
+# ---------------- AI 解析 ----------------
+
+
+@router.get("/questions/{question_id}/ai", summary="AI 解析（面试视角）")
+def question_ai(question_id: str, db: Session = Depends(get_db)) -> dict:
+    """让大模型把标准答案改写成「面试现场怎么答」。
+
+    返回五块内容，对应前端弹窗的五个分区：
+
+    - ``core``     一句话点出这道题在考什么
+    - ``answer``   面试时的回答顺序
+    - ``bonus``    能加分的点
+    - ``trap``     容易踩的坑
+    - ``followup`` 面试官可能的追问
+
+    同一道题只调一次模型，之后都读数据库缓存（``cached=true``）。
+    服务端没配 ``LLM_API_KEY`` 时返回 **503**，前端据此提示「未开启」，
+    不会返回伪造内容。
+    """
+    q = db.get(Question, question_id)
+    if q is None:
+        raise HTTPException(status_code=404, detail=f"题目 {question_id} 不存在")
+    return ai.get_explanation(db, q)
+
+
+@router.get("/questions/{question_id}/ai/stream", summary="AI 解析（流式）")
+def question_ai_stream(question_id: str) -> StreamingResponse:
+    """边生成边返回，用户不用盯着空白弹窗等 20 秒。
+
+    返回的是 ``text/plain`` 流，不是 SSE —— 因为内容本身带 ``@@XXX@@``
+    标记，前端拿纯文本按行切就行，不需要再包一层 event 格式。小程序那边
+    用 ``enableChunked`` 收分块，H5/APK 用 ``fetch`` 的 ReadableStream，
+    两边都更简单。
+
+    ``X-Accel-Buffering: no`` 是必须的：不加这行，Nginx 会把上游输出攒
+    成整包再发，流式就退化成了等 20 秒一次性出现。
+    """
+    return StreamingResponse(
+        ai.stream_explanation(question_id),
+        media_type="text/plain; charset=utf-8",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
 
 
 # ---------------- 搜索 ----------------

@@ -172,3 +172,23 @@ class SmsCode(Base):
     sent_at: Mapped[int] = mapped_column(Integer)
     # 已验证次数，防止同一验证码被撞库反复试探
     attempts: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class AiExplanation(Base):
+    """AI 解析缓存：一道题一行。
+
+    为什么落库而不是每次现调模型：一次调用要 5~20 秒、按 token 计费，
+    而解析内容对同一道题是稳定的。缓存之后只有第一个用户会等，其余
+    瞬间返回，也不会重复花钱。
+
+    用 ``question_id`` 直接做主键——天然保证一题一条，不需要额外唯一索引。
+    ``model`` 记录生成时用的模型名，方便以后换模型时判断哪些需要重生成。
+    """
+
+    __tablename__ = "ai_explanations"
+
+    question_id: Mapped[str] = mapped_column(ForeignKey("questions.id"), primary_key=True)
+    model: Mapped[str] = mapped_column(String(64), default="")
+    # 结构化内容：core / answer / bonus / trap / followup
+    content: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)

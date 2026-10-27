@@ -61,6 +61,20 @@ class Settings(BaseSettings):
     # 短信服务商，接真实通道时把 sms_debug 关掉并在这里选一个
     sms_provider: str = "debug"
 
+    # ---------------- AI 解析（大模型） ----------------
+    # 走 OpenAI 兼容的 /chat/completions 协议，DeepSeek / 通义 / 智谱 /
+    # 自建 vLLM 都能直接用，换服务商只改这三行。
+    # llm_api_key 留空时接口返回 503（前端弹窗提示「AI 解析未开启」），
+    # 不会伪装成有结果。
+    llm_base_url: str = "https://api.deepseek.com/v1"
+    llm_api_key: str = ""
+    llm_model: str = "deepseek-chat"
+    # 生成一段解析通常 5~20 秒，超时给足；前端请求超时要同步放大
+    llm_timeout: int = 60
+    llm_max_tokens: int = 1200
+    # 偏低一点，让输出稳定贴合 JSON 结构，不发挥
+    llm_temperature: float = 0.4
+
     # 种子数据目录
     seed_dir: Path = BASE_DIR / "seed"
 

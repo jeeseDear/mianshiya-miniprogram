@@ -71,6 +71,23 @@
 					</view>
 				</view>
 
+				<!-- AI 解析入口 -->
+				<view
+					class="ai-entry"
+					hover-class="ai-entry-hover"
+					v-if="!detailLoading"
+					@tap="openAi"
+				>
+					<view class="ai-entry-badge">
+						<text class="ai-entry-badge-txt">AI</text>
+					</view>
+					<view class="ai-entry-body">
+						<text class="ai-entry-title">AI 解析</text>
+						<text class="ai-entry-desc">面试官视角拆解 · 怎么答 · 加分项 · 追问</text>
+					</view>
+					<view class="duck-ic-arrow is-green"></view>
+				</view>
+
 				<!-- 代码示例 -->
 				<view class="sec" v-if="item.code">
 					<view class="sec-head">
@@ -132,6 +149,125 @@
 			<text class="duck-empty-title">没有找到这道题</text>
 			<text class="duck-empty-desc">它可能已经被移除，回题库看看其他题目</text>
 		</view>
+
+		<!-- ============ AI 解析弹窗 ============ -->
+		<view class="ai-mask" v-if="aiVisible" @tap="closeAi">
+			<view class="ai-sheet" @tap.stop>
+				<view class="ai-sheet-bar"></view>
+
+				<view class="ai-sheet-head">
+					<view class="ai-sheet-titles">
+						<view class="ai-sheet-title-row">
+							<view class="ai-entry-badge is-sm">
+								<text class="ai-entry-badge-txt">AI</text>
+							</view>
+							<text class="ai-sheet-title">AI 解析</text>
+							<text class="ai-sheet-live" v-if="aiLoading">生成中</text>
+							<text class="ai-sheet-live is-done" v-else-if="aiHasContent">已完成</text>
+						</view>
+						<text class="ai-sheet-sub">{{ item ? item.title : '' }}</text>
+					</view>
+					<view class="ai-sheet-close" hover-class="ai-sheet-close-hover" @tap="closeAi">
+						<text class="ai-sheet-close-txt">×</text>
+					</view>
+				</view>
+
+				<scroll-view class="ai-sheet-body" scroll-y :show-scrollbar="false">
+					<!-- 首包还没到：等模型开口 -->
+					<view class="ai-loading" v-if="aiLoading && !aiHasContent">
+						<view class="ai-dots">
+							<view class="ai-dot"></view>
+							<view class="ai-dot"></view>
+							<view class="ai-dot"></view>
+						</view>
+						<text class="ai-loading-txt">正在结合标准答案生成解析</text>
+						<text class="ai-loading-tip">首次生成约 5~20 秒，同一道题之后秒开</text>
+					</view>
+
+					<!-- 一个字都没生成出来 -->
+					<view class="ai-error" v-if="aiError && !aiHasContent">
+						<text class="ai-error-title">生成失败</text>
+						<text class="ai-error-txt">{{ aiError }}</text>
+						<view class="ai-retry" hover-class="ai-retry-hover" @tap="startAi">
+							<text class="ai-retry-txt">重试</text>
+						</view>
+					</view>
+
+					<!-- 内容：流式过程中不断长出来 -->
+					<view class="ai-content" v-if="aiHasContent">
+						<view class="ai-core" v-if="aiBlocks.core">
+							<text class="ai-core-mark">这道题在考什么</text>
+							<text class="ai-core-txt">{{ aiBlocks.core }}</text>
+						</view>
+
+						<view class="ai-block" v-if="aiBlocks.answer.length">
+							<view class="ai-block-head">
+								<view class="ai-block-bar"></view>
+								<text class="ai-block-title">面试这样答</text>
+							</view>
+							<view class="ai-step" v-for="(s, i) in aiBlocks.answer" :key="'a' + i">
+								<view class="ai-step-no">
+									<text class="ai-step-no-txt duck-num">{{ i + 1 }}</text>
+								</view>
+								<text class="ai-step-txt">{{ s }}</text>
+							</view>
+						</view>
+
+						<view class="ai-block" v-if="aiBlocks.bonus.length">
+							<view class="ai-block-head">
+								<view class="ai-block-bar is-bonus"></view>
+								<text class="ai-block-title">能加分的地方</text>
+							</view>
+							<view class="ai-li" v-for="(s, i) in aiBlocks.bonus" :key="'b' + i">
+								<text class="ai-li-mark is-bonus">+</text>
+								<text class="ai-li-txt">{{ s }}</text>
+							</view>
+						</view>
+
+						<view class="ai-block" v-if="aiBlocks.trap.length">
+							<view class="ai-block-head">
+								<view class="ai-block-bar is-trap"></view>
+								<text class="ai-block-title">容易踩的坑</text>
+							</view>
+							<view class="ai-li" v-for="(s, i) in aiBlocks.trap" :key="'t' + i">
+								<text class="ai-li-mark is-trap">!</text>
+								<text class="ai-li-txt">{{ s }}</text>
+							</view>
+						</view>
+
+						<view class="ai-block" v-if="aiBlocks.followup.length">
+							<view class="ai-block-head">
+								<view class="ai-block-bar is-follow"></view>
+								<text class="ai-block-title">可能的追问</text>
+							</view>
+							<view class="ai-li" v-for="(s, i) in aiBlocks.followup" :key="'f' + i">
+								<text class="ai-li-mark is-follow">?</text>
+								<text class="ai-li-txt">{{ s }}</text>
+							</view>
+						</view>
+
+						<!-- 还在生成：底部呼吸点，告诉用户没卡住 -->
+						<view class="ai-typing" v-if="aiLoading">
+							<view class="ai-typing-dot"></view>
+							<view class="ai-typing-dot"></view>
+							<view class="ai-typing-dot"></view>
+						</view>
+
+						<!-- 中途断了：保留已生成的部分 -->
+						<view class="ai-inline-error" v-if="aiError">
+							<text class="ai-inline-error-txt">{{ aiError }}</text>
+							<text class="ai-inline-retry" @tap="startAi">重新生成</text>
+						</view>
+
+						<view class="ai-foot" v-if="!aiLoading && !aiError">
+							<text class="ai-foot-txt">AI 生成 · 仅供参考，以标准答案为准</text>
+						</view>
+					</view>
+
+					<view class="ai-bottom-space"></view>
+				</scroll-view>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -139,6 +275,7 @@
 	import { getCategories, levelText, findQa, qaOfCat, randomQa, fetchQaDetail, getCachedDetail } from '@/common/question-source.js'
 	import { isFavorite, toggleFavorite, recordAnswer } from '@/common/user-store.js'
 	import { menuSafeRight, navBack } from '@/common/nav.js'
+	import { aiExplainStream } from '@/common/api.js'
 
 	export default {
 		data() {
@@ -150,10 +287,29 @@
 				item: null,
 				fav: false,
 				detailLoading: false,
-				levelText: levelText
+				levelText: levelText,
+				// ---- AI 解析 ----
+				aiVisible: false,
+				aiLoading: false,
+				aiError: '',
+				// 累计收到的原始文本，每次重解析都基于它，避免增量拼接出错
+				aiRaw: '',
+				aiBlocks: { core: '', answer: [], bonus: [], trap: [], followup: [] },
+				aiAbort: null,
+				aiTimer: null
 			}
 		},
 		computed: {
+			aiHasContent() {
+				const b = this.aiBlocks
+				return !!(
+					b.core ||
+					b.answer.length ||
+					b.bonus.length ||
+					b.trap.length ||
+					b.followup.length
+				)
+			},
 			catName() {
 				const c = getCategories().find((x) => x.id === this.catId)
 				return c ? c.name : ''
@@ -213,6 +369,10 @@
 
 			// 2. 再拉完整解析（命中内存缓存则同步返回）
 			this.loadDetail()
+		},
+		onUnload() {
+			// 离开页面就断开流，别让请求在后台空跑
+			this.stopAi()
 		},
 		methods: {
 			async loadDetail() {
@@ -280,6 +440,124 @@
 					return
 				}
 				this.open(q)
+			},
+
+			/* ---------------- AI 解析 ---------------- */
+
+			openAi() {
+				if (!this.item) return
+				this.aiVisible = true
+				// 已经生成过（哪怕是在关闭面板时跑完的）就直接复用，不重复花钱
+				if (this.aiHasContent || this.aiLoading) return
+				this.startAi()
+			},
+			closeAi() {
+				// 只关面板，不中断生成：再次打开能直接看到完整结果
+				this.aiVisible = false
+			},
+			startAi() {
+				if (!this.item || this.aiLoading) return
+				this.stopAi()
+
+				const qid = this.item.id
+				this.aiLoading = true
+				this.aiError = ''
+				this.aiRaw = ''
+				this.aiBlocks = { core: '', answer: [], bonus: [], trap: [], followup: [] }
+
+				// 回调里判断 qid 是否还是当前题：用户可能在生成期间换了题
+				const stale = () => qid !== (this.item && this.item.id)
+
+				this.aiAbort = aiExplainStream(qid, {
+					onChunk: (text) => {
+						if (stale()) return
+						this.aiRaw += text
+						this.queueAiRender()
+					},
+					onDone: () => {
+						if (stale()) return
+						this.flushAiRender()
+						this.aiLoading = false
+					},
+					onError: (msg) => {
+						if (stale()) return
+						this.flushAiRender()
+						this.aiLoading = false
+						this.aiError = msg || '生成失败，请重试'
+					}
+				})
+			},
+			stopAi() {
+				if (this.aiTimer) {
+					clearTimeout(this.aiTimer)
+					this.aiTimer = null
+				}
+				if (this.aiAbort) {
+					try {
+						this.aiAbort()
+					} catch (e) {
+						/* 已经结束 */
+					}
+					this.aiAbort = null
+				}
+			},
+			queueAiRender() {
+				// 模型每秒能吐几十个分片，逐个 setData 会让小程序发烫。
+				// 攒 60ms 合一次，视觉上仍是逐字冒出来。
+				if (this.aiTimer) return
+				this.aiTimer = setTimeout(() => {
+					this.aiTimer = null
+					this.applyAiRender()
+				}, 60)
+			},
+			flushAiRender() {
+				if (this.aiTimer) {
+					clearTimeout(this.aiTimer)
+					this.aiTimer = null
+				}
+				this.applyAiRender()
+			},
+			applyAiRender() {
+				const raw = this.aiRaw || ''
+				const errAt = raw.indexOf('@@ERROR@@')
+				if (errAt > -1) {
+					const msg = raw.slice(errAt + 10).trim()
+					if (msg) this.aiError = msg
+				}
+				this.aiBlocks = this.parseAiBlocks(errAt > -1 ? raw.slice(0, errAt) : raw)
+			},
+			parseAiBlocks(text) {
+				const out = { core: '', answer: [], bonus: [], trap: [], followup: [] }
+				const marks = {
+					'@@CORE@@': 'core',
+					'@@ANSWER@@': 'answer',
+					'@@BONUS@@': 'bonus',
+					'@@TRAP@@': 'trap',
+					'@@FOLLOW@@': 'followup'
+				}
+				let cur = null
+
+				// 每次都从完整文本重新切，而不是拼增量：
+				// 半截的行会在下一次重算时变成完整句子，天然就是打字机效果
+				const lines = String(text || '').split('\n')
+				for (let i = 0; i < lines.length; i++) {
+					const line = lines[i].trim()
+					if (!line) continue
+					if (marks[line]) {
+						cur = marks[line]
+						continue
+					}
+					if (!cur) continue
+					// 模型偶尔还是加 "- " 或 "1. "，剥掉，编号由前端统一渲染
+					const clean = line.replace(/^(?:[-*·]\s*|\d+[.、)]\s*)+/, '').trim()
+					if (!clean) continue
+					if (cur === 'core') {
+						if (!out.core) out.core = clean
+					} else if (out[cur].length < 6) {
+						out[cur].push(clean)
+					}
+				}
+				return out
 			}
 		}
 	}
@@ -711,5 +989,471 @@
 
 	.qa-empty {
 		margin-top: 120rpx;
+	}
+
+	/* ---------- AI 解析入口 ---------- */
+	.ai-entry {
+		margin-top: 20rpx;
+		padding: 24rpx 26rpx;
+		display: flex;
+		align-items: center;
+		background-color: #ffffff;
+		border: 1rpx solid $duck-primary-line;
+		border-radius: $duck-radius;
+		box-shadow: $duck-shadow;
+	}
+
+	.ai-entry-hover {
+		background-color: $duck-primary-soft;
+	}
+
+	.ai-entry-badge {
+		width: 60rpx;
+		height: 60rpx;
+		border-radius: 20rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-image: $duck-grad-btn;
+		flex-shrink: 0;
+	}
+
+	.ai-entry-badge.is-sm {
+		width: 40rpx;
+		height: 40rpx;
+		border-radius: 12rpx;
+	}
+
+	.ai-entry-badge-txt {
+		font-size: 22rpx;
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: 0.5rpx;
+		color: #ffffff;
+	}
+
+	.ai-entry-body {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		margin-left: 20rpx;
+	}
+
+	.ai-entry-title {
+		font-size: 28rpx;
+		font-weight: 600;
+		color: $duck-text;
+	}
+
+	.ai-entry-desc {
+		margin-top: 6rpx;
+		font-size: 21rpx;
+		color: $duck-text-muted;
+	}
+
+	/* ---------- AI 解析弹窗 ---------- */
+	.ai-mask {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		z-index: 900;
+		display: flex;
+		align-items: flex-end;
+		background-color: rgba(10, 22, 17, 0.46);
+	}
+
+	.ai-sheet {
+		width: 100%;
+		max-height: 84vh;
+		display: flex;
+		flex-direction: column;
+		background-color: #ffffff;
+		border-radius: 32rpx 32rpx 0 0;
+		padding-bottom: env(safe-area-inset-bottom);
+		animation: aiSheetUp 0.24s ease-out;
+	}
+
+	@keyframes aiSheetUp {
+		from {
+			transform: translateY(48rpx);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+
+	.ai-sheet-bar {
+		width: 72rpx;
+		height: 8rpx;
+		margin: 16rpx auto 0;
+		border-radius: 4rpx;
+		background-color: #e9edeb;
+	}
+
+	.ai-sheet-head {
+		display: flex;
+		align-items: flex-start;
+		padding: 18rpx 30rpx 16rpx;
+	}
+
+	.ai-sheet-titles {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.ai-sheet-title-row {
+		display: flex;
+		align-items: center;
+	}
+
+	.ai-sheet-title {
+		margin-left: 12rpx;
+		font-size: 32rpx;
+		font-weight: 600;
+		color: $duck-text;
+	}
+
+	.ai-sheet-live {
+		margin-left: 12rpx;
+		height: 34rpx;
+		line-height: 34rpx;
+		padding: 0 12rpx;
+		border-radius: 999rpx;
+		background-color: $duck-primary-soft;
+		font-size: 19rpx;
+		color: $duck-primary-dark;
+	}
+
+	.ai-sheet-live.is-done {
+		background-color: #f2f4f3;
+		color: $duck-text-muted;
+	}
+
+	.ai-sheet-sub {
+		margin-top: 10rpx;
+		font-size: 22rpx;
+		line-height: 1.5;
+		color: $duck-text-muted;
+	}
+
+	.ai-sheet-close {
+		width: 56rpx;
+		height: 56rpx;
+		margin-left: 16rpx;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: $duck-fill;
+		flex-shrink: 0;
+	}
+
+	.ai-sheet-close-hover {
+		background-color: #eaeeec;
+	}
+
+	.ai-sheet-close-txt {
+		font-size: 38rpx;
+		line-height: 1;
+		color: $duck-text-muted;
+	}
+
+	.ai-sheet-body {
+		flex: 1;
+		height: 0;
+		padding: 0 30rpx;
+		box-sizing: border-box;
+	}
+
+	.ai-loading {
+		padding: 90rpx 0 60rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.ai-dots {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.ai-dot {
+		width: 14rpx;
+		height: 14rpx;
+		margin: 0 6rpx;
+		border-radius: 50%;
+		background-color: $duck-primary;
+		animation: aiBounce 1s infinite ease-in-out;
+	}
+
+	.ai-dot:nth-child(2) {
+		animation-delay: 0.15s;
+	}
+
+	.ai-dot:nth-child(3) {
+		animation-delay: 0.3s;
+	}
+
+	@keyframes aiBounce {
+		0%,
+		80%,
+		100% {
+			transform: scale(0.55);
+			opacity: 0.4;
+		}
+		40% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	.ai-loading-txt {
+		margin-top: 28rpx;
+		font-size: 26rpx;
+		color: $duck-text;
+	}
+
+	.ai-loading-tip {
+		margin-top: 12rpx;
+		font-size: 21rpx;
+		color: $duck-text-light;
+	}
+
+	.ai-content {
+		padding-top: 8rpx;
+	}
+
+	.ai-core {
+		padding: 22rpx 24rpx;
+		display: flex;
+		flex-direction: column;
+		background-color: $duck-primary-soft;
+		border-left: 6rpx solid $duck-primary;
+		border-radius: 0 16rpx 16rpx 0;
+	}
+
+	.ai-core-mark {
+		font-size: 19rpx;
+		letter-spacing: 2rpx;
+		color: $duck-primary-dark;
+	}
+
+	.ai-core-txt {
+		margin-top: 10rpx;
+		font-size: 28rpx;
+		line-height: 1.6;
+		color: $duck-ink;
+	}
+
+	.ai-block {
+		margin-top: 34rpx;
+	}
+
+	.ai-block-head {
+		display: flex;
+		align-items: center;
+	}
+
+	.ai-block-bar {
+		width: 6rpx;
+		height: 26rpx;
+		margin-right: 14rpx;
+		border-radius: 3rpx;
+		background-color: $duck-primary;
+	}
+
+	.ai-block-bar.is-bonus {
+		background-color: $duck-gold;
+	}
+
+	.ai-block-bar.is-trap {
+		background-color: $duck-warn;
+	}
+
+	.ai-block-bar.is-follow {
+		background-color: $duck-blue;
+	}
+
+	.ai-block-title {
+		font-size: 27rpx;
+		font-weight: 600;
+		color: $duck-text;
+	}
+
+	.ai-step {
+		display: flex;
+		align-items: flex-start;
+		margin-top: 18rpx;
+	}
+
+	.ai-step-no {
+		width: 36rpx;
+		height: 36rpx;
+		margin-top: 4rpx;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: $duck-primary-soft;
+		flex-shrink: 0;
+	}
+
+	.ai-step-no-txt {
+		font-size: 21rpx;
+		font-weight: 600;
+		color: $duck-primary-dark;
+	}
+
+	.ai-step-txt {
+		flex: 1;
+		margin-left: 16rpx;
+		font-size: 26rpx;
+		line-height: 1.68;
+		color: #3a3f3d;
+	}
+
+	.ai-li {
+		display: flex;
+		align-items: flex-start;
+		margin-top: 16rpx;
+	}
+
+	.ai-li-mark {
+		width: 32rpx;
+		flex-shrink: 0;
+		font-size: 27rpx;
+		font-weight: 600;
+		line-height: 1.6;
+		text-align: center;
+	}
+
+	.ai-li-mark.is-bonus {
+		color: $duck-gold;
+	}
+
+	.ai-li-mark.is-trap {
+		color: $duck-warn;
+	}
+
+	.ai-li-mark.is-follow {
+		color: $duck-blue;
+	}
+
+	.ai-li-txt {
+		flex: 1;
+		margin-left: 10rpx;
+		font-size: 26rpx;
+		line-height: 1.68;
+		color: #3a3f3d;
+	}
+
+	.ai-typing {
+		display: flex;
+		align-items: center;
+		margin-top: 26rpx;
+	}
+
+	.ai-typing-dot {
+		width: 10rpx;
+		height: 10rpx;
+		margin-right: 8rpx;
+		border-radius: 50%;
+		background-color: $duck-primary-line;
+		animation: aiBounce 1s infinite ease-in-out;
+	}
+
+	.ai-typing-dot:nth-child(2) {
+		animation-delay: 0.15s;
+	}
+
+	.ai-typing-dot:nth-child(3) {
+		animation-delay: 0.3s;
+	}
+
+	.ai-inline-error {
+		margin-top: 26rpx;
+		padding: 18rpx 20rpx;
+		display: flex;
+		align-items: center;
+		border-radius: 16rpx;
+		background-color: #fff7f0;
+	}
+
+	.ai-inline-error-txt {
+		flex: 1;
+		font-size: 22rpx;
+		line-height: 1.5;
+		color: #a35a1c;
+	}
+
+	.ai-inline-retry {
+		margin-left: 16rpx;
+		font-size: 22rpx;
+		color: $duck-primary-dark;
+		flex-shrink: 0;
+	}
+
+	.ai-error {
+		padding: 80rpx 20rpx 60rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.ai-error-title {
+		font-size: 28rpx;
+		font-weight: 600;
+		color: $duck-text;
+	}
+
+	.ai-error-txt {
+		margin-top: 14rpx;
+		font-size: 23rpx;
+		line-height: 1.6;
+		text-align: center;
+		color: $duck-text-muted;
+	}
+
+	.ai-retry {
+		margin-top: 30rpx;
+		height: 64rpx;
+		padding: 0 46rpx;
+		border-radius: 999rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-image: $duck-grad-btn;
+	}
+
+	.ai-retry-hover {
+		opacity: 0.86;
+	}
+
+	.ai-retry-txt {
+		font-size: 26rpx;
+		font-weight: 600;
+		color: #ffffff;
+	}
+
+	.ai-foot {
+		margin-top: 40rpx;
+		padding-top: 20rpx;
+		border-top: 1rpx solid $duck-line;
+		text-align: center;
+	}
+
+	.ai-foot-txt {
+		font-size: 20rpx;
+		color: $duck-text-light;
+	}
+
+	.ai-bottom-space {
+		height: 60rpx;
 	}
 </style>

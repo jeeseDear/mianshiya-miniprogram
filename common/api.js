@@ -416,6 +416,170 @@ export async function logout() {
 
 /* ---------------- 业务接口 ---------------- */
 
+/* ---------------- 流式接口 ---------------- */
+
+/** 跨块解码 UTF-8：一个中文字可能被切在两个 chunk 之间，必须带 stream 标记 */
+function makeChunkDecoder() {
+	if (typeof TextDecoder === 'undefined') {
+		// 基础库低于 2.16 没有 TextDecoder，这条路只保证不崩，中文可能断字
+		return function (buf) {
+			const bytes = new Uint8Array(buf)
+			let out = ''
+			for (let i = 0; i < bytes.length; i++) out += String.fromCharCode(bytes[i])
+			return out
+		}
+	}
+	const decoder = new TextDecoder('utf-8')
+	return function (buf) {
+		return decoder.decode(buf, { stream: true })
+	}
+}
+
+function streamError(err) {
+	const msg = (err && (err.errMsg || err.message)) || ''
+	if (msg.indexOf('timeout') > -1 || msg.indexOf('超时') > -1) return '生成超时，请重试'
+	return '网络连接失败，请检查网络后重试'
+}
+
+/**
+ * AI 解析（流式）。
+ *
+ * 各端接收方式不同，在这里统一抹平：
+ *   - H5 / Android APK（WebView）：fetch + ReadableStream 逐块读
+ *   - 微信小程序：uni.request 的 enableChunked + onChunkReceived
+ *
+ * handlers: { onChunk(增量文本), onDone(), onError(消息) }
+ * 返回 abort 函数，页面卸载时调用可立刻断开，别让请求在后台空跑。
+ *
+ * 这里没有用 SSE —— 后端返回的是带 @@XXX@@ 标记的纯文本，前端按行切
+ * 就够了，省掉一层 event 格式解析。
+ */
+export function aiExplainStream(id, handlers) {
+	const opts = handlers || {}
+	const token = getToken()
+	const header = token ? { Authorization: 'Bearer ' + token } : {}
+	const url = baseUrl + '/api/questions/' + encodeURIComponent(id) + '/ai/stream'
+	let aborted = false
+
+	const emit = (text) => {
+		if (!aborted && text) opts.onChunk && opts.onChunk(text)
+	}
+	const finish = () => {
+		if (!aborted) opts.onDone && opts.onDone()
+	}
+	const fail = (msg) => {
+		if (!aborted) opts.onError && opts.onError(msg)
+	}
+
+	// #ifdef MP-WEIXIN
+	const decode = makeChunkDecoder()
+	let received = false
+	const task = uni.request({
+		url,
+		method: 'GET',
+		header,
+		enableChunked: true,
+		responseType: 'arraybuffer',
+		timeout: 180000,
+		success: (res) => {
+			// 基础库过低时不会触发分块回调，用完整响应兜一次
+			if (!received && res && res.data) {
+				received = true
+				emit(decode(res.data))
+			}
+			finish()
+		},
+		fail: (err) => fail(streamError(err))
+	})
+	if (task && typeof task.onChunkReceived === 'function') {
+		task.onChunkReceived((res) => {
+			received = true
+			emit(decode(res.data))
+		})
+	}
+	return function () {
+		aborted = true
+		try {
+			task.abort()
+		} catch (e) {
+			/* 已结束 */
+		}
+	}
+	// #endif
+
+	// #ifndef MP-WEIXIN
+	const decode = makeChunkDecoder()
+	const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+
+	;(async function () {
+		let res
+		try {
+			res = await fetch(url, {
+				method: 'GET',
+				headers: Object.assign({ Accept: 'text/plain' }, header),
+				signal: controller ? controller.signal : undefined
+			})
+		} catch (err) {
+			if (aborted || (err && err.name === 'AbortError')) return
+			return fail(streamError(err))
+		}
+
+		if (!res.ok) {
+			let detail = ''
+			try {
+				detail = (await res.text()).slice(0, 200)
+			} catch (e) {
+				/* ignore */
+			}
+			return fail(detail || 'HTTP ' + res.status)
+		}
+
+		// 老 WebView 不支持流式读取：退化成一次性拿全，功能不受影响
+		if (!res.body || typeof res.body.getReader !== 'function') {
+			try {
+				emit(await res.text())
+				finish()
+			} catch (err) {
+				fail(streamError(err))
+			}
+			return
+		}
+
+		const reader = res.body.getReader()
+		try {
+			for (;;) {
+				const chunk = await reader.read()
+				if (chunk.done) break
+				if (aborted) {
+					try {
+						reader.cancel()
+					} catch (e) {
+						/* ignore */
+					}
+					return
+				}
+				emit(decode(chunk.value))
+			}
+			finish()
+		} catch (err) {
+			if (aborted) return
+			fail(streamError(err))
+		}
+	})()
+
+	return function () {
+		aborted = true
+		if (controller) {
+			try {
+				controller.abort()
+			} catch (e) {
+				/* ignore */
+			}
+		}
+	}
+	// #endif
+}
+
 export const api = {
 	// 题库（只读）
 	home: () => request({ url: '/api/home', auth: !!getToken() }),
@@ -423,6 +587,15 @@ export const api = {
 	mirror: () => request({ url: '/api/catalog/mirror', auth: !!getToken() }),
 	questions: (params) => request({ url: '/api/questions', params }),
 	question: (id) => request({ url: '/api/questions/' + id, auth: !!getToken() }),
+	// AI 解析：首次生成要等模型（5~20 秒），超时放大到 60 秒；
+	// retry 必须为 0 —— 失败重试会让模型调用翻倍，白花钱。
+	aiExplain: (id) =>
+		request({
+			url: '/api/questions/' + id + '/ai',
+			auth: !!getToken(),
+			timeout: 60000,
+			retry: 0
+		}),
 	daily: () => request({ url: '/api/questions/daily' }),
 	hot: (n) => request({ url: '/api/questions/hot', params: { n: n || 5 } }),
 	random: (cat, exclude) =>
