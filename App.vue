@@ -113,6 +113,9 @@
 
 	/* #endif */
 
+	/* 小游戏图标（我的页 + 游戏列表页共用，纯 CSS 拼，不依赖图片） */
+	@import './common/game-tiles.scss';
+
 	/* 以下样式用于 hello uni-app 演示所需 */
 	page {
 		background-color: #f3f5f4;

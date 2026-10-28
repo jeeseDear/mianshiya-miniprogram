@@ -113,59 +113,16 @@
 			</view>
 		</view>
 
-		<!-- 放松一下 -->
+		<!-- 放松一下：只放三款，其余收进游戏列表页 -->
 		<view class="duck-sec-head">
 			<text class="duck-sec-title">放松一下</text>
-			<text class="sec-more-txt">刷题累了，来一局</text>
+			<view class="sec-more" hover-class="sec-more-hover" @tap="goGameList">
+				<text class="sec-more-txt">更多</text>
+				<view class="duck-ic-arrow"></view>
+			</view>
 		</view>
 
 		<view class="duck-panel menu-panel">
-			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goGame">
-				<view class="menu-tile game-tile">
-					<image class="game-icon" src="/static/icons/ic-game.png" mode="aspectFit" />
-				</view>
-				<view class="menu-main">
-					<text class="menu-title">五子棋</text>
-					<text class="menu-desc">和电脑对局，五子连珠即胜</text>
-				</view>
-				<view class="duck-ic-arrow"></view>
-			</view>
-			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goChess">
-				<view class="menu-tile chess-tile">
-					<view class="chess-pc">
-						<text class="chess-pc-txt">象</text>
-					</view>
-				</view>
-				<view class="menu-main">
-					<text class="menu-title">中国象棋</text>
-					<text class="menu-desc">楚河汉界，执红人机对弈</text>
-				</view>
-				<view class="duck-ic-arrow"></view>
-			</view>
-			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goGo">
-				<view class="menu-tile go-tile">
-					<view class="go-pc is-b"></view>
-					<view class="go-pc is-w"></view>
-				</view>
-				<view class="menu-main">
-					<text class="menu-title">围棋</text>
-					<text class="menu-desc">9 路小棋盘，围空多者胜</text>
-				</view>
-				<view class="duck-ic-arrow"></view>
-			</view>
-			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goMatch">
-				<view class="menu-tile match-tile">
-					<view class="mt-dot d1"></view>
-					<view class="mt-dot d2"></view>
-					<view class="mt-dot d3"></view>
-					<view class="mt-dot d4"></view>
-				</view>
-				<view class="menu-main">
-					<text class="menu-title">消消乐</text>
-					<text class="menu-desc">三消连锁，25 步刷高分</text>
-				</view>
-				<view class="duck-ic-arrow"></view>
-			</view>
 			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goTetris">
 				<view class="menu-tile tetris-tile">
 					<view class="tt-b t1"></view>
@@ -176,6 +133,31 @@
 				<view class="menu-main">
 					<text class="menu-title">俄罗斯方块</text>
 					<text class="menu-desc">整行消除，越堆越快</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goPlane">
+				<view class="menu-tile plane-tile">
+					<view class="pt-wing"></view>
+					<view class="pt-tail"></view>
+					<view class="pt-body"></view>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">飞机大战</text>
+					<text class="menu-desc">全屏射击，拖动战机躲弹幕</text>
+				</view>
+				<view class="duck-ic-arrow"></view>
+			</view>
+			<view class="duck-row menu-row" hover-class="duck-row-hover" @tap="goBubble">
+				<view class="menu-tile bubble-tile">
+					<view class="bb-dot b1"></view>
+					<view class="bb-dot b2"></view>
+					<view class="bb-dot b3"></view>
+					<view class="bb-dot b4"></view>
+				</view>
+				<view class="menu-main">
+					<text class="menu-title">泡泡龙</text>
+					<text class="menu-desc">三颗同色连一起，打穿天花板</text>
 				</view>
 				<view class="duck-ic-arrow"></view>
 			</view>
@@ -402,20 +384,17 @@
 			goAiHistory() {
 				uni.navigateTo({ url: '/pages/interview/ai-history/ai-history' })
 			},
-			goGame() {
-				uni.navigateTo({ url: '/pages/interview/game/game' })
-			},
-			goChess() {
-				uni.navigateTo({ url: '/pages/interview/game/chess' })
-			},
-			goGo() {
-				uni.navigateTo({ url: '/pages/interview/game/go' })
-			},
-			goMatch() {
-				uni.navigateTo({ url: '/pages/interview/game/match' })
+			goGameList() {
+				uni.navigateTo({ url: '/pages/interview/game/list' })
 			},
 			goTetris() {
 				uni.navigateTo({ url: '/pages/interview/game/tetris' })
+			},
+			goPlane() {
+				uni.navigateTo({ url: '/pages/interview/game/plane' })
+			},
+			goBubble() {
+				uni.navigateTo({ url: '/pages/interview/game/bubble' })
 			},
 			about() {
 				uni.showModal({
@@ -676,6 +655,12 @@
 	.sec-more {
 		display: flex;
 		align-items: center;
+		/* 加大点击热区，右侧不留内边距，箭头仍与页面右边界对齐 */
+		padding: 10rpx 0 10rpx 16rpx;
+	}
+
+	.sec-more-hover {
+		opacity: 0.55;
 	}
 
 	.sec-more-txt {
@@ -703,154 +688,8 @@
 		padding: 26rpx 26rpx;
 	}
 
-	.menu-tile {
-		width: 72rpx;
-		height: 72rpx;
-		border-radius: 20rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin-right: 22rpx;
-		flex-shrink: 0;
-	}
-
-	.menu-tile-txt {
-		font-size: 26rpx;
-		font-weight: 600;
-	}
-
-	.game-tile {
-		background: linear-gradient(135deg, #56cf9b, #00b578);
-	}
-
-	.game-icon {
-		width: 44rpx;
-		height: 44rpx;
-	}
-
-	.chess-tile {
-		background: linear-gradient(135deg, #f7e2bb, #e2b97e);
-	}
-
-	.chess-pc {
-		width: 54rpx;
-		height: 54rpx;
-		border-radius: 50%;
-		box-sizing: border-box;
-		background: radial-gradient(circle at 34% 28%, #fffdf4, #f0e2c4 78%);
-		border: 2rpx solid #c09a6b;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.chess-pc-txt {
-		font-size: 32rpx;
-		font-weight: 700;
-		line-height: 1;
-		color: #c62828;
-	}
-
-	.go-tile {
-		position: relative;
-		background: linear-gradient(135deg, #f0e6d6, #ccb896);
-	}
-
-	.go-pc {
-		position: absolute;
-		width: 32rpx;
-		height: 32rpx;
-		border-radius: 50%;
-		box-sizing: border-box;
-	}
-
-	.go-pc.is-b {
-		left: 11rpx;
-		top: 11rpx;
-		background: radial-gradient(circle at 34% 28%, #6a7175, #1c1f21 78%);
-		box-shadow: 0 2rpx 4rpx rgba(30, 20, 10, 0.3);
-	}
-
-	.go-pc.is-w {
-		right: 11rpx;
-		bottom: 11rpx;
-		background: radial-gradient(circle at 34% 28%, #ffffff, #e6e0d3 80%);
-		border: 2rpx solid #d3cab8;
-		box-shadow: 0 2rpx 4rpx rgba(30, 20, 10, 0.18);
-	}
-
-	.match-tile {
-		position: relative;
-		background: linear-gradient(135deg, #fff2e6, #ffd6ad);
-	}
-
-	.mt-dot {
-		position: absolute;
-		width: 22rpx;
-		height: 22rpx;
-		border-radius: 7rpx;
-	}
-
-	.mt-dot.d1 {
-		left: 12rpx;
-		top: 12rpx;
-		background: linear-gradient(160deg, #ff9a9a, #e0433f);
-	}
-
-	.mt-dot.d2 {
-		right: 12rpx;
-		top: 12rpx;
-		background: linear-gradient(160deg, #ffe08a, #f2b705);
-	}
-
-	.mt-dot.d3 {
-		left: 12rpx;
-		bottom: 12rpx;
-		background: linear-gradient(160deg, #7fe0b4, #00a86b);
-	}
-
-	.mt-dot.d4 {
-		right: 12rpx;
-		bottom: 12rpx;
-		background: linear-gradient(160deg, #7fb6ff, #2b6fe0);
-	}
-
-	.tetris-tile {
-		position: relative;
-		background: linear-gradient(135deg, #e8f3ff, #cfe0ff);
-	}
-
-	.tt-b {
-		position: absolute;
-		width: 24rpx;
-		height: 24rpx;
-		border-radius: 6rpx;
-		box-shadow: inset 0 -3rpx 0 rgba(0, 0, 0, 0.16);
-	}
-
-	.tt-b.t1 {
-		left: 10rpx;
-		top: 10rpx;
-		background: linear-gradient(160deg, #7ce9f7, #17a9d4);
-	}
-
-	.tt-b.t2 {
-		left: 38rpx;
-		top: 10rpx;
-		background: linear-gradient(160deg, #d8b4fe, #8b3fd9);
-	}
-
-	.tt-b.t3 {
-		left: 10rpx;
-		top: 38rpx;
-		background: linear-gradient(160deg, #ffe08a, #f0a020);
-	}
-
-	.tt-b.t4 {
-		left: 38rpx;
-		top: 38rpx;
-		background: linear-gradient(160deg, #9bf0b8, #14a05a);
-	}
+	/* 小游戏图标（.menu-tile 及各类游戏图标）已抽到 common/game-tiles.scss，
+	   供「我的」页和游戏列表页共用，这里不再重复定义 */
 
 	.menu-main {
 		flex: 1;

@@ -138,6 +138,46 @@
 						"navigationStyle": "custom",
 						"navigationBarTitleText": "俄罗斯方块"
 					}
+				},
+				{
+					"path": "plane",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "飞机大战",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "bubble",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "泡泡龙",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "adventure",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "冒险岛3",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "kart",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "极速卡丁",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "list",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "小游戏",
+						"disableScroll": true
+					}
 				}
 			]
 		}

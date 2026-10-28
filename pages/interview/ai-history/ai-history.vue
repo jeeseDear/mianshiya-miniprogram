@@ -3,17 +3,17 @@
 		<!-- 渐变头部 -->
 		<view class="duck-head hist-head">
 			<view :style="{ height: statusBar + 'px' }"></view>
-			<view class="head-main">
-				<view class="head-row">
-					<view class="head-left">
-						<text class="duck-head-title">AI 解析</text>
-						<text class="head-sub-white">{{ list.length ? '看过 ' + list.length + ' 道题的解析' : '看看 AI 怎么答这些题' }}</text>
-					</view>
-					<view class="head-clear" v-if="list.length" hover-class="head-clear-hover" @tap="clearAll">
-						<text class="head-clear-txt">清空</text>
-					</view>
+			<view class="nav-row" :style="menuRight ? { paddingRight: menuRight + 'px' } : ''">
+				<view class="nav-back" hover-class="nav-back-hover" @tap="goBack">
+					<view class="duck-ic-back"></view>
+				</view>
+				<text class="nav-title">AI 解析</text>
+				<view class="head-clear" v-if="list.length" hover-class="head-clear-hover" @tap="clearAll">
+					<text class="head-clear-txt">清空</text>
 				</view>
 			</view>
+
+			<text class="head-sub-white">{{ list.length ? '看过 ' + list.length + ' 道题的解析' : '看看 AI 怎么答这些题' }}</text>
 		</view>
 
 		<scroll-view class="content" scroll-y :show-scrollbar="false">
@@ -63,6 +63,7 @@
 	import { getCategories, levelText } from '@/common/question-source.js'
 	import { showPageLoading, hidePageLoading } from '@/common/loading.js'
 	import { ensureReady } from '@/common/bootstrap.js'
+	import { navBack, menuSafeRight } from '@/common/nav.js'
 	import { api } from '@/common/api.js'
 
 	/**
@@ -85,6 +86,7 @@
 		data() {
 			return {
 				statusBar: 0,
+				menuRight: 0,
 				levelText: levelText,
 				list: [],
 				categories: getCategories()
@@ -97,11 +99,15 @@
 			} catch (e) {
 				this.statusBar = 0
 			}
+			this.menuRight = menuSafeRight()
 		},
 		onShow() {
 			this.load()
 		},
 		methods: {
+			goBack() {
+				navBack('/pages/interview/mine/mine')
+			},
 			async load() {
 				showPageLoading()
 				try {
@@ -193,31 +199,45 @@
 	/* ---------- 头部 ---------- */
 	.hist-head {
 		padding-bottom: 40rpx;
+		flex-shrink: 0;
 	}
 
-	.head-main {
-		padding: 20rpx 32rpx 0;
-	}
-
-	.head-row {
+	.nav-row {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
+		padding: 10rpx 24rpx 0;
 	}
 
-	.head-left {
-		flex: 1;
-		min-width: 0;
+	.nav-back {
+		width: 56rpx;
+		height: 56rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.nav-back-hover {
+		opacity: 0.55;
+	}
+
+	.nav-title {
+		margin-left: 8rpx;
+		font-size: 32rpx;
+		font-weight: 600;
+		color: #ffffff;
 	}
 
 	.head-sub-white {
 		display: block;
-		margin-top: 8rpx;
+		margin-top: 10rpx;
+		padding-left: 88rpx;
 		font-size: 24rpx;
 		color: rgba(255, 255, 255, 0.84);
 	}
 
 	.head-clear {
-		margin-left: 16rpx;
+		margin-left: auto;
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;

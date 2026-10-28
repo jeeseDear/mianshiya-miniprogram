@@ -7,6 +7,9 @@
 2. **模型输出带标记的纯文本，不是 JSON**。原因有两个：
    - 流式场景下 JSON 是半截的，前端没法解析；标记格式可以边收边切
    - JSON 要求模型转义引号，中文长文本容易出错，标记格式不会
+   注意这里说的是「模型吐出来的东西」。传输层走的是 SSE，一帧一个
+   ``delta`` 事件、载荷本身是 JSON，换行由 JSON 转义，不会把帧劈开。
+
    输出的东西长这样，前端按行实时切成五块：
 
        @@CORE@@      一句话核心（一行）
@@ -15,8 +18,9 @@
        @@TRAP@@      容易踩的坑
        @@FOLLOW@@    可能的追问
 
-3. **生成过程流式转发**。首次生成要 5~20 秒，一次性返回用户会盯着空白
-   弹窗；流式输出第二秒就有字，观感完全不同。
+3. **生成过程用 SSE 流式转发**。首次生成要 5~20 秒，一次性返回用户会盯着
+   空白弹窗；流式输出第二秒就有字，观感完全不同。事件见 ``sse`` 与
+   ``stream_explanation``。
 4. **结果落库缓存**。见 ``models.AiExplanation``：同一题只调一次模型。
    缓存命中时直接把存好的内容转回标记格式，前端代码只有一条路径。
 5. **没配 key 就返回 503 / 错误标记**。宁可明确说「未开启」，也不返回
@@ -352,63 +356,100 @@ def get_explanation(db: Session, question: Question) -> dict:
         return _to_out(row, cached=False)
 
 
+def sse(event: str, data: dict | str) -> str:
+    """拼一帧 SSE。
+
+    格式是 ``event: <名字>\\ndata: <载荷>\\n\\n``，结尾的空行才是帧分隔符，
+    少了它前端会一直等下一帧。
+
+    ``data`` 一律走 JSON：模型吐的文本里有换行，直接塞进 ``data:`` 会把
+    一帧劈成多行（SSE 规定多行要各自加 ``data: `` 前缀再用 ``\\n`` 拼回去），
+    绕这一圈不如让 JSON 把换行转义掉；还能顺带带上 model、cached 这类元信息。
+    """
+    body = data if isinstance(data, str) else json.dumps(data, ensure_ascii=False)
+    # 兜底：万一将来有人传了多行纯文本，按规范逐行加前缀，不要产生半截帧
+    lines = "\n".join("data: " + part for part in (body.splitlines() or [""]))
+    return f"event: {event}\n{lines}\n\n"
+
+
 def stream_explanation(question_id: str) -> Iterator[str]:
-    """流式接口的生成器。
+    """流式接口的生成器，按 SSE 帧往外发。
+
+    事件只有四种，前端照名字分发就行，不用再猜文本里的标记：
+
+    - ``start``  ``{"model": ..., "cached": bool}`` 首个字节立刻到，顺便顶开代理
+    - ``delta``  ``{"t": "增量文本"}`` 正文，仍是 ``@@CORE@@`` 标记格式
+    - ``done``   ``{"cached": bool}`` 正常收尾
+    - ``error``  ``{"message": "原因"}``
+
+    正文继续用标记格式而不是 JSON：流式下 JSON 是半截的没法解析，
+    标记格式可以边收边切。传输层换了，载荷格式不变。
 
     自己开 session，不复用请求依赖：生成器的存活时间比请求处理函数长，
     依赖注入的会话到那时可能已经关了。
 
-    任何异常都转成 ``@@ERROR@@`` 标记往下发——响应头早就发出去了，
-    这时候再抛 HTTPException 前端是收不到的。
+    任何异常都转成 ``error`` 帧——响应头早就发出去了，这时候再抛
+    HTTPException 前端是收不到的。
     """
     with SessionLocal() as db:
         q = db.get(Question, question_id)
         if q is None:
-            yield "@@ERROR@@\n题目不存在\n"
+            yield sse("error", {"message": "题目不存在"})
             return
 
         row = db.get(AiExplanation, question_id)
         if row is not None and row.content:
             # 缓存命中：内容一次性发完，前端瞬间渲染
             log_event("ai_cache_hit", qid=question_id)
-            yield to_marked(row.content)
+            yield sse("start", {"model": row.model, "cached": True})
+            yield sse("delta", {"t": to_marked(row.content)})
+            yield sse("done", {"cached": True})
             return
 
         if not enabled():
-            yield "@@ERROR@@\nAI 解析未开启：请在服务端 .env 里配置 LLM_API_KEY\n"
+            yield sse("error", {"message": "AI 解析未开启：请在服务端 .env 里配置 LLM_API_KEY"})
             return
 
         with _lock_for(question_id):
+            # 等锁期间可能已经被别的请求生成好了，直接读缓存
             row = db.get(AiExplanation, question_id)
             if row is not None and row.content:
-                yield to_marked(row.content)
+                log_event("ai_cache_hit", qid=question_id, waited=True)
+                yield sse("start", {"model": row.model, "cached": True})
+                yield sse("delta", {"t": to_marked(row.content)})
+                yield sse("done", {"cached": True})
                 return
+
+            model = get_settings().llm_model
+            # 先发一帧，别让前端在模型连上来的几秒里一片空白
+            yield sse("start", {"model": model, "cached": False})
 
             buf: list[str] = []
             try:
                 for piece in stream_model(q):
                     buf.append(piece)
-                    yield piece
+                    yield sse("delta", {"t": piece})
             except RuntimeError as exc:
                 log_event("ai_stream_failed", level=logging.ERROR, qid=question_id, error=str(exc))
-                yield f"\n@@ERROR@@\n{exc}\n"
+                yield sse("error", {"message": str(exc)})
                 return
             except Exception as exc:  # 兜底：不让生成器把 500 抛在流中间
                 log_event("ai_stream_crash", level=logging.ERROR, qid=question_id, error=str(exc))
-                yield "\n@@ERROR@@\nAI 生成中断，请重试\n"
+                yield sse("error", {"message": "AI 生成中断，请重试"})
                 return
 
             content = parse_marked("".join(buf))
             if not content["core"] and not content["answer"]:
                 log_event("ai_empty_result", level=logging.WARNING, qid=question_id)
-                yield "\n@@ERROR@@\nAI 返回内容无法解析，请重试\n"
+                yield sse("error", {"message": "AI 返回内容无法解析，请重试"})
                 return
 
             _save(db, q, content)
             log_event(
                 "ai_generated",
                 qid=question_id,
-                model=get_settings().llm_model,
+                model=model,
                 mode="stream",
                 answer=len(content["answer"]),
             )
+            yield sse("done", {"cached": False, "model": model})

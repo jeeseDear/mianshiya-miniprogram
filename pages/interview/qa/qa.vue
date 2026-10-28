@@ -534,13 +534,8 @@
 				this.applyAiRender()
 			},
 			applyAiRender() {
-				const raw = this.aiRaw || ''
-				const errAt = raw.indexOf('@@ERROR@@')
-				if (errAt > -1) {
-					const msg = raw.slice(errAt + 10).trim()
-					if (msg) this.aiError = msg
-				}
-				this.aiBlocks = this.parseAiBlocks(errAt > -1 ? raw.slice(0, errAt) : raw)
+				// 错误走 SSE 的 error 事件，正文里不会再有 @@ERROR@@ 这种标记
+				this.aiBlocks = this.parseAiBlocks(this.aiRaw || '')
 			},
 			parseAiBlocks(text) {
 				const out = { core: '', answer: [], bonus: [], trap: [], followup: [] }

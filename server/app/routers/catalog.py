@@ -289,23 +289,24 @@ def question_ai(question_id: str, db: Session = Depends(get_db)) -> dict:
     return ai.get_explanation(db, q)
 
 
-@router.get("/questions/{question_id}/ai/stream", summary="AI 解析（流式）")
+@router.get("/questions/{question_id}/ai/stream", summary="AI 解析（SSE 流式）")
 def question_ai_stream(question_id: str) -> StreamingResponse:
     """边生成边返回，用户不用盯着空白弹窗等 20 秒。
 
-    返回的是 ``text/plain`` 流，不是 SSE —— 因为内容本身带 ``@@XXX@@``
-    标记，前端拿纯文本按行切就行，不需要再包一层 event 格式。小程序那边
-    用 ``enableChunked`` 收分块，H5/APK 用 ``fetch`` 的 ReadableStream，
-    两边都更简单。
+    标准 ``text/event-stream``，事件有 ``start`` / ``delta`` / ``done`` /
+    ``error`` 四种，载荷是 JSON（见 ``ai.sse``）。没走 EventSource：小程序
+    没有这个 API，也带不上 Authorization。微信下用 ``uni.request`` 的
+    ``enableChunked`` 收分块，H5/APK 用 ``fetch`` 的 ReadableStream，两端
+    共用同一个分帧解析器。
 
     ``X-Accel-Buffering: no`` 是必须的：不加这行，Nginx 会把上游输出攒
     成整包再发，流式就退化成了等 20 秒一次性出现。
     """
     return StreamingResponse(
         ai.stream_explanation(question_id),
-        media_type="text/plain; charset=utf-8",
+        media_type="text/event-stream; charset=utf-8",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
         },

@@ -1,0 +1,362 @@
+/* ---------- 小游戏图标（「我的」页与游戏列表页共用） ----------
+   图标全部用 CSS 拼，不依赖图片资源。
+   外层统一 72rpx 的圆角方块，内部元素按这个尺寸绝对定位。 */
+
+.menu-tile {
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 20rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 22rpx;
+	flex-shrink: 0;
+}
+
+.menu-tile-txt {
+	font-size: 26rpx;
+	font-weight: 600;
+}
+
+/* ---------- 五子棋 ---------- */
+.game-tile {
+	background: linear-gradient(135deg, #56cf9b, #00b578);
+}
+
+.game-icon {
+	width: 44rpx;
+	height: 44rpx;
+}
+
+/* ---------- 中国象棋 ---------- */
+.chess-tile {
+	background: linear-gradient(135deg, #f7e2bb, #e2b97e);
+}
+
+.chess-pc {
+	width: 54rpx;
+	height: 54rpx;
+	border-radius: 50%;
+	box-sizing: border-box;
+	background: radial-gradient(circle at 34% 28%, #fffdf4, #f0e2c4 78%);
+	border: 2rpx solid #c09a6b;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.chess-pc-txt {
+	font-size: 32rpx;
+	font-weight: 700;
+	line-height: 1;
+	color: #c62828;
+}
+
+/* ---------- 围棋 ---------- */
+.go-tile {
+	position: relative;
+	background: linear-gradient(135deg, #f0e6d6, #ccb896);
+}
+
+.go-pc {
+	position: absolute;
+	width: 32rpx;
+	height: 32rpx;
+	border-radius: 50%;
+	box-sizing: border-box;
+}
+
+.go-pc.is-b {
+	left: 11rpx;
+	top: 11rpx;
+	background: radial-gradient(circle at 34% 28%, #6a7175, #1c1f21 78%);
+	box-shadow: 0 2rpx 4rpx rgba(30, 20, 10, 0.3);
+}
+
+.go-pc.is-w {
+	right: 11rpx;
+	bottom: 11rpx;
+	background: radial-gradient(circle at 34% 28%, #ffffff, #e6e0d3 80%);
+	border: 2rpx solid #d3cab8;
+	box-shadow: 0 2rpx 4rpx rgba(30, 20, 10, 0.18);
+}
+
+/* ---------- 消消乐 ---------- */
+.match-tile {
+	position: relative;
+	background: linear-gradient(135deg, #fff2e6, #ffd6ad);
+}
+
+.mt-dot {
+	position: absolute;
+	width: 22rpx;
+	height: 22rpx;
+	border-radius: 7rpx;
+}
+
+.mt-dot.d1 {
+	left: 12rpx;
+	top: 12rpx;
+	background: linear-gradient(160deg, #ff9a9a, #e0433f);
+}
+
+.mt-dot.d2 {
+	right: 12rpx;
+	top: 12rpx;
+	background: linear-gradient(160deg, #ffe08a, #f2b705);
+}
+
+.mt-dot.d3 {
+	left: 12rpx;
+	bottom: 12rpx;
+	background: linear-gradient(160deg, #7fe0b4, #00a86b);
+}
+
+.mt-dot.d4 {
+	right: 12rpx;
+	bottom: 12rpx;
+	background: linear-gradient(160deg, #7fb6ff, #2b6fe0);
+}
+
+/* ---------- 俄罗斯方块 ---------- */
+.tetris-tile {
+	position: relative;
+	background: linear-gradient(135deg, #e8f3ff, #cfe0ff);
+}
+
+.tt-b {
+	position: absolute;
+	width: 24rpx;
+	height: 24rpx;
+	border-radius: 6rpx;
+	box-shadow: inset 0 -3rpx 0 rgba(0, 0, 0, 0.16);
+}
+
+.tt-b.t1 {
+	left: 10rpx;
+	top: 10rpx;
+	background: linear-gradient(160deg, #7ce9f7, #17a9d4);
+}
+
+.tt-b.t2 {
+	left: 38rpx;
+	top: 10rpx;
+	background: linear-gradient(160deg, #d8b4fe, #8b3fd9);
+}
+
+.tt-b.t3 {
+	left: 10rpx;
+	top: 38rpx;
+	background: linear-gradient(160deg, #ffe08a, #f0a020);
+}
+
+.tt-b.t4 {
+	left: 38rpx;
+	top: 38rpx;
+	background: linear-gradient(160deg, #9bf0b8, #14a05a);
+}
+
+/* ---------- 飞机大战 ---------- */
+.plane-tile {
+	position: relative;
+	overflow: hidden;
+	background: linear-gradient(150deg, #22386f 0%, #0d1533 100%);
+}
+
+/* 机身：细长条 + 尖头，靠渐变拉出金属感 */
+.pt-body {
+	position: absolute;
+	left: 50%;
+	top: 12rpx;
+	margin-left: -6rpx;
+	width: 12rpx;
+	height: 38rpx;
+	border-radius: 7rpx 7rpx 4rpx 4rpx;
+	background: linear-gradient(180deg, #ffffff 0%, #a8ecff 56%, #3fc9ff 100%);
+	box-shadow: 0 0 12rpx rgba(120, 225, 255, 0.6);
+}
+
+/* 主机翼 */
+.pt-wing {
+	position: absolute;
+	left: 50%;
+	top: 32rpx;
+	margin-left: -17rpx;
+	width: 34rpx;
+	height: 8rpx;
+	border-radius: 4rpx;
+	background-color: rgba(150, 235, 255, 0.92);
+}
+
+/* 尾翼 */
+.pt-tail {
+	position: absolute;
+	left: 50%;
+	top: 46rpx;
+	margin-left: -10rpx;
+	width: 20rpx;
+	height: 6rpx;
+	border-radius: 3rpx;
+	background-color: rgba(110, 210, 255, 0.6);
+}
+
+/* ---------- 泡泡龙 ---------- */
+.bubble-tile {
+	position: relative;
+	overflow: hidden;
+	background: linear-gradient(150deg, #2b2159 0%, #130f2e 100%);
+}
+
+.bb-dot {
+	position: absolute;
+	border-radius: 50%;
+	box-shadow: inset -3rpx -4rpx 0 rgba(0, 0, 0, 0.16), inset 3rpx 3rpx 0 rgba(255, 255, 255, 0.42);
+}
+
+.bb-dot.b1 {
+	left: 10rpx;
+	top: 10rpx;
+	width: 26rpx;
+	height: 26rpx;
+	background-color: #ff5d6c;
+}
+
+.bb-dot.b2 {
+	left: 36rpx;
+	top: 10rpx;
+	width: 26rpx;
+	height: 26rpx;
+	background-color: #ffd93d;
+}
+
+.bb-dot.b3 {
+	left: 23rpx;
+	top: 34rpx;
+	width: 26rpx;
+	height: 26rpx;
+	background-color: #4aa8ff;
+}
+
+.bb-dot.b4 {
+	left: 47rpx;
+	top: 36rpx;
+	width: 18rpx;
+	height: 18rpx;
+	background-color: #3ddc84;
+}
+
+/* 冒险岛：蓝天 + 绿岛 + 小红人，比纯色块更像「横版闯关」 */
+.adventure-tile {
+	position: relative;
+	overflow: hidden;
+	background: linear-gradient(170deg, #cdeeff 0%, #86cdf2 100%);
+}
+
+.av-sun {
+	position: absolute;
+	right: 9rpx;
+	top: 9rpx;
+	width: 13rpx;
+	height: 13rpx;
+	border-radius: 50%;
+	background-color: #ffe066;
+	box-shadow: 0 0 10rpx rgba(255, 224, 102, 0.8);
+}
+
+/* 小岛：上圆下方的半椭圆 */
+.av-island {
+	position: absolute;
+	left: 2rpx;
+	bottom: -10rpx;
+	width: 68rpx;
+	height: 36rpx;
+	border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+	background: linear-gradient(180deg, #5ecb6a 0%, #2f9b46 62%, #26773a 100%);
+}
+
+.av-hero {
+	position: absolute;
+	left: 30rpx;
+	bottom: 26rpx;
+	width: 13rpx;
+	height: 17rpx;
+	border-radius: 4rpx 4rpx 2rpx 2rpx;
+	background: linear-gradient(180deg, #ff8a6b 0%, #f3543a 100%);
+}
+
+.av-cap {
+	position: absolute;
+	left: 27rpx;
+	bottom: 41rpx;
+	width: 19rpx;
+	height: 7rpx;
+	border-radius: 5rpx 5rpx 2rpx 2rpx;
+	background: linear-gradient(180deg, #ffe27a 0%, #f2b705 100%);
+}
+
+
+
+/* 极速卡丁：沥青底 + 一台俯视卡丁车，车尾一点氮气 */
+.kart-tile {
+	position: relative;
+	overflow: hidden;
+	background: linear-gradient(160deg, #4d5a66 0%, #20262d 100%);
+}
+
+.kt-flame {
+	position: absolute;
+	left: 30rpx;
+	bottom: 2rpx;
+	width: 12rpx;
+	height: 16rpx;
+	border-radius: 50% 50% 40% 40%;
+	background: linear-gradient(180deg, rgba(120, 240, 255, 0.95) 0%, rgba(120, 240, 255, 0) 100%);
+}
+
+.kt-wheel {
+	position: absolute;
+	width: 7rpx;
+	height: 13rpx;
+	border-radius: 2rpx;
+	background-color: #15181c;
+}
+
+.kt-wheel.w1 {
+	left: 16rpx;
+	top: 15rpx;
+}
+
+.kt-wheel.w2 {
+	right: 16rpx;
+	top: 15rpx;
+}
+
+.kt-wheel.w3 {
+	left: 16rpx;
+	top: 37rpx;
+}
+
+.kt-wheel.w4 {
+	right: 16rpx;
+	top: 37rpx;
+}
+
+.kt-body {
+	position: absolute;
+	left: 24rpx;
+	top: 11rpx;
+	width: 24rpx;
+	height: 38rpx;
+	border-radius: 8rpx;
+	background: linear-gradient(180deg, #ff8074 0%, #d63b3b 62%, #a72a30 100%);
+}
+
+.kt-helm {
+	position: absolute;
+	left: 30rpx;
+	top: 28rpx;
+	width: 12rpx;
+	height: 12rpx;
+	border-radius: 50%;
+	background-color: #ffe066;
+}

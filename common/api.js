@@ -445,17 +445,86 @@ function streamError(err) {
 }
 
 /**
- * AI 解析（流式）。
+ * SSE 分帧器。
+ *
+ * 服务端发的是标准 `text/event-stream`，一帧长这样：
+ *
+ *   event: delta\n
+ *   data: {"t":"增量"}\n
+ *   \n
+ *
+ * 网络会给什么切法谁也不知道：一帧可能被劈成两半，一个包里也可能挤着
+ * 三帧。所以必须留着缓冲区，只处理完整的空行分隔，剩下的留到下次。
+ * 顺带兼容 \r\n（有些代理会改写换行）。
+ */
+function makeSseParser(onEvent) {
+	let buf = ''
+
+	function dispatch(frame) {
+		const lines = frame.split(/\r?\n/)
+		let name = 'message'
+		const data = []
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i]
+			// 空行和冒号开头的是注释/心跳，没有语义
+			if (!line || line.charAt(0) === ':') continue
+			const at = line.indexOf(':')
+			const field = at === -1 ? line : line.slice(0, at)
+			let value = at === -1 ? '' : line.slice(at + 1)
+			if (value.charAt(0) === ' ') value = value.slice(1)
+			if (field === 'event') name = value
+			else if (field === 'data') data.push(value)
+		}
+		if (!data.length) return
+		// 多行 data 按规范用换行拼回去
+		const raw = data.join('\n')
+		let payload = raw
+		try {
+			payload = JSON.parse(raw)
+		} catch (e) {
+			/* 不是 JSON 就当纯文本，兼容将来其它 event */
+		}
+		onEvent(name, payload)
+	}
+
+	return function (text) {
+		if (!text) return
+		buf += text
+		for (;;) {
+			const lf = buf.indexOf('\n\n')
+			const crlf = buf.indexOf('\r\n\r\n')
+			let at = lf
+			let len = 2
+			if (crlf > -1 && (at === -1 || crlf < at)) {
+				at = crlf
+				len = 4
+			}
+			if (at === -1) break
+			const frame = buf.slice(0, at)
+			buf = buf.slice(at + len)
+			if (frame.trim()) dispatch(frame)
+		}
+	}
+}
+
+/**
+ * AI 解析（SSE 流式）。
  *
  * 各端接收方式不同，在这里统一抹平：
  *   - H5 / Android APK（WebView）：fetch + ReadableStream 逐块读
  *   - 微信小程序：uni.request 的 enableChunked + onChunkReceived
  *
- * handlers: { onChunk(增量文本), onDone(), onError(消息) }
+ * 正常走 SSE：事件按名字分发
+ *   start {model,cached} / delta {t} / done {cached} / error {message}
+ *
+ * 但后端要重新部署才发 SSE，过渡期线上还是「纯文本 + @@CORE@@ 标记」，
+ * 按 SSE 切会一帧都切不出来。所以先嗅首段再决定用哪套解析——两种格式
+ * 都支持流式，只是分帧方式不同。后端全量上线后可以删掉纯文本分支。
+ *
+ * handlers: { onStart(meta), onChunk(增量文本), onDone(), onError(消息) }
  * 返回 abort 函数，页面卸载时调用可立刻断开，别让请求在后台空跑。
  *
- * 这里没有用 SSE —— 后端返回的是带 @@XXX@@ 标记的纯文本，前端按行切
- * 就够了，省掉一层 event 格式解析。
+ * 没用 EventSource：小程序没有这个 API，而且它带不上 Authorization。
  */
 export function aiExplainStream(id, handlers) {
 	const opts = handlers || {}
@@ -463,15 +532,90 @@ export function aiExplainStream(id, handlers) {
 	const header = token ? { Authorization: 'Bearer ' + token } : {}
 	const url = baseUrl + '/api/questions/' + encodeURIComponent(id) + '/ai/stream'
 	let aborted = false
+	// 成功和失败只能有一个结局：error 帧之后又收到尾巴，不能再报一次 done
+	let settled = false
+	let gotDelta = false
 
 	const emit = (text) => {
-		if (!aborted && text) opts.onChunk && opts.onChunk(text)
+		if (!aborted && !settled && text) opts.onChunk && opts.onChunk(text)
 	}
 	const finish = () => {
-		if (!aborted) opts.onDone && opts.onDone()
+		if (aborted || settled) return
+		settled = true
+		opts.onDone && opts.onDone()
 	}
 	const fail = (msg) => {
-		if (!aborted) opts.onError && opts.onError(msg)
+		if (aborted || settled) return
+		settled = true
+		opts.onError && opts.onError(msg || 'AI 生成失败，请重试')
+	}
+
+	const feedSse = makeSseParser((name, data) => {
+		if (name === 'delta') {
+			const t = typeof data === 'string' ? data : data && data.t
+			if (t) gotDelta = true
+			emit(t)
+		} else if (name === 'error') {
+			fail((data && data.message) || (typeof data === 'string' ? data : ''))
+		} else if (name === 'done') {
+			finish()
+		} else if (name === 'start') {
+			if (!aborted && !settled && opts.onStart) opts.onStart(data || {})
+		}
+	})
+
+	/* ---- 过渡期：老服务端还是纯文本 + @@ERROR@@ 标记 ---- */
+	const MARK_ERR = '@@ERROR@@'
+	let mode = ''
+	let textBuf = ''
+	let textSent = 0
+
+	const feedText = (chunk) => {
+		textBuf += chunk
+		const errAt = textBuf.indexOf(MARK_ERR)
+		let end = textBuf.length
+		if (errAt > -1) {
+			end = errAt
+		} else if (textBuf.length < MARK_ERR.length) {
+			// 太短，可能就是标记的前半截，等下一块再说
+			end = 0
+		} else {
+			// 结尾可能正好是标记的前半截，从最后一个 @ 起先扣着，别当正文渲染
+			const at = textBuf.lastIndexOf('@')
+			if (at > -1 && textBuf.length - at < MARK_ERR.length) end = at
+		}
+		if (end > textSent) {
+			gotDelta = true
+			emit(textBuf.slice(textSent, end))
+			textSent = end
+		}
+		if (errAt > -1) fail(textBuf.slice(errAt + MARK_ERR.length).trim() || '生成失败，请重试')
+	}
+
+	const feed = (text) => {
+		if (!text) return
+		if (!mode) {
+			// SSE 的帧一定以 event: / data: / id: / retry: / 注释行开头
+			const head = text.replace(/^\s+/, '')
+			if (!head) return
+			mode = /^(?:event|data|id|retry):|^:/.test(head) ? 'sse' : 'text'
+		}
+		if (mode === 'sse') feedSse(text)
+		else feedText(text)
+	}
+
+	// 连接自己断了（没等到 done）：有内容就当正常收尾，一个字都没有说明
+	// 是半路断的，报错让用户点重试，别停在空白面板上
+	const close = () => {
+		if (settled) return
+		// 纯文本模式扣着的尾巴这时补发
+		if (mode === 'text' && textSent < textBuf.length) {
+			gotDelta = true
+			emit(textBuf.slice(textSent))
+			textSent = textBuf.length
+		}
+		if (!gotDelta) return fail('生成中断，请重试')
+		finish()
 	}
 
 	// #ifdef MP-WEIXIN
@@ -480,24 +624,27 @@ export function aiExplainStream(id, handlers) {
 	const task = uni.request({
 		url,
 		method: 'GET',
-		header,
+		header: Object.assign({ Accept: 'text/event-stream' }, header),
 		enableChunked: true,
 		responseType: 'arraybuffer',
 		timeout: 180000,
 		success: (res) => {
+			if (res && res.statusCode && res.statusCode !== 200) {
+				return fail('HTTP ' + res.statusCode)
+			}
 			// 基础库过低时不会触发分块回调，用完整响应兜一次
 			if (!received && res && res.data) {
 				received = true
-				emit(decode(res.data))
+				feed(decode(res.data))
 			}
-			finish()
+			close()
 		},
 		fail: (err) => fail(streamError(err))
 	})
 	if (task && typeof task.onChunkReceived === 'function') {
 		task.onChunkReceived((res) => {
 			received = true
-			emit(decode(res.data))
+			feed(decode(res.data))
 		})
 	}
 	return function () {
@@ -519,7 +666,7 @@ export function aiExplainStream(id, handlers) {
 		try {
 			res = await fetch(url, {
 				method: 'GET',
-				headers: Object.assign({ Accept: 'text/plain' }, header),
+				headers: Object.assign({ Accept: 'text/event-stream' }, header),
 				signal: controller ? controller.signal : undefined
 			})
 		} catch (err) {
@@ -540,8 +687,8 @@ export function aiExplainStream(id, handlers) {
 		// 老 WebView 不支持流式读取：退化成一次性拿全，功能不受影响
 		if (!res.body || typeof res.body.getReader !== 'function') {
 			try {
-				emit(await res.text())
-				finish()
+				feed(await res.text())
+				close()
 			} catch (err) {
 				fail(streamError(err))
 			}
@@ -561,9 +708,9 @@ export function aiExplainStream(id, handlers) {
 					}
 					return
 				}
-				emit(decode(chunk.value))
+				feed(decode(chunk.value))
 			}
-			finish()
+			close()
 		} catch (err) {
 			if (aborted) return
 			fail(streamError(err))
